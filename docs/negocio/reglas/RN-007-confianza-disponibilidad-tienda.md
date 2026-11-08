@@ -100,6 +100,6 @@ Cada dato de disponibilidad trae la hora en que se consultó y lo que dijo la ti
 |---|---|---|
 | 2026-11-08 | Se incluyen compras en tienda física en la zona de San Diego | Jesús |
 
-## 14. Estado de inspección
-- Última inspección: 2026-11-08 — APROBADO CON OBSERVACIONES
-- Detalle: [inspecciones/RN-007.md](/inspecciones/RN-007.md)
+## 14. Revisión de consistencia
+- Última revisión: 2026-11-08 — APROBADO CON OBSERVACIONES
+- Detalle: [revisiones/RN-007.md](/revisiones/RN-007.md)

@@ -10,15 +10,15 @@ Ninguna regla tiene defectos graves y se rehicieron todas las cuentas de los eje
 
 | Regla | Dictamen | Defectos ALTA | MEDIA | BAJA |
 |---|---|---|---|---|
-| [RN-001 Margen neto](/inspecciones/RN-001.md) | APROBADO CON OBSERVACIONES | 0 | 3 | 3 |
-| [RN-002 Precio de mercado](/inspecciones/RN-002.md) | APROBADO CON OBSERVACIONES | 0 | 3 | 4 |
-| [RN-003 Descuentos falsos](/inspecciones/RN-003.md) | APROBADO CON OBSERVACIONES | 0 | 1 | 3 |
-| [RN-004 Demanda](/inspecciones/RN-004.md) | APROBADO CON OBSERVACIONES | 0 | 2 | 2 |
-| [RN-005 Rentabilidad ajustada](/inspecciones/RN-005.md) | APROBADO CON OBSERVACIONES | 0 | 4 | 4 |
-| [RN-006 Comisiones y restricciones](/inspecciones/RN-006.md) | APROBADO CON OBSERVACIONES | 0 | 1 | 3 |
-| [RN-007 Disponibilidad en tienda](/inspecciones/RN-007.md) | APROBADO CON OBSERVACIONES | 0 | 1 | 4 |
-| [RN-008 Costo del viaje](/inspecciones/RN-008.md) | APROBADO CON OBSERVACIONES | 0 | 2 | 2 |
-| [RN-009 Niveles y avisos](/inspecciones/RN-009.md) | APROBADO CON OBSERVACIONES | 0 | 3 | 2 |
+| [RN-001 Margen neto](/revisiones/RN-001.md) | APROBADO CON OBSERVACIONES | 0 | 3 | 3 |
+| [RN-002 Precio de mercado](/revisiones/RN-002.md) | APROBADO CON OBSERVACIONES | 0 | 3 | 4 |
+| [RN-003 Descuentos falsos](/revisiones/RN-003.md) | APROBADO CON OBSERVACIONES | 0 | 1 | 3 |
+| [RN-004 Demanda](/revisiones/RN-004.md) | APROBADO CON OBSERVACIONES | 0 | 2 | 2 |
+| [RN-005 Rentabilidad ajustada](/revisiones/RN-005.md) | APROBADO CON OBSERVACIONES | 0 | 4 | 4 |
+| [RN-006 Comisiones y restricciones](/revisiones/RN-006.md) | APROBADO CON OBSERVACIONES | 0 | 1 | 3 |
+| [RN-007 Disponibilidad en tienda](/revisiones/RN-007.md) | APROBADO CON OBSERVACIONES | 0 | 1 | 4 |
+| [RN-008 Costo del viaje](/revisiones/RN-008.md) | APROBADO CON OBSERVACIONES | 0 | 2 | 2 |
+| [RN-009 Niveles y avisos](/revisiones/RN-009.md) | APROBADO CON OBSERVACIONES | 0 | 3 | 2 |
 | **Total** | | **0** | **20** | **27** |
 
 ---

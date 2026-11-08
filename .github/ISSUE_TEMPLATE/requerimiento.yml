@@ -1,0 +1,101 @@
+name: Requerimiento
+description: Requerimiento formal del solicitante. Pasa por oip-inspector antes de análisis.
+title: "[REQ-AAAA-NNNN] <título>"
+labels: ["Requerimiento"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Cada sección corresponde a un criterio de inspección. Si una no aplica, escribe "No aplica" y el motivo.
+        Asigna **milestone** y **proyecto**: sin ellos la inspección no puede aprobar.
+  - type: input
+    id: req_id
+    attributes:
+      label: ID del requerimiento
+      description: "Formato REQ-AAAA-NNNN. Es el hilo de trazabilidad (requirement_key) de toda la cadena."
+      placeholder: REQ-2026-0001
+    validations: { required: true }
+  - type: dropdown
+    id: prioridad
+    attributes:
+      label: Prioridad
+      options: [Alta, Media, Baja]
+    validations: { required: true }
+  - type: textarea
+    id: objetivo
+    attributes:
+      label: "1. Objetivo"
+      description: "Qué necesidad resuelve y qué valor aporta (criterio 1)."
+    validations: { required: true }
+  - type: textarea
+    id: alcance
+    attributes:
+      label: "2. Alcance"
+      description: "Incluye / No incluye (criterio 2)."
+    validations: { required: true }
+  - type: textarea
+    id: descripcion
+    attributes:
+      label: "3. Descripción funcional"
+      description: "Qué debe hacer el sistema, paso a paso (criterio 3)."
+    validations: { required: true }
+  - type: textarea
+    id: reglas
+    attributes:
+      label: "4. Reglas de negocio aplicables"
+      description: "Referencias a docs/negocio/reglas/RN-XXX con su versión. No copiar su contenido (criterio 4)."
+    validations: { required: true }
+  - type: textarea
+    id: criterios
+    attributes:
+      label: "5. Criterios de aceptación"
+      description: "Escenarios Dado / Cuando / Entonces con datos concretos; cada uno cita la RN de la que sale (criterios 5 y 14)."
+    validations: { required: true }
+  - type: textarea
+    id: entradas
+    attributes:
+      label: "6. Datos de entrada"
+      description: "Qué información recibe el sistema y de dónde (criterio 6)."
+    validations: { required: true }
+  - type: textarea
+    id: salidas
+    attributes:
+      label: "7. Resultados esperados"
+      description: "Qué produce el sistema (criterio 7)."
+    validations: { required: true }
+  - type: textarea
+    id: actores
+    attributes:
+      label: "8. Actores y sistemas involucrados"
+      description: "Criterio 8."
+    validations: { required: true }
+  - type: textarea
+    id: dependencias
+    attributes:
+      label: "9. Dependencias"
+      description: "Otros REQ, RN, servicios externos, decisiones pendientes (criterio 9)."
+    validations: { required: true }
+  - type: textarea
+    id: restricciones
+    attributes:
+      label: "10. Restricciones técnicas, operativas y de seguridad"
+      description: "Criterio 10."
+    validations: { required: true }
+  - type: textarea
+    id: errores
+    attributes:
+      label: "11. Manejo de errores y excepciones"
+      description: "Criterio 11."
+    validations: { required: true }
+  - type: textarea
+    id: rnf
+    attributes:
+      label: "12. Requerimientos no funcionales"
+      description: "Rendimiento, configurabilidad, trazabilidad, etc."
+    validations: { required: false }
+  - type: textarea
+    id: abiertas
+    attributes:
+      label: "13. Preguntas abiertas y supuestos"
+      description: "Lo que aún no está decidido. Los criterios 12 y 13 (contradicciones y ambigüedades) se evalúan sobre todo el documento."
+    validations: { required: false }

@@ -103,6 +103,6 @@ ganancia del viaje = Σ (margen ajustado por unidad × unidades recomendadas) de
 |---|---|---|
 | 2026-11-08 | Zona inicial de compra en tienda: San Diego; más lejos solo si la ganancia lo justifica | Jesús |
 
-## 14. Estado de inspección
-- Última inspección: 2026-11-08 — APROBADO CON OBSERVACIONES
-- Detalle: [inspecciones/RN-008.md](/inspecciones/RN-008.md)
+## 14. Revisión de consistencia
+- Última revisión: 2026-11-08 — APROBADO CON OBSERVACIONES
+- Detalle: [revisiones/RN-008.md](/revisiones/RN-008.md)

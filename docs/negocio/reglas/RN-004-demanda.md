@@ -91,6 +91,6 @@ Advertencia (no descarta): **DEMANDA A LA BAJA** si el ranking empeoró más de 
 |---|---|---|
 | | | |
 
-## 14. Estado de inspección
-- Última inspección: 2026-11-08 — APROBADO CON OBSERVACIONES
-- Detalle: [inspecciones/RN-004.md](/inspecciones/RN-004.md)
+## 14. Revisión de consistencia
+- Última revisión: 2026-11-08 — APROBADO CON OBSERVACIONES
+- Detalle: [revisiones/RN-004.md](/revisiones/RN-004.md)
