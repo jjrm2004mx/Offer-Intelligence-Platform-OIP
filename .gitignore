@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+*.egg-info/
+dist/
+build/
+
+# Node
+node_modules/
+
+# Entorno y secretos
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# Scrapy / Playwright
+.scrapy/
+jobdir/
+playwright-report/
+test-results/
+
+# Editor / SO
+.vscode/*
+!.vscode/settings.json
+.idea/
+.DS_Store
+Thumbs.db
+
+# Vercel
+.vercel/
