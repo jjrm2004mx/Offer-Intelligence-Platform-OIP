@@ -11,7 +11,7 @@
   - [RN-008 Costo del viaje](/reglas/RN-008-costo-de-traslado.md)
   - [RN-009 Niveles y avisos](/reglas/RN-009-niveles-y-alertas.md)
 - Inspecciones
-  - [Preguntas consolidadas](/inspecciones/README.md)
+  - [Preguntas consolidadas](/inspecciones/preguntas-consolidadas.md)
   - [RN-001](/inspecciones/RN-001.md)
   - [RN-002](/inspecciones/RN-002.md)
   - [RN-003](/inspecciones/RN-003.md)
