@@ -101,6 +101,6 @@ margen neto (%)   = margen neto ($) ÷ costo de compra × 100
 | 2026-11-08 | Costos de importación o cruce para la venta quedan fuera del modelo | Jesús |
 | 2026-11-08 | Moneda única de cálculo: USD | Jesús |
 
-## 14. Estado de inspección
-- Última inspección: 2026-11-08 — APROBADO CON OBSERVACIONES
-- Detalle: [inspecciones/RN-001.md](/inspecciones/RN-001.md)
+## 14. Revisión de consistencia
+- Última revisión: 2026-11-08 — APROBADO CON OBSERVACIONES
+- Detalle: [revisiones/RN-001.md](/revisiones/RN-001.md)

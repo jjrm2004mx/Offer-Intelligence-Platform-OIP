@@ -3,8 +3,8 @@
 > Cómo usarla: copia este archivo como `reglas/RN-XXX-nombre-corto.md` y llena cada sección **en lenguaje llano**, sin términos técnicos.
 > Si algo no aplica, escribe "No aplica" y explica por qué en una línea. No borres secciones.
 >
-> Cada sección responde a uno de los criterios que revisa el inspector (`oip-inspector`).
-> Una RN bien llenada pasa la inspección a la primera.
+> Cada sección responde a uno de los criterios que revisa `oip-revisor-rn`.
+> Una RN bien llenada pasa la revisión de consistencia (`oip-revisor-rn`) a la primera. Las RN no se inspeccionan formalmente: lo que pasa por `oip-inspector` es el **requerimiento** (issue) que las referencia.
 
 ---
 
@@ -90,6 +90,6 @@ Al menos **un ejemplo que sí cumple** y **uno que no**. Cada ejemplo con númer
 |---|---|---|
 | | | |
 
-## 14. Estado de inspección
-- Última inspección: <fecha> — <APROBADO / APROBADO CON OBSERVACIONES / RECHAZADO>
-- Detalle: `inspecciones/RN-XXX.md`
+## 14. Revisión de consistencia
+- Última revisión: <fecha> — <APROBADO / APROBADO CON OBSERVACIONES / RECHAZADO>
+- Detalle: `revisiones/RN-XXX.md`

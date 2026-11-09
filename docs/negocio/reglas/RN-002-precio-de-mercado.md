@@ -103,6 +103,6 @@ precio de venta esperado = el MÁS BAJO entre:
 |---|---|---|
 | 2026-11-08 | La fuente del historial de Amazon es Keepa | Jesús |
 
-## 14. Estado de inspección
-- Última inspección: 2026-11-08 — APROBADO CON OBSERVACIONES
-- Detalle: [inspecciones/RN-002.md](/inspecciones/RN-002.md)
+## 14. Revisión de consistencia
+- Última revisión: 2026-11-08 — APROBADO CON OBSERVACIONES
+- Detalle: [revisiones/RN-002.md](/revisiones/RN-002.md)

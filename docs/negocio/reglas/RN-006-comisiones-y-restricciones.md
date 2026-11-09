@@ -108,6 +108,6 @@ Mientras no exista cuenta de vendedor, el sistema usa una **tabla manual** de co
 |---|---|---|
 | 2026-11-08 | Se vende con FBM (envío propio), no FBA | Jesús |
 
-## 14. Estado de inspección
-- Última inspección: 2026-11-08 — APROBADO CON OBSERVACIONES
-- Detalle: [inspecciones/RN-006.md](/inspecciones/RN-006.md)
+## 14. Revisión de consistencia
+- Última revisión: 2026-11-08 — APROBADO CON OBSERVACIONES
+- Detalle: [revisiones/RN-006.md](/revisiones/RN-006.md)

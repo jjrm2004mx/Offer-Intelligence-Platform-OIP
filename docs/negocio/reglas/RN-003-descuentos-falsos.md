@@ -101,6 +101,6 @@ Marcas que se asignan (una oferta puede tener varias):
 |---|---|---|
 | 2026-11-08 | El descuento anunciado solo sirve para descubrir candidatos; nunca decide | Jesús |
 
-## 14. Estado de inspección
-- Última inspección: 2026-11-08 — APROBADO CON OBSERVACIONES
-- Detalle: [inspecciones/RN-003.md](/inspecciones/RN-003.md)
+## 14. Revisión de consistencia
+- Última revisión: 2026-11-08 — APROBADO CON OBSERVACIONES
+- Detalle: [revisiones/RN-003.md](/revisiones/RN-003.md)

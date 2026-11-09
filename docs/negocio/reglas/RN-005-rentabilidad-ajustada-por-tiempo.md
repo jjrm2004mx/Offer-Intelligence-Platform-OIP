@@ -120,6 +120,6 @@ Días estimados de venta según el ranking (RN-004):
 |---|---|---|
 | | | |
 
-## 14. Estado de inspección
-- Última inspección: 2026-11-08 — APROBADO CON OBSERVACIONES
-- Detalle: [inspecciones/RN-005.md](/inspecciones/RN-005.md)
+## 14. Revisión de consistencia
+- Última revisión: 2026-11-08 — APROBADO CON OBSERVACIONES
+- Detalle: [revisiones/RN-005.md](/revisiones/RN-005.md)

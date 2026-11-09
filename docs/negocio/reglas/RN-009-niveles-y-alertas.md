@@ -112,6 +112,6 @@ Si no alcanza ni "Interesante" → no es oportunidad (queda registrada como eval
 |---|---|---|
 | 2026-11-08 | Los avisos llegan por mensaje al celular (Telegram) y además se ven en un tablero | Jesús |
 
-## 14. Estado de inspección
-- Última inspección: 2026-11-08 — APROBADO CON OBSERVACIONES
-- Detalle: [inspecciones/RN-009.md](/inspecciones/RN-009.md)
+## 14. Revisión de consistencia
+- Última revisión: 2026-11-08 — APROBADO CON OBSERVACIONES
+- Detalle: [revisiones/RN-009.md](/revisiones/RN-009.md)
