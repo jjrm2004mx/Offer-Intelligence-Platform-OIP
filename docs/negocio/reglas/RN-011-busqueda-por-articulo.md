@@ -147,5 +147,5 @@ Resultado:
 | 2026-11-09 | Criterios: primero el más económico, segundo que esté disponible | Jesús |
 
 ## 14. Revisión de consistencia
-- Última revisión: pendiente
-- Detalle: `revisiones/RN-011.md`
+- Última revisión: 2026-11-09 — APROBADO CON OBSERVACIONES
+- Detalle: [revisiones/RN-011.md](/revisiones/RN-011.md)

@@ -114,3 +114,48 @@ Para que lo tenga a la vista; Jesús los corrige en las reglas y en el documento
 - **Forma de redondear.** Cada monto se redondea a centavos y el medio centavo sube. Afecta al ejemplo del taladro en RN-005 (RN-005 D-001).
 - **Documento técnico v1.2 por actualizar** para que coincida con las reglas: el viaje fuera del margen por unidad (RN-001), cómo se calculan los precios de mercado y de venta (RN-002), condiciones de las marcas (RN-003), rendimiento mensual y margen ajustado (RN-005), confianza en tienda (RN-007), avisos de tiendas lejanas (RN-008) y niveles sin rangos (RN-009).
 - **Ajustes de forma**: dependencias faltantes en RN-005 (RN-007) y RN-006 (RN-002); rangos de peso encimados en RN-006; ejemplos faltantes en RN-003, RN-005 y RN-008.
+
+---
+
+## Sesión 1 con el experto — reglas nuevas (RN-010, RN-011)
+
+Primera revisión de las dos reglas que salieron de la sesión 1 — 9 de noviembre de 2026. Ninguna tiene defectos graves y **las cuentas de los ejemplos son correctas**. Las dos pueden avanzar, pero sus preguntas deben responderse antes de terminar la construcción. Se responde igual que las demás, por ejemplo: *"RN-010 · P5: 10 consultas"*.
+
+| Regla | Dictamen | Defectos ALTA | MEDIA | BAJA |
+|---|---|---|---|---|
+| [RN-010 Consulta responsable](/revisiones/RN-010.md) | APROBADO CON OBSERVACIONES | 0 | 6 | 4 |
+| [RN-011 Búsqueda por artículo](/revisiones/RN-011.md) | APROBADO CON OBSERVACIONES | 0 | 6 | 4 |
+
+### RN-010 — Consulta responsable a los comercios
+
+- **RN-010 · P1** — ¿Le parecen razonables 6 consultas por minuto por comercio, con pausas de 10 a 15 segundos?
+- **RN-010 · P2** — ¿Conviene respetar las indicaciones que cada sitio publica para los programas automáticos (el archivo "robots.txt"), aunque eso deje fuera algunas páginas de ofertas?
+- **RN-010 · P8** — Además de esas indicaciones, ¿se deben respetar los **términos de uso** del sitio cuando prohíben consultas automáticas? (a) sí, siempre; (b) se decide comercio por comercio; (c) no.
+- **RN-010 · P3** — ¿Qué tan "fresco" debe ser el dato para un cliente: 1 hora está bien, o lo quiere más reciente?
+- **RN-010 · P7** — Antes de salir a una tienda, cuando Jesús pide volver a consultar, ¿debe ir siempre al comercio, aunque haya un dato de hace pocas horas? (a) siempre; (b) solo si el dato tiene más de 1 hora.
+- **RN-010 · P4** — Ante una pausa por bloqueo, ¿24 horas es razonable o lo dejaría más tiempo?
+- **RN-010 · P5** — Para pausar un comercio por bloqueos, ¿cuántas consultas debe haber como mínimo en la última hora? Con 1 sola consulta bloqueada ya sería 100 %. ¿5, 10 o 20?
+- **RN-010 · P9** — Al terminar una pausa de 24 horas, ¿OIP reanuda solo o espera a que Jesús lo autorice? Si el comercio vuelve a bloquear pronto, ¿la siguiente pausa debe ser más larga (por ejemplo, 48 horas)?
+- **RN-010 · P6** — Si un cliente pide un artículo mientras OIP está revisando ofertas en ese mismo comercio, ¿qué prefiere? (a) el cliente pasa primero; (b) espera su turno, aunque tarde hasta una hora; (c) otra opción.
+
+### RN-011 — Búsqueda particular por artículo (servicio a clientes)
+
+- **RN-011 · P6** — La regla dice "primero el más económico, segundo que esté disponible". Se aplicó así: se recomienda la más económica **entre las disponibles**; una opción más barata pero con disponibilidad dudosa se muestra aparte y no se recomienda. ¿Es lo que se busca?
+- **RN-011 · P1** — ¿El impuesto debería sumarse al precio total, o basta con precio + envío?
+- **RN-011 · P8** — Para el cliente, ¿qué precio de Amazon le compartiría? (a) el del vendedor del botón de compra; (b) la oferta nueva más barata, aunque sea de un vendedor poco conocido. ¿Debe ser de 1 hora o menos, o aceptaría uno de hasta 6 horas mostrando su antigüedad? Tenerlo de 1 hora puede costar más consultas pagadas.
+- **RN-011 · P3** — ¿Se incluyen productos reacondicionados si son mucho más baratos, o siempre solo nuevos?
+- **RN-011 · P7** — Cuando un comercio dice en línea "disponible", ¿lo toma como seguro (igual que una tienda con cantidad exacta y reciente)? Y "disponible para recoger en tienda", ¿lo trata como compra en línea o como tienda física?
+- **RN-011 · P9** — Si una opción se encontró solo por el nombre (sin código de barras) y es la más barata, ¿puede quedar como la recomendada con una advertencia, o siempre debe ir aparte hasta que Jesús la verifique?
+- **RN-011 · P10** — Cuando el cliente pide varias piezas: (a) ¿se compara el total del pedido, con envío? (b) ¿una opción que no tiene suficientes piezas se recomienda o va aparte? (c) ¿se vale juntar las piezas en dos comercios?
+- **RN-011 · P2** — Si la opción más barata está en una tienda física, ¿Jesús va por ella y se la entrega al cliente (y entonces cuenta el costo del viaje, RN-008), o solo le comparte el enlace?
+- **RN-011 · P11** — ¿Qué tiendas físicas se deben revisar para un cliente? (a) todas las de la zona de San Diego; (b) las 3 o 5 más cercanas al cliente; (c) una lista fija.
+- **RN-011 · P5** — Además de Home Depot, Walmart y Amazon, ¿qué comercios conviene consultar para este servicio (por ejemplo, tiendas de electrónica)?
+- **RN-011 · P12** — ¿En cuánto tiempo espera el cliente una respuesta? ¿15 minutos, 1 hora o el mismo día?
+- **RN-011 · P4** — ¿Cómo se cobra este servicio (tarifa fija, porcentaje)? ¿Debe OIP calcularlo?
+
+### Pendientes del autor (RN-010, RN-011 — no requieren respuesta del experto)
+
+- **Qué cuenta como consulta bloqueada** y cómo cuentan los reintentos (RN-010 D-002).
+- **Ejemplo A de RN-011** con un dato de tienda de 4 horas, cuando el límite es 1 hora (RN-011 D-001).
+- **Documento técnico v1.2 por actualizar (v1.3)**: consultas que nacen en el servidor en la nube, modo desarrollo con lista permitida, verificación de la dirección autorizada, pausa por bloqueo con umbral, límites y caché (RN-010 D-009); búsqueda por artículo (RN-011 D-010).
+- **Ajustes de forma**: medición de la pausa y casos en el límite (RN-010 D-007), desempates y orden (RN-011 D-008), redacción de DEC-113 después de RN-011 · P6 (RN-011 D-006).

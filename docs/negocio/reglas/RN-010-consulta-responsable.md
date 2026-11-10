@@ -130,5 +130,5 @@ OIP se comporta como un visitante tranquilo: hace pocas consultas, con pausas en
 | 2026-11-09 | Proxies residenciales: no en el MVP, pero no se descartan | Jesús |
 
 ## 14. Revisión de consistencia
-- Última revisión: pendiente
-- Detalle: `revisiones/RN-010.md`
+- Última revisión: 2026-11-09 — APROBADO CON OBSERVACIONES
+- Detalle: [revisiones/RN-010.md](/revisiones/RN-010.md)
