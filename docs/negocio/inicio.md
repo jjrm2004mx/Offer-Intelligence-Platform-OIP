@@ -1,8 +1,15 @@
 # OIP — Reglas de negocio
 
-**Offer Intelligence Platform (OIP)** es una herramienta personal que busca, todos los días, productos que se pueden comprar muy por debajo de su precio real de mercado y revender con ganancia. Por ejemplo: liquidaciones en Home Depot, Walmart o Target, para revender en Amazon.
+**Offer Intelligence Platform (OIP)** es una herramienta que busca productos en distintos comercios y tiene **dos funcionalidades principales**, que comparten el mismo motor de búsqueda:
 
-Este sitio contiene **las reglas con las que la herramienta decide qué es una buena oportunidad**. Están escritas sin lenguaje técnico y con ejemplos numéricos, para que un experto de negocio pueda revisarlas y corregirlas antes de construir nada.
+| | Funcionalidad | Qué hace | Reglas |
+|---|---|---|---|
+| **A** | **Búsqueda automatizada de ofertas** | Trabaja de forma periódica y autónoma: identifica productos en oferta, compara precios entre tiendas, detecta cambios de precio y encuentra los que se pueden comprar muy por debajo de su precio real de mercado para **revender con ganancia**. Por ejemplo: liquidaciones en Home Depot o Walmart, para revender en Amazon | RN-001 a RN-009 |
+| **B** | **Búsqueda particular por artículo** (servicio a clientes) | Un cliente pide un producto concreto (por ejemplo, un Nintendo Switch) y OIP lo busca, compara precios, revisa la disponibilidad publicada y presenta alternativas con enlaces: **primero la más económica, que además esté disponible** | RN-011 |
+
+Las dos funcionan bajo una **consulta responsable** (RN-010): OIP consulta los comercios sin generar tráfico excesivo, sin ocultarse y sin evadir restricciones.
+
+Este sitio contiene **las reglas con las que la herramienta decide**. Están escritas sin lenguaje técnico y con ejemplos numéricos, para que un experto de negocio pueda revisarlas y corregirlas antes de construir nada.
 
 ## Cómo leer este sitio
 
@@ -12,6 +19,8 @@ Este sitio contiene **las reglas con las que la herramienta decide qué es una b
 4. Cada regla pasa por una **revisión de consistencia** (cuentas, contradicciones, ambigüedades), con su dictamen y preguntas adicionales. Está en el menú "Revisión de consistencia".
 
 ## Cómo encajan las reglas
+
+**Funcionalidad A — búsqueda automatizada (reventa)**
 
 ```
 Oferta encontrada en una tienda
@@ -27,6 +36,17 @@ Oferta encontrada en una tienda
    └─ RN-008  Si es en tienda: ¿vale la pena el viaje?
 ```
 
+**Funcionalidad B — búsqueda por artículo (servicio a clientes)**
+
+```
+Un cliente pide un artículo a Jesús → Jesús lo captura en OIP
+   │
+   ├─ RN-011  ¿Dónde está más económico? ¿Está disponible?
+   └─ RN-007  Si es en tienda: ¿qué tan seguro es que esté ahí?
+```
+
+**Para las dos:** RN-010, consulta responsable (cuántas consultas, a qué velocidad y desde dónde).
+
 ## Estado de las reglas
 
 | Regla | Tema | Estado | Revisión |
@@ -40,10 +60,14 @@ Oferta encontrada en una tienda
 | [RN-007](reglas/RN-007-confianza-disponibilidad-tienda.md) | Disponibilidad en tienda | Borrador | [Ver](revisiones/RN-007.md) |
 | [RN-008](reglas/RN-008-costo-de-traslado.md) | Costo del viaje | Borrador | [Ver](revisiones/RN-008.md) |
 | [RN-009](reglas/RN-009-niveles-y-alertas.md) | Niveles y avisos | Borrador | [Ver](revisiones/RN-009.md) |
+| [RN-010](reglas/RN-010-consulta-responsable.md) | Consulta responsable a los comercios | Borrador | [Ver](revisiones/RN-010.md) |
+| [RN-011](reglas/RN-011-busqueda-por-articulo.md) | Búsqueda por artículo (servicio a clientes) | Borrador | [Ver](revisiones/RN-011.md) |
 
 ## Decisiones generales ya tomadas
 
 - La herramienta es de uso personal y funciona todo el año, con atención especial a temporadas (Buen Fin, Black Friday, Navidad, liquidaciones).
+- Además, ofrece un **servicio de búsqueda por artículo a clientes**. Por ahora el cliente le pide a Jesús; más adelante podrá pedirlo directamente (por ejemplo, por WhatsApp). Entra en el primer incremento.
+- OIP **no pretende ocultarse ni evadir restricciones**; las consultas a los comercios salen desde un servidor en la nube, nunca desde la casa de Jesús.
 - Se compra en línea y en tiendas físicas de la zona de San Diego.
 - Se vende en Amazon enviando uno mismo (FBM). Facebook Marketplace llegará después.
 - Costos de importación o cruce **para la venta**: fuera del modelo.

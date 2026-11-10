@@ -10,6 +10,8 @@
   - [RN-007 Disponibilidad en tienda](/reglas/RN-007-confianza-disponibilidad-tienda.md)
   - [RN-008 Costo del viaje](/reglas/RN-008-costo-de-traslado.md)
   - [RN-009 Niveles y avisos](/reglas/RN-009-niveles-y-alertas.md)
+  - [RN-010 Consulta responsable](/reglas/RN-010-consulta-responsable.md)
+  - [RN-011 Búsqueda por artículo](/reglas/RN-011-busqueda-por-articulo.md)
 - Revisión de consistencia
   - [Preguntas consolidadas](/revisiones/preguntas-consolidadas.md)
   - [RN-001](/revisiones/RN-001.md)
@@ -21,4 +23,6 @@
   - [RN-007](/revisiones/RN-007.md)
   - [RN-008](/revisiones/RN-008.md)
   - [RN-009](/revisiones/RN-009.md)
+  - [RN-010](/revisiones/RN-010.md)
+  - [RN-011](/revisiones/RN-011.md)
 - [Plantilla de regla](/plantilla-rn.md)
