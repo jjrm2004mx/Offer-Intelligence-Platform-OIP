@@ -45,3 +45,33 @@ Nadie pidió el producto: el ejercicio parte de **descubrir** algo que vale la p
 3. **Generación o versión del modelo:** el mismo nombre comercial ("QuietComfort") cubre dos generaciones. Es el tercer caso con este patrón (edición especial, kit, generación).
 4. **Sustituto cercano:** la versión nueva cuesta $30 más; un modelo anterior puede perder valor de reventa cuando sale el nuevo.
 5. **Criterio de "disponible confirmada" en línea:** propuesta, la ficha dice "en existencia" y permite agregar al carrito.
+
+---
+
+## 5. Revisión 2: comparación entre comercios (datos al 2026-11-09)
+
+| Comercio | Precio | Disponibilidad | Nota |
+|---|---|---|---|
+| Best Buy | $169.00 | Disponible según la publicación | Algunas publicaciones son de **vendedores externos**: confirmar quién vende y envía |
+| Amazon | $169.00 | Por confirmar | — |
+| Target | $169.99 | En existencia | — |
+| Lowe's | $249.00 | En existencia | — |
+| Dell | $359.00 | En existencia | Igual al precio anunciado de referencia |
+| Walmart | $363.00 | En existencia | **Por encima** del precio de referencia: probablemente vendedor externo |
+
+**Fuente externa adicional:** una publicación editorial (NBC Select, 3 de noviembre) reporta $169 como el **precio más bajo del año**.
+
+### 5.1 Resultado con estos datos
+
+- **Competitividad:** $169 empata con el precio más bajo del mercado hoy (Best Buy, Amazon y Target dentro de $0.99).
+- **Calidad del precio:** candidato a **"Buena oferta"** u **"Oferta excepcional"**, según los umbrales que se definan en RN-012. La señal de "mínimo del año" viene de una fuente externa, no del historial propio.
+- **Oportunidad de reventa:** **DESCARTADA**. Amazon está en $169, así que el precio de venta esperado es igual al de compra y cualquier comisión vuelve negativo el margen (RN-001). Se confirma lo esperado en la sección 3.
+- Se confirman los **dos ejes** (DEC-131): el mismo producto es de alta calidad de precio y nula oportunidad de reventa.
+
+### 5.2 Huecos adicionales
+
+6. **Precio publicado no es precio de venta:** Walmart a $363 no significa que alguien lo compre a ese precio. Para la comparación solo cuentan publicaciones del mismo producto exacto, vendidas por el comercio y disponibles; las demás se muestran aparte.
+7. **Fuentes editoriales** (artículos de ofertas) como señal externa, igual que los comparadores (DEC-133): orientan, pero no sustituyen el historial ni la confirmación en la ficha.
+8. **Categoría:** audio y electrónica no está entre las categorías acordadas (joyería, relojes, perfumes, herramientas). Sin esa categoría, OIP no descubriría este producto.
+9. **Umbrales de RN-012:** el "mínimo de 180 días o del año" es un buen criterio para "Oferta excepcional", pero exige un historial largo que OIP no tendrá al principio.
+10. **Filtro previo al descubrimiento:** con el límite de consultas (RN-010), OIP no puede comparar cada producto rebajado en todos los comercios. El descuento anunciado sirve para **decidir qué investigar**, no para calificar la oferta.
