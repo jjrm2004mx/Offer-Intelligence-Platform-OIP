@@ -25,6 +25,8 @@ fuentes: [CASO-001 a CASO-006, ANL-001, registro de decisiones §9.1 y §10]
 
 ### 1.1 Preguntas nuevas (2026-11-11, después de las reglas v2 del bloque 1 y de CASO-007)
 
+> P-09 a P-12 resueltas: DEC-156 a DEC-159. P-09 se resolvió **distinto** a la propuesta (sin consulta directa a Amazon). Quedan abiertas P-13 y P-14.
+
 | # | Pregunta | Propuesta de Claude | Origen |
 |---|---|---|---|
 | P-09 | En la etapa 1, sin Keepa, ¿OIP consulta la página de Amazon como a cualquier comercio, con los límites de RN-010? | Sí | RN-002 v2, pregunta 4 |
@@ -32,6 +34,7 @@ fuentes: [CASO-001 a CASO-006, ANL-001, registro de decisiones §9.1 y §10]
 | P-11 | ¿El filtro previo es de 40% para todos? | 40% en general y 30% para marcas reconocidas de la lista prioritaria | CASO-007 |
 | P-12 | ¿Productos voluminosos o pesados (refrigeradores, lavadoras)? | Excluidos en el Inc. 1 | CASO-007 |
 | P-13 | ¿Ventas concretadas de eBay como dato? | Sí, como dato de RN-014 y RN-016, con captura manual; eBay no es canal en el Inc. 1 | CASO-007 |
+| P-14 | Con DEC-156, ¿Amazon aparece en la búsqueda por artículo (B)? | Sí, con el precio que **capture Jesús** a mano para esa solicitud, marcado "captura manual" | DEC-156 |
 
 ## 2. Propuestas para las reglas (se aplican al reescribirlas)
 
