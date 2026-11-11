@@ -4,7 +4,7 @@
 **Versión:** 1.0 — 2026-11-08
 **Documentos relacionados:**
 - Detalle de la primera etapa: [`flujo-negocio-a-requerimiento.md`](flujo-negocio-a-requerimiento.md)
-- Arquitectura técnica: [`../arquitectura/OIP_Arquitectura_Tecnica_Integrada_v1.2.md`](../arquitectura/OIP_Arquitectura_Tecnica_Integrada_v1.2.md)
+- Arquitectura técnica: [`../arquitectura/arquitectura-tecnica.md`](../arquitectura/arquitectura-tecnica.md) (archivo único vigente; versiones anteriores en su tabla "Archivo vigente")
 - Reglas de negocio publicadas: https://oip-negocio.vercel.app
 
 ---

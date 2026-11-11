@@ -7,7 +7,7 @@
 **Estados:** `VIGENTE` · `PROVISIONAL` (valor por confirmar con el experto o con datos) · `PROPUESTA` (pendiente de aprobación de Jesús) · `REEMPLAZADA`
 
 **Fuentes:**
-- Arquitectura: `docs/arquitectura/OIP_Arquitectura_Tecnica_Integrada_v1.2.md`
+- Arquitectura: `docs/arquitectura/arquitectura-tecnica.md` (archivo único vigente; versiones anteriores en su tabla "Archivo vigente")
 - Reglas de negocio: `docs/negocio/reglas/`
 - Flujos: `docs/proceso/flujo-general.md` y `docs/proceso/flujo-negocio-a-requerimiento.md`
 - Requerimiento: issue #2 (REQ-2026-0001), inspección: issue #3
@@ -126,6 +126,7 @@
 | DEC-100 | Aprender haciendo; propuestas acotadas, que Jesús reduce o corrige | VIGENTE |
 | DEC-101 | **No perder decisiones ni contenido**: los cambios solo agregan o reemplazan por versiones que lo contienen todo; nunca se borra sin acuerdo explícito | VIGENTE |
 | DEC-102 | Una sola fuente de verdad para la arquitectura: **el repo**. La copia del Drive se sincroniza desde el repo | VIGENTE |
+| DEC-103 | La arquitectura vive en **un solo archivo vigente** (`docs/arquitectura/arquitectura-tecnica.md`), sin versión en el nombre; el historial lo guarda GitHub y las versiones anteriores se consultan con enlaces permanentes a commit, desde la tabla "Archivo vigente" del propio documento | VIGENTE (2026-11-11) |
 
 ## 9. Retroalimentación del experto de negocio — sesión 1 (2026-11-09)
 

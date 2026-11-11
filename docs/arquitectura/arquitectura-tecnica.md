@@ -3,10 +3,18 @@
 ## Propuesta de alcance, auditoría de repositorios Open Source y arquitectura técnica
 
 **Versión:** 1.3 — dos funcionalidades (búsqueda automatizada y búsqueda por artículo), topología Core/Worker, consulta responsable y alineación con las reglas de negocio (sobre v1.2, sin eliminar contenido: lo modificado se marca *(v1.3)* y conserva la redacción anterior)
-**Fecha:** 8 de noviembre de 2026
+**Fecha:** 9 de noviembre de 2026 (v1.3) · v1.2: 8 de noviembre de 2026
 **Estado:** Línea base aprobada para construcción por incrementos; decisiones marcadas "PoC" se cierran con datos
 **Tipo de producto:** Herramienta interna, uso propio, operación todo el año
 **Idioma:** Español
+
+> **Archivo vigente.** La arquitectura vive en un solo archivo; GitHub guarda el historial. Las versiones anteriores se consultan con estos enlaces permanentes (apuntan a un commit fijo y no cambian):
+>
+> | Versión | Fecha | Dónde |
+> |---|---|---|
+> | **v1.3** (vigente) | 2026-11-09 | Este archivo · [enlace permanente](https://github.com/jjrm2004mx/Offer-Intelligence-Platform-OIP/blob/a13c81801642f5ac49958fa92a9fd65e425b5948/docs/arquitectura/OIP_Arquitectura_Tecnica_Integrada_v1.3.md) |
+> | v1.2 | 2026-11-08 | [enlace permanente](https://github.com/jjrm2004mx/Offer-Intelligence-Platform-OIP/blob/a13c81801642f5ac49958fa92a9fd65e425b5948/docs/arquitectura/OIP_Arquitectura_Tecnica_Integrada_v1.2.md) |
+> | v1.1 y v1.0 | 2026-11-08 | Fuera del repo: documentos del proyecto en Claude y carpeta OIP del Drive (la v1.0 en `otros/`) |
 
 > **Convención de certeza** (se conserva de v1.0): **Verificado** = observado en código/documentación;
 > **Propuesta** = decisión arquitectónica recomendada; **PoC** = no se da por resuelto hasta probarlo.
