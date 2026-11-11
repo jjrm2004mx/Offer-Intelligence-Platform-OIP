@@ -11,6 +11,8 @@ revisor_negocio: Experto en negocios internacionales
 depende_de: [RN-002]
 ```
 
+> **Por actualizar (v2, 2026-11-11).** Esta regla cambiará al terminar los ejercicios de comprobación: el Sales Rank es un indicador de **popularidad, no de unidades vendidas**; definir la demanda sin Keepa mientras esté diferido. DEC-124, DEC-128. El texto de abajo sigue siendo la v1.
+
 ## 1. ¿Qué queremos lograr?
 Evitar comprar productos baratos **que nadie compra**. Una oferta solo vale la pena si el producto se vende con frecuencia y no hay demasiados vendedores peleando la misma venta.
 

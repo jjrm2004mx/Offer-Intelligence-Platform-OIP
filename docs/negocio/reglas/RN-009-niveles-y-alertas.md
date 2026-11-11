@@ -11,6 +11,8 @@ revisor_negocio: Experto en negocios internacionales
 depende_de: [RN-001, RN-002, RN-003, RN-004, RN-005, RN-006, RN-007]
 ```
 
+> **Por actualizar (v2, 2026-11-11).** Esta regla cambiará al terminar los ejercicios de comprobación: pasa a ser el eje 2 (**oportunidad de reventa**); el eje 1 es la nueva RN-012 (calidad del precio). Si el vendedor es externo, la oportunidad va a revisión manual. DEC-131, DEC-137. El texto de abajo sigue siendo la v1.
+
 ## 1. ¿Qué queremos lograr?
 Clasificar cada oferta que sobrevivió a todos los filtros en un **nivel**, y avisar a Jesús en el momento adecuado: de inmediato las mejores y en resumen las demás. Sin llenarlo de avisos repetidos.
 

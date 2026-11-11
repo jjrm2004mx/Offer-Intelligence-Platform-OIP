@@ -11,6 +11,8 @@ revisor_negocio: Experto en negocios internacionales
 depende_de: []
 ```
 
+> **Por actualizar (v2, 2026-11-11).** Esta regla cambiará al terminar los ejercicios de comprobación: separar el **precio de mercado hoy** (competitividad) del **precio habitual** (descuento); fuente por etapas (historial propio + otros comercios → APIs oficiales → Keepa al final). DEC-123, DEC-124, DEC-129, DEC-130. El texto de abajo sigue siendo la v1.
+
 ## 1. ¿Qué queremos lograr?
 Tener dos números confiables para cada producto: **cuánto cuesta normalmente en el mercado** (para saber si la oferta es barata de verdad) y **a cuánto lo podemos vender** (para calcular la ganancia).
 

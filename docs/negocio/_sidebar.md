@@ -12,6 +12,17 @@
   - [RN-009 Niveles y avisos](/reglas/RN-009-niveles-y-alertas.md)
   - [RN-010 Consulta responsable](/reglas/RN-010-consulta-responsable.md)
   - [RN-011 Búsqueda por artículo](/reglas/RN-011-busqueda-por-articulo.md)
+- Casos reales (escenarios de prueba)
+  - [CASO-001 Switch 2 Zelda](/casos/CASO-001-switch2-zelda.md)
+  - [CASO-002 DEWALT ATOMIC](/casos/CASO-002-dewalt-atomic-dck225d2.md)
+  - [CASO-003 Bose QuietComfort](/casos/CASO-003-bose-quietcomfort.md)
+  - [CASO-004 Ninja BN701](/casos/CASO-004-ninja-bn701.md)
+  - [CASO-005 Baterías Milwaukee](/casos/CASO-005-milwaukee-48-11-1852.md)
+  - [CASO-006 DEWALT DCF840 en OfferUp](/casos/CASO-006-dewalt-dcf840-offerup.md)
+- Análisis de negocio
+  - [ANL-001 Abastecimiento y comercialización](/analisis/ANL-001-modelo-abastecimiento-comercializacion.md)
+  - [ANL-002 Inventario de reglas](/analisis/ANL-002-inventario-de-reglas.md)
+  - [Pendientes de consolidación](/analisis/pendientes-de-consolidacion.md)
 - Revisión de consistencia
   - [Preguntas consolidadas](/revisiones/preguntas-consolidadas.md)
   - [RN-001](/revisiones/RN-001.md)
