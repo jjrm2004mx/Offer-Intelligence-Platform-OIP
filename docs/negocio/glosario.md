@@ -27,3 +27,12 @@
 | **Ruta** | Viaje que junta varias tiendas para repartir el costo del traslado (RN-008). |
 | **Tablero** | Pantalla donde se ven todas las oportunidades, aunque no generen aviso. |
 | **Inspección** | Revisión de calidad de cada regla antes de construirla. Da un dictamen y preguntas. |
+| **Búsqueda automatizada** | Funcionalidad A: OIP busca ofertas por su cuenta, de forma periódica, para reventa. |
+| **Búsqueda por artículo** | Funcionalidad B: servicio a clientes. Un cliente pide un producto concreto y OIP encuentra dónde está más económico y disponible (RN-011). |
+| **Consulta responsable** | Conjunto de límites para consultar a los comercios sin generar tráfico excesivo (RN-010). |
+| **Límite de consultas** | Máximo de consultas por minuto a un comercio. |
+| **Caché** | Reutilizar información ya obtenida mientras siga siendo reciente, en vez de volver a consultar. |
+| **Espera creciente (backoff)** | Ante un error, esperar cada vez más antes de reintentar. |
+| **Pausa por bloqueo** | Si un comercio empieza a bloquear las consultas, OIP deja de consultarlo por un tiempo y avisa. |
+| **Servidor en la nube (VPS)** | Servidor contratado desde el que salen las consultas a los comercios, para no usar la conexión de la casa. |
+| **Stealth** | Técnicas para que un navegador automático pase desapercibido. En OIP están deshabilitadas por defecto. |
