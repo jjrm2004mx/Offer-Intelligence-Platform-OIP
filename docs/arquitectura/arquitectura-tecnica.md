@@ -276,6 +276,12 @@ Postura (DEC-116): OIP no pretende ocultarse ni evadir restricciones; stealth de
 - **Estricto:** toda consulta a comercios va al Worker en el VPS. El Core no tiene ruta de scraping propia.
 - **Desarrollo:** permite ejecutar spiders en casa **solo** contra una lista permitida (fixtures guardados, simulaciones, APIs que permiten automatización).
 - **Límite duro, independiente de la aplicación:** el firewall del servidor de Jesús (nftables / firewalld) **rechaza la salida hacia los dominios de Home Depot, Walmart y Target** desde los contenedores. Ninguna opción de OIP lo desbloquea.
+  - *(v1.3, precisión 2026-11-11 — DEC-122)* El límite duro se implementa como **lista de permitidos (salida denegada por defecto)**, no como lista de prohibidos: los firewalls filtran por IP, y los comercios usan CDN con IPs numerosas y cambiantes, por lo que una lista de prohibidos es frágil y no cubre comercios futuros.
+    - Los contenedores del servidor de Jesús tienen **la salida a Internet denegada por defecto** (firewalld/nftables, zona propia para la red de Podman).
+    - Solo se permite salida hacia **destinos aprobados**: Keepa, Telegram, el endpoint WireGuard del VPS, el registro de imágenes y los servicios de prueba del modo desarrollo. Se mantienen como conjunto (`set`) de nftables, con resolución DNS controlada para los que cambian de IP.
+    - Cualquier otro destino, **incluidos Home Depot, Walmart, Target y cualquier comercio futuro**, queda bloqueado sin necesidad de conocer sus IPs.
+    - Cada conexión rechazada se registra; un intento de salida hacia un comercio genera un aviso.
+    - Ninguna opción de OIP modifica estas reglas; solo el administrador del servidor.
 - Activar el modo desarrollo deja un registro (quién y cuándo) y muestra un aviso visible en el tablero y en Telegram.
 
 ---
