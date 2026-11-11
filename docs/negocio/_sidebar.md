@@ -12,6 +12,8 @@
   - [RN-009 Niveles y avisos](/reglas/RN-009-niveles-y-alertas.md)
   - [RN-010 Consulta responsable](/reglas/RN-010-consulta-responsable.md)
   - [RN-011 Búsqueda por artículo](/reglas/RN-011-busqueda-por-articulo.md)
+- Casos reales (escenarios de prueba)
+  - [CASO-001 Switch 2 Zelda](/casos/CASO-001-switch2-zelda.md)
 - Revisión de consistencia
   - [Preguntas consolidadas](/revisiones/preguntas-consolidadas.md)
   - [RN-001](/revisiones/RN-001.md)
