@@ -72,6 +72,36 @@ Nadie pidió el producto: el ejercicio parte de **descubrir** algo que vale la p
 
 6. **Precio publicado no es precio de venta:** Walmart a $363 no significa que alguien lo compre a ese precio. Para la comparación solo cuentan publicaciones del mismo producto exacto, vendidas por el comercio y disponibles; las demás se muestran aparte.
 7. **Fuentes editoriales** (artículos de ofertas) como señal externa, igual que los comparadores (DEC-133): orientan, pero no sustituyen el historial ni la confirmación en la ficha.
-8. **Categoría:** audio y electrónica no está entre las categorías acordadas (joyería, relojes, perfumes, herramientas). Sin esa categoría, OIP no descubriría este producto.
+8. **Categoría:** audio cabe en **tecnología**, que ya es una categoría acordada (DEC-006). Lo que falta es priorizar las categorías por temporada (DEC-138) para decidir qué páginas de ofertas recorrer primero.
 9. **Umbrales de RN-012:** el "mínimo de 180 días o del año" es un buen criterio para "Oferta excepcional", pero exige un historial largo que OIP no tendrá al principio.
 10. **Filtro previo al descubrimiento:** con el límite de consultas (RN-010), OIP no puede comparar cada producto rebajado en todos los comercios. El descuento anunciado sirve para **decidir qué investigar**, no para calificar la oferta.
+
+---
+
+## 6. Revisión 3: ¿está barato o conviene comprarlo? (2026-11-11)
+
+**Historial supuesto del ejercicio** (hipotético, no verificado; contradice la señal editorial de "mínimo del año", y con datos reales solo una de las dos versiones será cierta):
+
+| Periodo | Precio |
+|---|---|
+| Hace 180 días | $179 |
+| Hace 90 días | $169 |
+| Hace 30 días | $169 |
+| Hoy | $169 |
+
+### 6.1 Resultado con el historial supuesto
+
+- **Descuento anunciado:** 52.92% contra $359. **Descuento real** contra el precio habitual ($169): **0%**.
+- **Competitividad:** empata con Amazon y Target. Sin ventaja.
+- **Calidad del precio (RN-012):** **"Precio competitivo"**, con la marca **"descuento anunciado no comprobado"**. Esto equivale a la conclusión del ejercicio: *producto con descuento comercial, sin ventaja competitiva demostrada*.
+- **Búsqueda por artículo (B):** la mejor opción es la de **menor costo total** (precio + envío + condiciones), no la del mayor descuento anunciado.
+- **Reventa (A):** DESCARTADA (sin cambio).
+
+Conclusión: **el resultado depende del historial**. Con el historial supuesto no es una súper oferta; con la señal de "mínimo del año" podría serlo. Por eso OIP necesita su historial propio antes de calificar.
+
+### 6.2 Huecos adicionales
+
+11. **Tres preguntas, tres reglas:** ¿está barato? (RN-012), ¿dónde conviene comprarlo? (RN-011) y ¿conviene revenderlo? (RN-009).
+12. **Cercanía al mínimo histórico** como criterio aparte del descuento contra la mediana.
+13. **Costo total de compra:** precio, envío, impuestos, cupones, membresías necesarias, devolución y garantía.
+14. **La marca de "descuento anunciado no comprobado"** debe ir separada de la clasificación del precio: un precio puede ser competitivo aunque su anuncio esté inflado.
