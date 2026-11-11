@@ -23,6 +23,16 @@ fuentes: [CASO-001 a CASO-006, ANL-001, registro de decisiones §9.1 y §10]
 | P-07 | Lista priorizada de categorías por temporada | Por proponer con el experto | DEC-138 |
 | P-08 | ¿Sitios de seguimiento de precios como fuente temporal de historial? | Solo como señal, igual que comparadores; revisar condiciones de uso | CASO-004 |
 
+### 1.1 Preguntas nuevas (2026-11-11, después de las reglas v2 del bloque 1 y de CASO-007)
+
+| # | Pregunta | Propuesta de Claude | Origen |
+|---|---|---|---|
+| P-09 | En la etapa 1, sin Keepa, ¿OIP consulta la página de Amazon como a cualquier comercio, con los límites de RN-010? | Sí | RN-002 v2, pregunta 4 |
+| P-10 | ¿Cómo entran los productos de folletos y campañas sin precio tachado? | Se investigan si son de una categoría prioritaria de la temporada o están por debajo del último precio observado | CASO-007 |
+| P-11 | ¿El filtro previo es de 40% para todos? | 40% en general y 30% para marcas reconocidas de la lista prioritaria | CASO-007 |
+| P-12 | ¿Productos voluminosos o pesados (refrigeradores, lavadoras)? | Excluidos en el Inc. 1 | CASO-007 |
+| P-13 | ¿Ventas concretadas de eBay como dato? | Sí, como dato de RN-014 y RN-016, con captura manual; eBay no es canal en el Inc. 1 | CASO-007 |
+
 ## 2. Propuestas para las reglas (se aplican al reescribirlas)
 
 ### Identidad y datos
