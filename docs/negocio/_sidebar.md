@@ -19,6 +19,8 @@
   - [CASO-004 Ninja BN701](/casos/CASO-004-ninja-bn701.md)
   - [CASO-005 Baterías Milwaukee](/casos/CASO-005-milwaukee-48-11-1852.md)
   - [CASO-006 DEWALT DCF840 en OfferUp](/casos/CASO-006-dewalt-dcf840-offerup.md)
+- Análisis de negocio
+  - [ANL-001 Abastecimiento y comercialización](/analisis/ANL-001-modelo-abastecimiento-comercializacion.md)
 - Revisión de consistencia
   - [Preguntas consolidadas](/revisiones/preguntas-consolidadas.md)
   - [RN-001](/revisiones/RN-001.md)
