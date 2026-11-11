@@ -21,6 +21,7 @@
   - [CASO-006 DEWALT DCF840 en OfferUp](/casos/CASO-006-dewalt-dcf840-offerup.md)
 - Análisis de negocio
   - [ANL-001 Abastecimiento y comercialización](/analisis/ANL-001-modelo-abastecimiento-comercializacion.md)
+  - [ANL-002 Inventario de reglas](/analisis/ANL-002-inventario-de-reglas.md)
   - [Pendientes de consolidación](/analisis/pendientes-de-consolidacion.md)
 - Revisión de consistencia
   - [Preguntas consolidadas](/revisiones/preguntas-consolidadas.md)
