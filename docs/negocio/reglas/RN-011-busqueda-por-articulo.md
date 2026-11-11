@@ -12,6 +12,8 @@ depende_de: [RN-007, RN-010]
 origen: Sesión 1 con el experto (2026-11-09) — DEC-110 a DEC-113
 ```
 
+> **Por actualizar (v2, 2026-11-11).** Esta regla cambiará al terminar los ejercicios de comprobación: vendedor externo, estados de disponibilidad en línea, canales especiales, comercios nuevos (Best Buy, Target, GameStop, Nintendo Store) y comparadores como fuente. Ver CASO-001. DEC-132 a DEC-135. El texto de abajo sigue siendo la v1.
+
 ## 1. ¿Qué queremos lograr?
 Que, cuando un cliente necesita un producto concreto que no encuentra (por ejemplo, un Nintendo Switch), OIP lo busque en los comercios y diga **dónde está más económico y disponible**, para que Jesús le ofrezca la mejor alternativa con su enlace.
 

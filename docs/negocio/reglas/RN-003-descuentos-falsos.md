@@ -11,6 +11,8 @@ revisor_negocio: Experto en negocios internacionales
 depende_de: [RN-002]
 ```
 
+> **Por actualizar (v2, 2026-11-11).** Esta regla cambiará al terminar los ejercicios de comprobación: el descuento real se mide **solo contra el precio habitual**; el precio tachado y el MSRP no son referencia. DEC-128, DEC-129. El texto de abajo sigue siendo la v1.
+
 ## 1. ¿Qué queremos lograr?
 Que el sistema **no se deje engañar** por el "antes $200, ahora $20" de las tiendas. Lo que importa es el **descuento real** contra el precio de mercado, no el descuento que anuncia la tienda.
 
