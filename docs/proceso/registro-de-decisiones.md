@@ -168,6 +168,7 @@ Fuente: análisis con ejemplos que compartió Jesús (comparación entre comerci
 | DEC-134 | **Datos a capturar en cada observación:** (1) identificación exacta, que distinga **ediciones especiales** (GTIN; sin GTIN la comparación queda "no confirmada"); (2) precio; (3) **vendedor**: el comercio o un vendedor externo; (4) disponibilidad con **estados en línea**: disponible confirmada · existencia limitada · no confirmada · agotado; (5) **envío**: costo, plazo, envío o recoger en tienda, **también en la búsqueda de ofertas (A)**; (6) **MSRP** con fuente y fecha; (7) fecha y hora; (8) historial. El **precio tachado** se guarda y se usa según DEC-129 | VIGENTE | Sin estos datos no se puede afirmar que existe una oportunidad | Arq. §6, §7 (por anotar); RN-011 |
 | DEC-135 | **Vendedor externo y canales especiales en la búsqueda por artículo (B):** las opciones de vendedor externo se muestran **marcadas y no se recomiendan por defecto**; los canales especiales (Walmart Business) se marcan "puede requerir cuenta especial" | VIGENTE | Cambian la confianza, la garantía y el riesgo de fraude | RN-011 v2 |
 | DEC-136 | **Casos reales** como escenarios de prueba en `docs/negocio/casos/` (CASO-001 en adelante), en lenguaje llano y **en USD**; cuando exista el motor, cada caso se vuelve una prueba automática | VIGENTE | Comprobar las reglas antes de construir y revisarlas con el experto | `docs/negocio/casos/` |
+| DEC-137 | **Vendedor externo en la búsqueda de ofertas (A):** la oportunidad **no se descarta ni se avisa automáticamente**; va a **revisión manual**, marcada "vendedor externo" | VIGENTE (decisión de Jesús, 2026-11-11) | Puede ser una oportunidad real, pero con más riesgo de fraude, garantía y devolución | RN-009 v2; precedencia DESCARTADA > REVISION_MANUAL > nivel (REQ-2026-0001) |
 
 ## 10. Pendientes abiertos
 
@@ -185,6 +186,6 @@ Fuente: análisis con ejemplos que compartió Jesús (comparación entre comerci
 | Etapa 3, arranque técnico (OpenSpec, `CLAUDE.md`, agentes restantes, gates) | Claude | Etapa 4 |
 | Decidir sobre la Action "Requiere reinspección" (DEC-086) | Jesús | — |
 | **RN-002: separar "precio de mercado hoy" (competitividad) de "precio habitual" (descuento)** (DEC-128, DEC-129). Hoy la fórmula toma el más bajo entre el precio de hoy y la mediana de 90 días; falta que Jesús confirme el cambio | Jesús | RN-002 v2 |
-| **Vendedor externo en la búsqueda de ofertas (A):** ¿se descarta o va a revisión manual? Propuesta: revisión manual | Jesús | RN-009 v2 |
+| ~~Vendedor externo en la búsqueda de ofertas (A)~~ **Resuelto por DEC-137** (revisión manual) | — | — |
 | Reescribir RN-002, RN-003, RN-004, RN-009 y RN-011 (v2) y crear RN-012 **al terminar los ejercicios de comprobación**; luego pasarlas por `oip-revisor-rn` | Claude | Sesión 2 con el experto |
 | Anotar en la arquitectura (§2.2, §4.3, §6, §7, §9, §12, ADR-007) las decisiones DEC-123 a DEC-136 | Claude | — |
