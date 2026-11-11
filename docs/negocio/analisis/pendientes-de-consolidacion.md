@@ -61,6 +61,8 @@ fuentes: [CASO-001 a CASO-006, ANL-001, registro de decisiones §9.1 y §10]
 
 ## 3. Reorganización de las reglas
 
+> **Aprobada** el 2026-11-11 con la agrupación de ANL-002 §2.1 (DEC-143 a DEC-146). La tabla siguiente se conserva como la propuesta original.
+
 | Grupo | Reglas |
 |---|---|
 | Comunes | RN-003, RN-007, RN-008, RN-010, RN-011, RN-012 (nueva); identidad, estado, riesgo y costo de adquisición |

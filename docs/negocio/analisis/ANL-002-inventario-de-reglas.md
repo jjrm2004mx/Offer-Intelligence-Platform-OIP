@@ -4,7 +4,7 @@
 id: ANL-002
 fecha: 2026-11-11
 autor: Jesús (propuesta), con evaluación de Claude
-estado: EN ANÁLISIS — no se modifica ninguna regla hasta que Jesús esté de acuerdo
+estado: APROBADO (2026-11-11) — camino b, una sola serie RN-xxx y agrupación de §2.1 (DEC-143 a DEC-146). Las reglas se reescriben en la consolidación
 relacionado: [ANL-001, pendientes-de-consolidacion.md]
 ```
 
