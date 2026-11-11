@@ -16,6 +16,7 @@
   - [CASO-001 Switch 2 Zelda](/casos/CASO-001-switch2-zelda.md)
   - [CASO-002 DEWALT ATOMIC](/casos/CASO-002-dewalt-atomic-dck225d2.md)
   - [CASO-003 Bose QuietComfort](/casos/CASO-003-bose-quietcomfort.md)
+  - [CASO-004 Ninja BN701](/casos/CASO-004-ninja-bn701.md)
 - Revisión de consistencia
   - [Preguntas consolidadas](/revisiones/preguntas-consolidadas.md)
   - [RN-001](/revisiones/RN-001.md)
