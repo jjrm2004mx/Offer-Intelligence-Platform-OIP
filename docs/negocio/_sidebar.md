@@ -15,6 +15,7 @@
 - Casos reales (escenarios de prueba)
   - [CASO-001 Switch 2 Zelda](/casos/CASO-001-switch2-zelda.md)
   - [CASO-002 DEWALT ATOMIC](/casos/CASO-002-dewalt-atomic-dck225d2.md)
+  - [CASO-003 Bose QuietComfort](/casos/CASO-003-bose-quietcomfort.md)
 - Revisión de consistencia
   - [Preguntas consolidadas](/revisiones/preguntas-consolidadas.md)
   - [RN-001](/revisiones/RN-001.md)
