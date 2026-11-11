@@ -10,6 +10,8 @@ fuentes: [CASO-001 a CASO-006, ANL-001, registro de decisiones §9.1 y §10]
 
 ## 1. Preguntas de alcance para Jesús
 
+> **Resueltas** el 2026-11-11: Jesús aceptó todas las recomendaciones (DEC-147 a DEC-154).
+
 | # | Pregunta | Propuesta de Claude | Origen |
 |---|---|---|---|
 | P-01 | ¿RN-002 separa **precio de mercado hoy** (competitividad) y **precio habitual** (descuento)? | Sí. Ejemplo: taladro habitual $200, hoy $150 en otro comercio; con la regla actual no se vería el 25% de descuento real | DEC-128, DEC-129 |
