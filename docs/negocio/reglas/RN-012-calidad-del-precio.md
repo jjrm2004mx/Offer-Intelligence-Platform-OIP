@@ -35,13 +35,14 @@ Se asigna la **primera** clase que se cumpla, en este orden:
 
 | Orden | Clase | Condición |
 |---|---|---|
-| 1 | **Descuento cuestionable** | Riesgo **Alto** (RN-015), **o** vendedor externo, **o** "precio antes inflado" (RN-003) sin estar entre los más baratos |
+| 1 | **Descuento cuestionable** | Riesgo **Alto** (RN-015) por una señal distinta de "vendedor sin confirmar", **o** vendedor externo, **o** "precio antes inflado" (RN-003) sin estar entre los más baratos |
 | 2 | **Oferta excepcional** | Descuento real ≥ **15%**, entre los más baratos **y** precio **menor** que el mínimo de 12 meses (RN-002) |
 | 3 | **Buena oferta** | Descuento real ≥ **15%** y entre los más baratos |
 | 4 | **Precio competitivo** | Entre los más baratos; **o**, sin precio de mercado hoy, descuento real ≥ 15% o precio ≤ MSRP |
 | 5 | **Sin clasificación** | Ninguna de las anteriores |
 
 Reglas adicionales:
+- **Antes de clasificar:** si el **vendedor no está confirmado** (no se sabe quién vende), o la publicación es de un **canal especial** (por ejemplo, Walmart Business), la oferta queda **sin clasificación** hasta confirmarlo. Las señales de riesgo Alto que cuentan en el orden 1 son las demás (RN-015).
 - **Sin historial suficiente** (RN-002): el máximo es **Precio competitivo** (DEC-129).
 - **Sin mínimo de 12 meses** (menos de un año de historial): no puede haber **Oferta excepcional**.
 - La marca **"descuento anunciado no comprobado"** (RN-003) se muestra **junto** a la clase, sin cambiarla: un precio puede ser competitivo aunque su anuncio esté inflado.
@@ -72,9 +73,10 @@ Reglas adicionales:
 - Resultado: **Precio competitivo**, con la marca **"descuento anunciado no comprobado"** (anunciado 52.92%).
 
 **Ejemplo D — Sin historial (CASO-001)**
-- Switch 2 Zelda en Amazon: $499.99. Sin historial, sin precio de mercado hoy (todo agotado o sin confirmar); MSRP $519.99.
+- Switch 2 Zelda en Amazon: $499.99, vendido por Amazon según la captura de Jesús (DEC-160). Sin historial, sin precio de mercado hoy (todo agotado o sin confirmar); MSRP $519.99.
 - 499.99 ≤ 519.99 → **Precio competitivo** (el máximo posible sin historial).
 - Walmart a $459.99 con **vendedor externo** → **Descuento cuestionable**.
+- Walmart Business a $519.00 → canal especial → **sin clasificación**.
 
 **Ejemplo E — Sin clasificación (CASO-005)**
 - Baterías Milwaukee en Walmart: $120. Un solo comercio de comparación (Home Depot $269), sin historial, sin MSRP y vendedor sin confirmar.

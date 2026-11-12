@@ -49,7 +49,8 @@ Los sitios de seguimiento de precios, comparadores y artículos de ofertas se mu
 **Publicación comparable** (la única que entra a las cuentas):
 - mismo producto exacto (RN-013) y misma condición (RN-014);
 - **vendida por el comercio**, no por un vendedor externo (DEC-135);
-- no agotada;
+- **no es un canal especial** que pida cuenta aparte (por ejemplo, Walmart Business);
+- **disponible**: en línea, "disponible confirmada"; en tienda física, confianza Alta o Media (RN-007);
 - consultada hace **48 horas o menos**.
 
 Las publicaciones que no cumplen se muestran aparte, con el motivo.
@@ -87,7 +88,7 @@ precio de venta esperado en Amazon FBM = el MÁS BAJO entre:
 
 ## 5. ¿Cómo sabremos que funciona? — Ejemplos con números
 
-**Ejemplo A — Taladro: el descuento real ya no se oculta**
+**Ejemplo A — Rotomartillo: el descuento real ya no se oculta**
 - Oferta: Home Depot $150. Precio tachado: $249.
 - Hoy, publicaciones comparables de otros comercios: Lowe's $150 (hace 6 h), Amazon $189, Walmart $195.
 - Observaciones de los últimos 60 días: $199, $205, $200, $198, $210, $200 (6 observaciones en 5 días).
@@ -96,7 +97,7 @@ precio de venta esperado en Amazon FBM = el MÁS BAJO entre:
 - Con la v1, el "precio de mercado" habría sido el más bajo de todo, $150, y el descuento real habría dado 0%. Con la v2, RN-003 mide el descuento contra $200: **25%**, y la competitividad contra $150: empata con Lowe's.
 
 **Ejemplo B — Vendedor externo excluido**
-- Walmart publica el mismo taladro a $140, pero lo vende un **vendedor externo**. No cuenta para el precio de mercado hoy; se muestra aparte como "vendedor externo". El precio de mercado hoy sigue siendo **$150**.
+- Walmart publica el mismo rotomartillo a $140, pero lo vende un **vendedor externo**. No cuenta para el precio de mercado hoy; se muestra aparte como "vendedor externo". El precio de mercado hoy sigue siendo **$150**.
 
 **Ejemplo C — Producto nuevo en el mercado (CASO-001)**
 - Switch 2, edición Zelda: sin historial propio y con todas las publicaciones agotadas o sin disponibilidad confirmada.
@@ -104,7 +105,7 @@ precio de venta esperado en Amazon FBM = el MÁS BAJO entre:
 - Se muestra el MSRP ($519.99) como orientación. No se calcula descuento.
 
 **Ejemplo D — Dato viejo descartado**
-- Target tenía el taladro a $139, pero el dato es de hace 4 días → **no se usa**.
+- Target tenía el rotomartillo a $139, pero el dato es de hace 4 días → **no se usa**.
 
 **Ejemplo E — Precio de venta esperado en Amazon**
 - Amazon hoy: $189. Observaciones de Amazon en 60 días: $195, $199, $189, $199, $195 → mediana **$195**.
@@ -150,7 +151,7 @@ precio de venta esperado en Amazon FBM = el MÁS BAJO entre:
 1. ¿Le parece correcto separar el precio de hoy (competitividad) del precio habitual (descuento)?
 2. ¿60 días y 5 observaciones en 3 días es buena base para el precio habitual? ¿En temporada conviene acortar la ventana?
 3. ¿2 comercios son suficientes para hablar de "precio de mercado"?
-4. *(Para Jesús)* En la etapa 1, sin Keepa, ¿OIP consulta la página de Amazon como a cualquier otro comercio, con los límites de RN-010? DEC-023 eligió Keepa para no consultar Amazon directamente.
+4. *(Respondida, DEC-156)* En la etapa 1, OIP **no** consulta Amazon: sus datos llegan solo por API oficial o Keepa. En la búsqueda por artículo, Jesús captura el precio de Amazon (DEC-160).
 5. *(De la v1)* ¿Usar siempre el precio más bajo como precio de venta esperado (criterio conservador), o en productos de mucha demanda conviene el habitual?
 6. *(De la v1)* Cuando otro comercio vende mucho más barato que Amazon, ¿eso debería bajar la calificación de la oportunidad aunque se venda en Amazon? (En la v2, la competencia fuera de Amazon se ve en el precio de mercado hoy.)
 
@@ -164,7 +165,7 @@ precio de venta esperado en Amazon FBM = el MÁS BAJO entre:
 | 2026-11-11 | Se separan el precio de hoy y el habitual (DEC-147) | Jesús |
 | 2026-11-11 | Sitios de seguimiento, comparadores y artículos: solo señal (DEC-154) | Jesús |
 
-**Cambios de la v2 contra la v1:** el "precio de mercado" único se divide en precio de mercado hoy y precio habitual; se agregan mínimos, MSRP y precio tachado con usos definidos; cuentan solo publicaciones comparables (vendedor, disponibilidad, condición); la fuente pasa a ser por etapas; el precio de venta local se mueve a RN-016. Los ejemplos A, B y C de la v1 (taladro, sierra, dato viejo) se reemplazan por A a E.
+**Cambios de la v2 contra la v1:** el "precio de mercado" único se divide en precio de mercado hoy y precio habitual; se agregan mínimos, MSRP y precio tachado con usos definidos; cuentan solo publicaciones comparables (vendedor, disponibilidad, condición); la fuente pasa a ser por etapas; el precio de venta local se mueve a RN-016. Los ejemplos A, B y C de la v1 (rotomartillo, sierra, dato viejo) se reemplazan por A a E.
 
 ## 14. Revisión de consistencia
 - Última revisión: 2026-11-11 (v2) — **RECHAZADO**: corregir y reinspeccionar. Revisión anterior: 2026-11-08 (v1) — APROBADO CON OBSERVACIONES.

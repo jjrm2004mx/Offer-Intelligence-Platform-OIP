@@ -45,13 +45,17 @@ ventaja contra mercado (%) = (1 − precio de oferta ÷ precio de mercado hoy) �
 
 Los porcentajes se redondean a 2 decimales para mostrarlos, pero se comparan sin redondear.
 
-**Filtro previo** (para no gastar consultas, RN-010): una oferta descubierta pasa a investigarse (buscar el mismo producto en otros comercios) si el descuento anunciado es **40% o más**, es de una **categoría acordada** (DEC-153) y la identificación no es dudosa. Las demás quedan registradas, sin investigar.
+**Filtro previo** (para no gastar consultas, RN-010): una oferta descubierta pasa a investigarse (buscar el mismo producto en otros comercios) si su identificación no es dudosa (RN-013) y cumple **una** de estas:
+- descuento anunciado de **40% o más**, o de **30% o más** si es de una **marca reconocida de la lista prioritaria** (DEC-158);
+- viene de una **página de campaña o folleto sin precio tachado** y es de una **categoría prioritaria de la temporada** (DEC-153) o está **por debajo del último precio que OIP observó** (DEC-157).
+
+Las demás quedan registradas, sin investigar.
 
 **Marcas** (una oferta puede tener varias):
 
 | Marca | Cuándo se asigna | Qué provoca |
 |---|---|---|
-| **PRECIO ANTES INFLADO** | El precio tachado es más de **1.5 veces** la mediana de 60 días de **esa misma tienda** | Se ignora el descuento anunciado y se muestra la advertencia |
+| **PRECIO ANTES INFLADO** | El precio tachado es más de **1.5 veces** el **precio habitual** (RN-002, DEC-129); si no hay precio habitual, más de 1.5 veces la mediana de 60 días de **esa misma tienda** | Se ignora el descuento anunciado y se muestra la advertencia |
 | **DESCUENTO ANUNCIADO NO COMPROBADO** | El descuento anunciado supera al real en **más de 15 puntos**, o hay descuento anunciado y no hay precio habitual | Se muestra junto a la clasificación del precio (RN-012), sin cambiarla |
 | **MERCADO YA BARATO** | El descuento real es **menor a 20%** | **Para reventa** (A): se descarta. Para calidad del precio (RN-012) y búsqueda por artículo (RN-011): no se descarta |
 | **SIN HISTORIAL SUFICIENTE** | No hay precio habitual (RN-002) | No se calcula el descuento real; la reventa sigue por margen (RN-001) y la calidad del precio queda limitada (RN-012) |
@@ -61,22 +65,22 @@ Los porcentajes se redondean a 2 decimales para mostrarlos, pero se comparan sin
 | Valor | Qué es | Valor inicial | ¿Confirmado? |
 |---|---|---|---|
 | Factor de inflado | Veces sobre la mediana de la tienda | 1.5 | Por confirmar |
-| Ventana de la tienda | Días | 60 | Por confirmar |
+| Ventana de la tienda | Días, solo si no hay precio habitual | 60 | Por confirmar |
 | Descuento real mínimo para reventa | Por debajo, se descarta para reventa | 20% | Por confirmar |
 | Diferencia para "no comprobado" | Puntos entre anunciado y real | 15 | Por confirmar |
-| Descuento anunciado del filtro previo | Para investigar | 40% | Por confirmar (DEC-004) |
+| Descuento anunciado del filtro previo | Para investigar | 40% general · 30% marcas reconocidas de la lista prioritaria | Decidido (DEC-158); valores por confirmar con el experto |
 
 ## 5. ¿Cómo sabremos que funciona? — Ejemplos con números
 
 **Ejemplo A — La lámpara (descuento falso; de la v1, recalculado)**
 - Walmart anuncia: antes $200, ahora $20 → anunciado = (1 − 20 ÷ 200) × 100 = **90%**.
-- Mediana de Walmart en 60 días: $25. 1.5 × 25 = $37.50, y $200 > $37.50 → **PRECIO ANTES INFLADO**.
 - Observaciones de 60 días en todos los comercios: $25, $25, $24, $22, $22, $23 → precio habitual = (23 + 24) ÷ 2 = **$23.50**.
+- 1.5 × 23.50 = $35.25, y $200 > $35.25 → **PRECIO ANTES INFLADO**.
 - Descuento real = (1 − 20 ÷ 23.50) × 100 = **14.89%** → **MERCADO YA BARATO** → **descartada para reventa**.
 - 90 − 14.89 = 75.11 puntos → **DESCUENTO ANUNCIADO NO COMPROBADO**.
 
-**Ejemplo B — Taladro (RN-002, ejemplo A)**
-- Home Depot: antes $249, ahora $150 → anunciado = **39.76%**. No pasa el filtro previo de 40%, pero si llega por búsqueda por artículo o captura manual, se evalúa igual.
+**Ejemplo B — Rotomartillo (RN-002, ejemplo A)**
+- Home Depot: antes $249, ahora $150 → anunciado = **39.76%**. Pasa el filtro previo solo si la marca está en la lista prioritaria (30%); si no, se evalúa igual cuando llega por búsqueda por artículo o captura manual.
 - Precio habitual $200 → descuento real = (1 − 150 ÷ 200) × 100 = **25.00%**.
 - Precio de mercado hoy $150 → ventaja = **0.00%** (empata con Lowe's).
 - 39.76 − 25.00 = 14.76 puntos → **no** se marca "no comprobado".
@@ -121,7 +125,7 @@ Los porcentajes se redondean a 2 decimales para mostrarlos, pero se comparan sin
 ## 11. ¿Qué pasa si…?
 | Situación | Qué hace el sistema |
 |---|---|
-| La tienda no muestra precio tachado | Descuento anunciado = no disponible; no pasa el filtro previo (salvo captura manual) |
+| La tienda no muestra precio tachado | Descuento anunciado = no disponible. Pasa el filtro previo solo si viene de una página de campaña o folleto y cumple DEC-157, o si llega por captura manual o búsqueda por artículo |
 | El precio de oferta es mayor que el habitual | Descuento real negativo → MERCADO YA BARATO |
 | El precio de oferta es mayor que el de mercado hoy | Ventaja negativa: hay otro comercio más barato |
 | La tienda tiene menos de 5 observaciones en 60 días | No se evalúa "precio antes inflado" |

@@ -37,8 +37,8 @@ Cada publicación lleva su condición. Solo se comparan publicaciones en la **mi
 | Nuevo | Sin abrir, con garantía del fabricante |
 | Caja abierta | Abierto o devuelto, completo, sin uso visible |
 | Reacondicionado | Revisado por el fabricante o un tercero, con o sin garantía |
-| Usado, buen estado | Funciona, desgaste normal, completo |
-| Usado, con detalles | Funciona, con desgaste visible o piezas faltantes |
+| Usado, buen estado | Funciona, desgaste normal |
+| Usado, con detalles | Funciona, con desgaste visible |
 | Para piezas | No funciona o no se pudo probar |
 
 La condición es **obligatoria**. Si una publicación no la dice: tienda o comercio → se toma como **nuevo** solo si la ficha lo indica; particular → **usado, con detalles** hasta que Jesús la verifique.
@@ -50,7 +50,8 @@ La condición es **obligatoria**. Si una publicación no la dice: tienda o comer
 2. Menor precio pedido comparable en la zona (techo, RN-016), marcado "estimado"
 3. Precio de mercado hoy del producto nuevo (RN-002) × factor de la condición, marcado "estimado"
 
-Accesorio faltante: se resta el precio de mercado hoy del accesorio (por ejemplo, una batería)
+Accesorio faltante: se resta el precio de mercado hoy del accesorio (por ejemplo, una batería).
+                   La condición describe el estado físico; los faltantes solo se restan (no bajan además la condición).
 ```
 
 | Valor | Qué es | Valor inicial | ¿Confirmado? |
@@ -67,7 +68,7 @@ Accesorio faltante: se resta el precio de mercado hoy del accesorio (por ejemplo
 **Ejemplo A — Usado comparado contra usados (CASO-006)**
 - DEWALT DCF840 de un particular: $70, con batería de 2 Ah y cargador. Jesús lo verifica: **usado, buen estado**, contenido igual al kit DCF840D1.
 - Ventas concretadas de usados iguales: ninguna registrada. Precios pedidos en la zona: ninguno comparable.
-- Precio de mercado hoy del nuevo: $169.99 (supuesto; el ejercicio lo dio para otro kit, así que hay que confirmarlo).
+- Precio de mercado hoy del DCF840D1 nuevo: **$169.99, supuesto** (el ejercicio dio $179 para el D1 en Lowe's y $169.99 para otro kit, el C2; con el dato real del D1 cambia el resultado).
 - Valor de referencia = 169.99 × 60% = **$101.99**, marcado "estimado".
 - La comparación es $70 contra $101.99, **no** contra $179 de nuevo.
 
