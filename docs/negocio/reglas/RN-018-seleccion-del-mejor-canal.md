@@ -45,8 +45,9 @@ Los productos voluminosos quedan descartados en todos los canales (DEC-159).
 
 | Situación | Resultado |
 |---|---|
+| Producto voluminoso o pesado (DEC-159) | **DESCARTADA**, tenga o no datos |
 | Ningún canal tiene datos | **REVISIÓN MANUAL** (sin precio de venta) |
-| Todos los canales con datos están descartados | **DESCARTADA** |
+| Hay al menos un canal con datos y **todos** los canales con datos están descartados | **DESCARTADA** |
 | Hay canales no descartados, pero ninguno es elegible | **No es oportunidad**; se informa el de mayor margen ajustado para la **vigilancia de precio** |
 | Al menos un canal es elegible | Se elige uno (abajo) y RN-009 asigna el nivel |
 
@@ -117,5 +118,5 @@ Los productos voluminosos quedan descartados en todos los canales (DEC-159).
 | 2026-11-11 | Amazon FBM se activa con fuente de Amazon (DEC-156) | Jesús |
 
 ## 14. Revisión de consistencia
-- Última revisión: 2026-11-11 (v1) — RECHAZADO.
+- Última revisión: 2026-11-11 (v2.1) — **APROBADO CON OBSERVACIONES**: continuar a requerimiento; las preguntas abiertas se responden antes de cerrar el desarrollo. Revisión anterior: 2026-11-11 (v1) — RECHAZADO.
 - Detalle: [revisiones/RN-018.md](/revisiones/RN-018.md)

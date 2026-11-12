@@ -38,7 +38,7 @@ Primero se revisa que la oferta no tenga ningún impedimento. Si tiene una seña
 **Descartada** (si falta cualquiera de estos requisitos):
 - Identificación **confirmada** (RN-013, niveles 1 y 2).
 - Sin marca **MERCADO YA BARATO** (RN-003).
-- Que no estén **descartados todos los canales con datos** (RN-018: no vendible, demanda insuficiente o saturada, voluminoso).
+- Que no sea **voluminoso** (DEC-159) y que, si hay al menos un canal con datos, no estén descartados todos (RN-018: no vendible, demanda insuficiente o saturada). Si ningún canal tiene datos, va a revisión manual, no se descarta.
 - Disponibilidad: tienda física con confianza Alta o Media; en línea, "disponible confirmada"; particular, publicación vigente (RN-007).
 
 **Revisión manual** (sin nivel ni aviso automático; Jesús decide):
@@ -160,5 +160,5 @@ precio máximo de compra       = costo de compra máximo ÷ (1 + tasa de impuest
 **Cambios de la v2 contra la v1:** los niveles se renombran **A, B, C y D** (antes Excepcional, Muy buena, Buena e Interesante), para no confundirlos con las clases de RN-012; los requisitos se evalúan en el canal elegido por RN-018; se agregan la revisión manual y la precedencia, el uso de la ventaja contra el mercado sin historial, el tope por demanda local desconocida y la vigilancia de precio, con los ejemplos F, G y H. "Coincidencia dudosa" pasa a RN-013. Los ejemplos A a E de la v1 se conservan; A y B usan los porcentajes recalculados (75.63% y 46.98%).
 
 ## 14. Revisión de consistencia
-- Última revisión: 2026-11-11 (v2) — RECHAZADO. Revisión anterior: 2026-11-08 (v1) — APROBADO CON OBSERVACIONES.
+- Última revisión: 2026-11-11 (v2.1) — **APROBADO CON OBSERVACIONES**: continuar a requerimiento; las preguntas abiertas se responden antes de cerrar el desarrollo. Revisiones anteriores: 2026-11-11 (v2) — RECHAZADO; 2026-11-08 (v1) — APROBADO CON OBSERVACIONES.
 - Detalle: [revisiones/RN-009.md](/revisiones/RN-009.md)

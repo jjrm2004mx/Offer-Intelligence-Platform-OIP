@@ -41,7 +41,7 @@ La demanda es **SUFICIENTE** si se cumplen las dos condiciones:
 1. Ranking de ventas en su categoría ≤ **150,000**.
 2. Número de vendedores de producto nuevo ≤ **20**.
 
-Si no se cumple alguna → **DEMANDA INSUFICIENTE** → la oferta se descarta.
+Si no se cumple alguna → **DEMANDA INSUFICIENTE** → se descarta el **canal Amazon** para esa oferta; la oferta sigue evaluándose en venta local (RN-018).
 
 Advertencia (no descarta): **DEMANDA A LA BAJA** si el ranking empeoró más de **50%** en los últimos 30 días (por ejemplo, pasó de 10,000 a más de 15,000).
 

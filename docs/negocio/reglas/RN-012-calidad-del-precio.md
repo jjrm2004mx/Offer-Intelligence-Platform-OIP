@@ -122,5 +122,5 @@ Reglas adicionales:
 | 2026-11-11 | Sin historial, el máximo es "Precio competitivo" (DEC-129) | Jesús |
 
 ## 14. Revisión de consistencia
-- Última revisión: 2026-11-11 (v1) — **RECHAZADO**: corregir y reinspeccionar.
+- Última revisión: 2026-11-11 (v2.1) — **APROBADO CON OBSERVACIONES**: continuar a requerimiento; las preguntas abiertas se responden antes de cerrar el desarrollo. Revisión anterior: 2026-11-11 (v1) — RECHAZADO.
 - Detalle: [revisiones/RN-012.md](/revisiones/RN-012.md)

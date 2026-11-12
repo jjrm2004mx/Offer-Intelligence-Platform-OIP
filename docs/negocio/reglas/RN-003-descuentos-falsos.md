@@ -33,7 +33,7 @@ El descuento que anuncia la tienda **solo sirve para encontrar** candidatos: dec
 - **Descuento real:** cuánto bajó contra el **precio habitual** (RN-002).
 - **Ventaja contra el mercado:** cuánto más barato está que el **precio de mercado hoy** (RN-002).
 
-Además se compara el precio tachado con el historial de la propia tienda: si casi nunca cobró el "precio antes", ese precio está inflado.
+Además se compara el precio tachado con el **precio habitual** (o, si no lo hay, con el historial de la propia tienda): si el producto casi nunca costó el "precio antes", ese precio está inflado.
 
 ## 4. La regla
 
@@ -64,7 +64,7 @@ Las demás quedan registradas, sin investigar.
 
 | Valor | Qué es | Valor inicial | ¿Confirmado? |
 |---|---|---|---|
-| Factor de inflado | Veces sobre la mediana de la tienda | 1.5 | Por confirmar |
+| Factor de inflado | Veces sobre el precio habitual (o la mediana de la tienda) | 1.5 | Por confirmar |
 | Ventana de la tienda | Días, solo si no hay precio habitual | 60 | Por confirmar |
 | Descuento real mínimo para reventa | Por debajo, se descarta para reventa | 20% | Por confirmar |
 | Diferencia para "no comprobado" | Puntos entre anunciado y real | 15 | Por confirmar |
@@ -103,7 +103,7 @@ Las demás quedan registradas, sin investigar.
 ## 6. ¿Qué información necesitamos?
 - Precio de oferta y precio tachado de la publicación.
 - Precio habitual y precio de mercado hoy (RN-002).
-- Historial de 60 días de la misma tienda.
+- Historial de 60 días de la misma tienda (solo si no hay precio habitual).
 - Categoría del producto y resultado de la identificación (RN-013).
 
 ## 7. ¿Qué obtenemos?
@@ -128,11 +128,11 @@ Las demás quedan registradas, sin investigar.
 | La tienda no muestra precio tachado | Descuento anunciado = no disponible. Pasa el filtro previo solo si viene de una página de campaña o folleto y cumple DEC-157, o si llega por captura manual o búsqueda por artículo |
 | El precio de oferta es mayor que el habitual | Descuento real negativo → MERCADO YA BARATO |
 | El precio de oferta es mayor que el de mercado hoy | Ventaja negativa: hay otro comercio más barato |
-| La tienda tiene menos de 5 observaciones en 60 días | No se evalúa "precio antes inflado" |
+| No hay precio habitual y la tienda tiene menos de 5 observaciones en 60 días | No se evalúa "precio antes inflado" |
 
 ## 12. Preguntas para el experto
 1. *(De la v1)* ¿20% de descuento real es un buen mínimo para reventa, o debería ser más (25%, 30%)?
-2. *(De la v1)* ¿1.5 veces el precio típico de la tienda es un buen umbral para llamar "inflado" al precio antes?
+2. *(De la v1)* ¿1.5 veces el precio habitual (o el típico de la tienda) es un buen umbral para llamar "inflado" al precio antes?
 3. *(De la v1)* ¿Conoce otras señales comunes de descuento engañoso? Por ejemplo, precio por unidad mayor en el "paquete con descuento".
 4. ¿40% de descuento anunciado es un buen filtro para decidir qué investigar?
 5. ¿15 puntos de diferencia es razonable para marcar un anuncio como "no comprobado"?
@@ -147,5 +147,5 @@ Las demás quedan registradas, sin investigar.
 **Cambios de la v2 contra la v1:** el descuento real se calcula contra el precio habitual, no contra el "precio de mercado" único; se agrega la ventaja contra el mercado; nuevas marcas "descuento anunciado no comprobado" y "comparación insuficiente"; "sin historial de tienda" pasa a "sin historial suficiente"; "mercado ya barato" descarta solo para reventa; "coincidencia dudosa" pasa a RN-013; se agrega el filtro previo. El ejemplo B de la v1 (taladro $79) se reemplaza; la sierra se conserva como ejemplo E.
 
 ## 14. Revisión de consistencia
-- Última revisión: 2026-11-11 (v2) — **RECHAZADO**: corregir y reinspeccionar. Revisión anterior: 2026-11-08 (v1) — APROBADO CON OBSERVACIONES.
+- Última revisión: 2026-11-11 (v2.1) — **APROBADO CON OBSERVACIONES**: continuar a requerimiento; las preguntas abiertas se responden antes de cerrar el desarrollo. Revisiones anteriores: 2026-11-11 (v2) — RECHAZADO; 2026-11-08 (v1) — APROBADO CON OBSERVACIONES.
 - Detalle: [revisiones/RN-003.md](/revisiones/RN-003.md)
