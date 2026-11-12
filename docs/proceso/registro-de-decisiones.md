@@ -191,6 +191,8 @@ Fuente: análisis con ejemplos que compartió Jesús (comparación entre comerci
 | DEC-157 | **Productos de folletos y páginas de campaña sin precio tachado:** se investigan si son de una **categoría prioritaria de la temporada** (DEC-153) o si están **por debajo del último precio que OIP observó** (P-10) | VIGENTE (2026-11-11) | El filtro por descuento anunciado los dejaba fuera (CASO-007) | RN-003 v2 |
 | DEC-158 | **Filtro previo:** descuento anunciado de **40%** en general y **30%** para marcas reconocidas de la lista prioritaria (P-11). Precisa DEC-004 | VIGENTE (2026-11-11; valores por confirmar con el experto) | La bocina Milwaukee (33.56%) quedaba fuera (CASO-007) | RN-003 v2 |
 | DEC-159 | **Productos voluminosos o pesados** (refrigeradores, lavadoras y similares) **excluidos en el Inc. 1**, hasta tener una regla de flete (P-12) | VIGENTE (2026-11-11) | No son prácticos ni para Amazon FBM ni para entrega local | RN-006 v2, RN-016 |
+| DEC-160 | **Amazon en la búsqueda por artículo (B):** aparece con el precio que **Jesús captura a mano** para esa solicitud, marcado "captura manual" (P-14). No contradice DEC-156: OIP no consulta Amazon, Jesús sí puede | VIGENTE (2026-11-11) | Sin Amazon, el cliente no vería el comercio más grande | RN-011 v2 |
+| DEC-161 | **Ventas concretadas de eBay como dato**, con captura manual: referencia del precio de venta local (RN-016) y del valor de usados (RN-014). eBay **no** es canal de venta en el Inc. 1 (P-13) | VIGENTE (2026-11-11) | Son transacciones reales, no precios pedidos | RN-014, RN-016 |
 
 ## 10. Pendientes abiertos
 

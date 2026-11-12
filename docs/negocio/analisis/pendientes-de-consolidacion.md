@@ -25,7 +25,7 @@ fuentes: [CASO-001 a CASO-006, ANL-001, registro de decisiones §9.1 y §10]
 
 ### 1.1 Preguntas nuevas (2026-11-11, después de las reglas v2 del bloque 1 y de CASO-007)
 
-> P-09 a P-12 resueltas: DEC-156 a DEC-159. P-09 se resolvió **distinto** a la propuesta (sin consulta directa a Amazon). Quedan abiertas P-13 y P-14.
+> P-09 a P-12 resueltas: DEC-156 a DEC-159. P-09 se resolvió **distinto** a la propuesta (sin consulta directa a Amazon). P-13 y P-14 resueltas como se propuso: DEC-161 y DEC-160.
 
 | # | Pregunta | Propuesta de Claude | Origen |
 |---|---|---|---|
