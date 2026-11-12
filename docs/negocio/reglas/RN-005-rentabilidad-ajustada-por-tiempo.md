@@ -1,18 +1,20 @@
-# RN-005 — Rentabilidad ajustada por tiempo y riesgo
+# RN-005 — Rentabilidad ajustada por tiempo y riesgo, por canal
 
 ```yaml
 id: RN-005
-titulo: Rentabilidad ajustada por tiempo y riesgo
+titulo: Rentabilidad ajustada por tiempo y riesgo, por canal
+grupo: resultado
 estado: BORRADOR
-version: 1
-fecha: 2026-11-08
+version: 2
+fecha: 2026-11-11
 responsable: Jesús
 revisor_negocio: Experto en negocios internacionales
-depende_de: [RN-001, RN-002, RN-004]
+depende_de: [RN-001, RN-002, RN-004, RN-016, RN-017]
+version_anterior: https://github.com/jjrm2004mx/Offer-Intelligence-Platform-OIP/blob/5a4744d15b2ac6439f2cd89d25cb377ab437ab36/docs/negocio/reglas/RN-005-rentabilidad-ajustada-por-tiempo.md
 ```
 
 ## 1. ¿Qué queremos lograr?
-Que la ganancia sea **real, no aparente**. Un margen alto que tarda meses en convertirse en dinero, o que se lo comen las devoluciones o una baja de precio, vale menos que un margen moderado que se cobra en semanas.
+Que la ganancia sea **real, no aparente**. Un margen alto que tarda meses en convertirse en dinero, o que se lo comen las devoluciones o una baja de precio, vale menos que un margen moderado que se cobra en semanas. Es lo que distingue una **oportunidad de inversión** de una simple oportunidad de reventa (ANL-001): $50 en tres meses no equivale a $30 en tres días. En la v2 se calcula **para cada canal** con la misma fórmula (DEC-143).
 
 ## 2. ¿Qué incluye y qué no?
 **Incluye:**
@@ -20,6 +22,7 @@ Que la ganancia sea **real, no aparente**. Un margen alto que tarda meses en con
 - Estimar en cuántos días se recupera el dinero.
 - Calcular un rendimiento mensual equivalente para **ordenar** oportunidades.
 - Recomendar cuántas unidades comprar.
+- Marcar el **riesgo de inventario** de una compra por oportunidad (DEC-141).
 
 **No incluye:**
 - El costo del viaje a tienda (RN-008).
@@ -44,6 +47,18 @@ unidades recomendadas  = ventas al mes ÷ (vendedores + 1), redondeado hacia aba
                          sin pasar de las unidades disponibles
 ```
 
+**Lo que cambia por canal** (la fórmula es la misma):
+
+| Concepto | Amazon FBM | Venta local |
+|---|---|---|
+| Costo por devoluciones | Como arriba | **$0**: la venta en persona es "como está" (las devoluciones acordadas son un riesgo de RN-015) |
+| Castigo por baja | (precio esperado − mínimo de 90 días en Amazon) × 50% | **5%** del precio de venta esperado (no hay historial local de precios) |
+| Días estimados de venta | Por ranking (tabla de abajo, RN-004) | Por clase de demanda local (RN-017): 7, 14 o 30 |
+| Días de pago | 14 (Amazon) | **0**: pago al entregar |
+| Unidades recomendadas | Fórmula de arriba | Máximo **2** mientras la demanda local no sea "probada"; con "probada", máximo 3 |
+
+**Riesgo de inventario (compra por oportunidad, DEC-141):** si los días para recuperar pasan de **45**, la oportunidad se marca **"riesgo de inventario"**. No se descarta: el rendimiento mensual ya la pone abajo en el orden.
+
 Días estimados de venta según el ranking (RN-004):
 
 | Ranking de ventas | Días estimados de venta |
@@ -58,9 +73,12 @@ Días estimados de venta según el ranking (RN-004):
 | Pérdida por devolución | Qué parte del precio se pierde en una devolución | 50% | Por confirmar |
 | Peso del castigo por baja | Qué parte de la posible baja se descuenta | 50% | Por confirmar |
 | Días de pago de Amazon | Lo que tarda Amazon en depositar | 14 | Por confirmar |
+| Castigo por baja en venta local | % del precio esperado | 5% | Por confirmar |
+| Unidades máximas en venta local | Sin / con demanda probada | 2 / 3 | Por confirmar |
+| Límite de riesgo de inventario | Días para recuperar | 45 | Por confirmar |
 | Tabla de días por ranking | Ver arriba | Ver arriba | Por confirmar |
 
-> Nota para el documento técnico: esta regla usa **rendimiento mensual** en lugar del "ROI anualizado" del documento de arquitectura v1.2, porque se entiende mejor. También agrega la "pérdida por devolución" y el castigo por baja con peso de 50%. Hay que actualizar el documento técnico cuando se apruebe.
+> Nota para el documento técnico (de la v1): esta regla usa **rendimiento mensual** en lugar del "ROI anualizado" del documento de arquitectura v1.2, porque se entiende mejor. También agrega la "pérdida por devolución" y el castigo por baja con peso de 50%. Hay que actualizar el documento técnico cuando se apruebe.
 
 ## 5. ¿Cómo sabremos que funciona? — Ejemplos con números
 
@@ -81,13 +99,25 @@ Días estimados de venta según el ranking (RN-004):
 
 **Comparación:** el taladro parecía bueno (32.3% de margen neto), pero ajustado queda en 22.1%. La sierra sigue siendo excelente.
 
+**Ejemplo C — Baterías DEWALT en venta local (nuevo; RN-001, ejemplo C)**
+- Margen neto local: $7.98. Costo de compra: $85.12. Precio esperado: $102.60.
+- Devoluciones: $0. Castigo por baja: 102.60 × 5% = **$5.13**.
+- Margen ajustado = 7.98 − 0 − 5.13 = **$2.85** → 2.85 ÷ 85.12 = **3.35%**.
+- Demanda local probada (RN-017) → 7 días + 0 de pago = **7 días**. Rendimiento mensual = 3.35% × 30 ÷ 7 = **14.35%** (con el porcentaje sin redondear, 3.3482…%).
+- Margen menor a $10 por unidad → no alcanza los requisitos de RN-009.
+
+**Ejemplo D — Oportunidad de inversión (ANL-001)**
+- Compra de $70 en los dos casos. Uno deja $50 en 90 días: 71.43% × 30 ÷ 90 = **23.81% al mes**, y se marca "riesgo de inventario" (más de 45 días). El otro deja $30 en 3 días: 42.86% × 30 ÷ 3 = **428.57% al mes**.
+- Con menos ganancia, el segundo queda muy arriba en el orden.
+
 ## 6. ¿Qué información necesitamos?
 - Resultados de RN-001, RN-002 y RN-004.
-- Ventas al mes y número de vendedores (Keepa).
+- Ventas al mes y número de vendedores (API oficial de Amazon o Keepa, cuando se contraten; DEC-156).
+- Para venta local: precio esperado (RN-016) y clase de demanda (RN-017).
 - Unidades disponibles en la tienda (RN-007).
 
 ## 7. ¿Qué obtenemos?
-- Margen ajustado ($ y %), días para recuperar, rendimiento mensual y unidades recomendadas.
+- Por canal: margen ajustado ($ y %), días para recuperar, rendimiento mensual, unidades recomendadas y marca de riesgo de inventario.
 
 ## 8. ¿Quién participa?
 - El sistema calcula.
@@ -95,7 +125,7 @@ Días estimados de venta según el ranking (RN-004):
 - Jesús decide cuánto comprar en realidad.
 
 ## 9. ¿De qué depende?
-- RN-001, RN-002, RN-004 y RN-007.
+- RN-001, RN-002, RN-004 y RN-007; para venta local, RN-016 y RN-017.
 
 ## 10. Limitaciones
 - Los días de venta son una estimación gruesa hasta tener ventas reales. Con cada venta registrada se irá ajustando la tabla.
@@ -118,8 +148,11 @@ Días estimados de venta según el ranking (RN-004):
 ## 13. Decisiones tomadas
 | Fecha | Decisión | Quién |
 |---|---|---|
-| | | |
+| 2026-11-11 | Compra por oportunidad, con riesgo de inventario (DEC-141) | Jesús |
+| 2026-11-11 | Una sola fórmula, con el canal como parámetro (DEC-143) | Jesús |
+
+**Cambios de la v2 contra la v1:** se agrega la tabla de lo que cambia por canal, el riesgo de inventario y los ejemplos C y D. Fórmulas y ejemplos A y B de Amazon, iguales que la v1.
 
 ## 14. Revisión de consistencia
-- Última revisión: 2026-11-08 — APROBADO CON OBSERVACIONES
+- Última revisión: 2026-11-11 (v2) — APROBADO CON OBSERVACIONES. Revisión anterior: 2026-11-08 (v1) — APROBADO CON OBSERVACIONES.
 - Detalle: [revisiones/RN-005.md](/revisiones/RN-005.md)

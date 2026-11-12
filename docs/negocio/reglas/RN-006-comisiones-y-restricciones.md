@@ -1,15 +1,19 @@
-# RN-006 — Comisiones, envío y restricciones de venta
+# RN-006 — Comisiones, envío y restricciones de venta en Amazon
 
 ```yaml
 id: RN-006
-titulo: Comisiones, envío y restricciones de venta
+titulo: Comisiones, envío y restricciones de venta en Amazon
+grupo: amazon
 estado: BORRADOR
-version: 1
-fecha: 2026-11-08
+version: 2
+fecha: 2026-11-11
 responsable: Jesús
 revisor_negocio: Experto en negocios internacionales
-depende_de: []
+depende_de: [RN-013, RN-014]
+version_anterior: https://github.com/jjrm2004mx/Offer-Intelligence-Platform-OIP/blob/5a4744d15b2ac6439f2cd89d25cb377ab437ab36/docs/negocio/reglas/RN-006-comisiones-y-restricciones.md
 ```
+
+> **Cuándo aplica (v2).** Esta regla da los costos y restricciones **del canal Amazon FBM**. La tabla es manual y puede mantenerse desde ya, pero el margen en Amazon solo se calcula cuando haya precio de venta de Amazon (API oficial o Keepa, DEC-156). Los costos de venta local están en RN-001 y RN-016.
 
 ## 1. ¿Qué queremos lograr?
 Saber **cuánto cobra Amazon y cuánto cuesta enviar** cada producto, y **si realmente se puede vender**. Algunas categorías requieren permiso de Amazon y algunos productos se consideran peligrosos para envío.
@@ -22,7 +26,7 @@ Saber **cuánto cobra Amazon y cuánto cuesta enviar** cada producto, y **si rea
 
 **No incluye:**
 - Envío a bodegas de Amazon (modalidad FBA): no se usará al inicio.
-- Facebook Marketplace (fase posterior).
+- Venta local: OfferUp, Facebook Marketplace o venta directa (RN-001, RN-008 y RN-016).
 
 ## 3. ¿Cómo funciona, en palabras?
 Mientras no exista cuenta de vendedor, el sistema usa una **tabla manual** de comisiones, envíos y restricciones. Cuando exista la cuenta, consultará los datos exactos directo con Amazon y la tabla quedará como respaldo.
@@ -50,7 +54,7 @@ Mientras no exista cuenta de vendedor, el sistema usa una **tabla manual** de co
 | 3 a 6 kg | $14 | Por confirmar |
 | más de 6 kg | Revisar manualmente | — |
 
-**Restricciones** — si un producto cae aquí y no hay aprobación, se marca **NO VENDIBLE EN AMAZON (POR AHORA)**: no genera alerta, pero se muestra en el tablero con el motivo.
+**Restricciones** — si un producto cae aquí y no hay aprobación, se marca **NO VENDIBLE EN AMAZON (POR AHORA)**: el canal Amazon queda descartado para esa oferta (RN-018) y se muestra el motivo; la oferta **sigue evaluándose en venta local**.
 
 | Caso | Tipo de restricción | ¿Confirmado? |
 |---|---|---|
@@ -58,6 +62,9 @@ Mientras no exista cuenta de vendedor, el sistema usa una **tabla manual** de co
 | Relojes | Puede requerir aprobación de Amazon | Por confirmar |
 | Perfumes, aerosoles, baterías de litio | Pueden considerarse material peligroso | Por confirmar |
 | Marcas con venta restringida | Requieren autorización de la marca | Lista por construir |
+| Productos **usados**, caja abierta o reacondicionados (RN-014) | Amazon exige requisitos de condición por categoría y algunas no aceptan usados | Por confirmar por categoría |
+
+**Productos voluminosos o pesados** (refrigeradores, lavadoras y similares): **excluidos en el Inc. 1** en todos los canales (DEC-159).
 
 ## 5. ¿Cómo sabremos que funciona? — Ejemplos con números
 
@@ -68,13 +75,19 @@ Mientras no exista cuenta de vendedor, el sistema usa una **tabla manual** de co
 - Comisión 119 × 15% = **$17.85**. Envío (3 a 6 kg): **$14**. Vendible.
 
 **Ejemplo C — Perfume con 70% de descuento real**
-- Categoría perfumes → posible material peligroso, sin aprobación → **NO VENDIBLE EN AMAZON (POR AHORA)**. No se alerta, aunque el margen sea alto.
+- Categoría perfumes → posible material peligroso, sin aprobación → **NO VENDIBLE EN AMAZON (POR AHORA)**. No se alerta por Amazon, aunque el margen sea alto; se evalúa en venta local.
 
 **Ejemplo D — Comisión por definir**
 - Reloj con categoría "por definir" → no se calcula margen; se marca "comisión desconocida" y no se alerta.
 
+**Ejemplo E — Baterías de litio (CASO-005 y CASO-007, nuevo)**
+- Baterías DEWALT o Milwaukee → posible material peligroso → **NO VENDIBLE EN AMAZON (POR AHORA)**. La oportunidad se evalúa solo en venta local.
+
+**Ejemplo F — Usado (CASO-006, nuevo)**
+- DEWALT DCF840 usado → "usado, requisitos por confirmar" → no vendible en Amazon hasta confirmarlo; se evalúa en venta local.
+
 ## 6. ¿Qué información necesitamos?
-- Categoría del producto en Amazon, peso y tamaño aproximados, marca.
+- Categoría del producto en Amazon, peso y tamaño aproximados, marca y condición (RN-014).
 
 ## 7. ¿Qué obtenemos?
 - Comisión en $, envío en $, y si es vendible o el motivo de la restricción.
@@ -107,7 +120,11 @@ Mientras no exista cuenta de vendedor, el sistema usa una **tabla manual** de co
 | Fecha | Decisión | Quién |
 |---|---|---|
 | 2026-11-08 | Se vende con FBM (envío propio), no FBA | Jesús |
+| 2026-11-11 | Canales por oportunidad; Amazon FBM se activa con fuente de Amazon (DEC-140, DEC-156) | Jesús |
+| 2026-11-11 | Voluminosos excluidos en el Inc. 1 (DEC-159) | Jesús |
+
+**Cambios de la v2 contra la v1:** la regla queda en el grupo `amazon`; se agregan la restricción de usados, la exclusión de voluminosos y los ejemplos E y F. Tablas, ejemplos A a D y preguntas, iguales que la v1.
 
 ## 14. Revisión de consistencia
-- Última revisión: 2026-11-08 — APROBADO CON OBSERVACIONES
+- Última revisión: 2026-11-11 (v2) — APROBADO CON OBSERVACIONES. Revisión anterior: 2026-11-08 (v1) — APROBADO CON OBSERVACIONES.
 - Detalle: [revisiones/RN-006.md](/revisiones/RN-006.md)

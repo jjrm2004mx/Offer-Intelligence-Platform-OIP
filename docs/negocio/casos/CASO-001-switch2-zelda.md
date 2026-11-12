@@ -52,6 +52,8 @@ Sin historial propio, la única referencia es el MSRP, y con ella el máximo pos
 | Opción | Diferencia contra el MSRP | Clasificación | Por qué |
 |---|---|---|---|
 | Amazon / GameStop $499.99 | $20.00 menos (3.85%) | Precio competitivo | Mejor precio del comercio mismo, sin historial que pruebe un descuento |
+
+> **Precisión (2026-11-11, RN-012 v1):** para Amazon, "Precio competitivo" supone que Jesús confirma en su captura que vende Amazon (DEC-160). Si el vendedor queda sin confirmar, el resultado es "sin clasificación" hasta confirmarlo.
 | Walmart $459.99 | $60.00 menos (11.54%) | Descuento cuestionable | Vendedor externo y disponibilidad no confirmada |
 | Walmart Business $519.00 | $0.99 menos (0.19%) | Sin clasificación de oferta | Prácticamente el MSRP |
 
