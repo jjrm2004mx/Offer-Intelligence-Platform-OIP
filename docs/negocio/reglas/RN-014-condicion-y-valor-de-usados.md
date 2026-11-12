@@ -118,5 +118,5 @@ Accesorio faltante: se resta el precio de mercado hoy del accesorio (por ejemplo
 | 2026-11-11 | Usados en el alcance, con condición obligatoria y valor de usados comparables (DEC-149) | Jesús |
 
 ## 14. Revisión de consistencia
-- Última revisión: pendiente.
-- Detalle: `revisiones/RN-014.md` (por crear)
+- Última revisión: 2026-11-11 (v1) — **APROBADO CON OBSERVACIONES**.
+- Detalle: [revisiones/RN-014.md](/revisiones/RN-014.md)

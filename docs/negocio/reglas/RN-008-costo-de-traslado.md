@@ -139,5 +139,5 @@ costo de entrega (venta local) = km × costo por km + horas × valor de la hora
 **Cambios de la v2 contra la v1:** se agregan el costo de adquisición por unidad (con impuesto de venta y envío), las paradas con particulares y el costo de entrega de venta local, con los ejemplos D, E y F. La regla del viaje y los ejemplos de la v1 quedan iguales. La v1 excluía compras en línea; ahora su costo de adquisición incluye el envío.
 
 ## 14. Revisión de consistencia
-- Última revisión: 2026-11-08 (v1) — APROBADO CON OBSERVACIONES. **La v2 está pendiente de revisión.**
+- Última revisión: 2026-11-11 (v2) — **APROBADO CON OBSERVACIONES**. Revisión anterior: 2026-11-08 (v1) — APROBADO CON OBSERVACIONES.
 - Detalle: [revisiones/RN-008.md](/revisiones/RN-008.md)

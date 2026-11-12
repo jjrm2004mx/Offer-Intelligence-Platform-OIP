@@ -105,5 +105,5 @@ La mejor señal es que el producto **ya se vendió**: ventas concretadas registr
 | 2026-11-11 | Ventas concretadas de eBay como dato (DEC-161) | Jesús |
 
 ## 14. Revisión de consistencia
-- Última revisión: pendiente.
-- Detalle: `revisiones/RN-017.md` (por crear)
+- Última revisión: 2026-11-11 (v1) — APROBADO CON OBSERVACIONES.
+- Detalle: [revisiones/RN-017.md](/revisiones/RN-017.md)

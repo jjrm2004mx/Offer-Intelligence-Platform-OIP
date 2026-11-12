@@ -38,17 +38,16 @@ Primero se revisa que la oferta no tenga ningún impedimento. Si tiene una seña
 **Descartada** (si falta cualquiera de estos requisitos):
 - Identificación **confirmada** (RN-013, niveles 1 y 2).
 - Sin marca **MERCADO YA BARATO** (RN-003).
-- Demanda en el canal elegido: Amazon, **SUFICIENTE** (RN-004); venta local, **no SATURADA** (RN-017).
-- Vendible en el canal elegido (RN-006; voluminosos excluidos, DEC-159).
+- Que no estén **descartados todos los canales con datos** (RN-018: no vendible, demanda insuficiente o saturada, voluminoso).
 - Disponibilidad: tienda física con confianza Alta o Media; en línea, "disponible confirmada"; particular, publicación vigente (RN-007).
 
 **Revisión manual** (sin nivel ni aviso automático; Jesús decide):
 - Marca **SIN REFERENCIA** (RN-003).
 - Riesgo **Alto** (RN-015).
 - **Vendedor externo** (DEC-137).
-- Sin precio de venta en ningún canal (RN-016 y RN-002).
+- **Ningún canal tiene datos** (RN-018): sin precio de venta en Amazon ni en venta local.
 
-**Niveles** — se asigna el más alto cuyas dos condiciones se cumplan, con margen ajustado **≥ $10 por unidad** en el canal elegido (RN-005, RN-018):
+**Niveles** — se asignan solo si RN-018 eligió un canal (margen ajustado **≥ $10 por unidad** y ≥ 25% en ese canal). Se asigna el más alto cuyas dos condiciones se cumplan:
 
 | Nivel | Descuento real (RN-003) | Margen ajustado % (RN-005) | Aviso |
 |---|---|---|---|
@@ -66,7 +65,7 @@ Primero se revisa que la oferta no tenga ningún impedimento. Si tiene una seña
 
 **No repetir avisos:** la misma oferta no se vuelve a avisar en **24 horas**, salvo que suba de nivel o su precio baje **5% o más**.
 
-**Vigilancia de precio** (nuevo): si una oferta cumple todo menos el **margen** (el $10 por unidad o el % del nivel D), se calcula el **precio máximo de compra** con el que alcanzaría el nivel D en su canal. Mientras siga publicada, si su precio baja a ese valor o menos, se vuelve a evaluar completa y se avisa si alcanza nivel.
+**Vigilancia de precio** (nuevo): si RN-018 dice "no es oportunidad" porque ningún canal fue elegible solo por **margen** (el $10 por unidad o el % del nivel D), se calcula el **precio máximo de compra** con el que alcanzaría el nivel D en su canal. Mientras siga publicada, si su precio baja a ese valor o menos, se vuelve a evaluar completa y se avisa si alcanza nivel.
 
 ```
 margen ajustado sin la compra = precio esperado − costo de venta − devoluciones − castigo por baja
@@ -108,11 +107,12 @@ precio máximo de compra       = costo de compra máximo ÷ (1 + tasa de impuest
 **Ejemplo F — Revisión manual (CASO-005)**
 - Baterías Milwaukee en Walmart con vendedor sin confirmar → riesgo Alto (RN-015) → **REVISIÓN MANUAL**, sin aviso, aunque no tuviera otro problema.
 
-**Ejemplo G — Vigilancia de precio (CASO-005, si se confirma que vende Walmart)**
+**Ejemplo G — Vigilancia de precio (producto supuesto, con historial y comparación suficiente)**
 - Canal venta local. Precio esperado $84.65 (RN-016, ejemplo B); entrega $9.50; devoluciones $0; castigo 84.65 × 5% = $4.23.
 - Margen ajustado sin la compra = 84.65 − 9.50 − 0 − 4.23 = **$70.92**.
-- Costo de compra máximo = menor(70.92 − 10 = 60.92 ; 70.92 ÷ 1.25 = 56.736) → **$56.73**.
-- Precio máximo de compra = 56.73 ÷ 1.0775 = 52.649… → **$52.64**. Si el precio baja a $52.64 o menos, se vuelve a evaluar y se avisa si alcanza nivel. El ejercicio estimaba $65 a $75 suponiendo una venta de $95; con el precio esperado de $84.65 que da RN-016, el precio de compra tiene que ser menor.
+- Costo de compra máximo = menor(70.92 − 10 = 60.92 ; 70.92 ÷ 1.25 = 56.736 → $56.74) → **$56.74**.
+- Precio máximo de compra = 56.74 ÷ 1.0775 = 52.658… → **$52.65** (hacia abajo). Comprobación: con $52.65 + impuesto $4.08 = $56.73, el margen ajustado es 70.92 − 56.73 = $14.19 = 25.01% ✓. Si el precio baja a $52.65 o menos, se vuelve a evaluar y se avisa si alcanza nivel.
+- Las baterías Milwaukee reales (CASO-005) **no** llegan a vigilancia: sin historial y con un solo comercio de comparación quedan en SIN REFERENCIA → revisión manual.
 
 **Ejemplo H — Sin historial**
 - Oferta nueva sin precio habitual, ventaja contra el mercado 55% y margen ajustado 32% ($14) en venta local con demanda probada → se usa la ventaja: C exige 50% ✓ y 30% ✓ → **Nivel C**, marcado "sin historial".
@@ -160,5 +160,5 @@ precio máximo de compra       = costo de compra máximo ÷ (1 + tasa de impuest
 **Cambios de la v2 contra la v1:** los niveles se renombran **A, B, C y D** (antes Excepcional, Muy buena, Buena e Interesante), para no confundirlos con las clases de RN-012; los requisitos se evalúan en el canal elegido por RN-018; se agregan la revisión manual y la precedencia, el uso de la ventaja contra el mercado sin historial, el tope por demanda local desconocida y la vigilancia de precio, con los ejemplos F, G y H. "Coincidencia dudosa" pasa a RN-013. Los ejemplos A a E de la v1 se conservan; A y B usan los porcentajes recalculados (75.63% y 46.98%).
 
 ## 14. Revisión de consistencia
-- Última revisión: 2026-11-08 (v1) — APROBADO CON OBSERVACIONES. **La v2 está pendiente de revisión.**
+- Última revisión: 2026-11-11 (v2) — RECHAZADO. Revisión anterior: 2026-11-08 (v1) — APROBADO CON OBSERVACIONES.
 - Detalle: [revisiones/RN-009.md](/revisiones/RN-009.md)

@@ -153,5 +153,5 @@ OIP se comporta como un visitante tranquilo: hace pocas consultas, con pausas en
 **Cambios de la v2 contra la v1:** se corrigen los defectos D-001 a D-008 y D-010 de la revisión (re-consulta antes de salir, qué es un bloqueo, mínimo de 10 consultas para pausar, prioridad del cliente, Amazon, qué son "restricciones", cómo se mide la pausa, qué pasa al terminar la pausa, y todos los comercios bloqueados desde la casa); se agregan la sección 4.6 y el ejemplo C2. D-009 quedó resuelto con la arquitectura v1.3.
 
 ## 14. Revisión de consistencia
-- Última revisión: 2026-11-09 (v1) — APROBADO CON OBSERVACIONES. **La v2 está pendiente de revisión.**
+- Última revisión: 2026-11-11 (v2) — **APROBADO CON OBSERVACIONES**. Revisión anterior: 2026-11-09 (v1) — APROBADO CON OBSERVACIONES.
 - Detalle: [revisiones/RN-010.md](/revisiones/RN-010.md)

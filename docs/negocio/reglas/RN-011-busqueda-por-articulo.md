@@ -180,5 +180,5 @@ Resultado:
 **Cambios de la v2 contra la v1:** se corrigen los defectos D-001 a D-009 de la revisión (dato de 4 horas en el ejemplo A, confianza en línea, fuente de Amazon, identificación por nombre, varias piezas, redacción de DEC-113, sucursales, desempates, "Amazon (nuevo)"). D-010 quedó resuelto con la arquitectura v1.3. Se agregan los criterios de recomendación (vendedor, condición, canal especial, cantidad), el costo total con impuesto, membresías, cupones y garantía, las sugerencias y los comercios nuevos.
 
 ## 14. Revisión de consistencia
-- Última revisión: 2026-11-09 (v1) — APROBADO CON OBSERVACIONES. **La v2 está pendiente de revisión.**
+- Última revisión: 2026-11-11 (v2) — **APROBADO CON OBSERVACIONES**. Revisión anterior: 2026-11-09 (v1) — APROBADO CON OBSERVACIONES.
 - Detalle: [revisiones/RN-011.md](/revisiones/RN-011.md)

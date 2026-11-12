@@ -126,5 +126,5 @@ margen neto (%)   = margen neto ($) ÷ costo de compra × 100
 **Cambios de la v2 contra la v1:** el costo de venta pasa a depender del canal; se agregan los costos de venta local y el ejemplo C. Fórmulas y ejemplos A y B de Amazon, iguales que la v1.
 
 ## 14. Revisión de consistencia
-- Última revisión: 2026-11-08 (v1) — APROBADO CON OBSERVACIONES. **La v2 está pendiente de revisión.**
+- Última revisión: 2026-11-11 (v2) — APROBADO CON OBSERVACIONES. Revisión anterior: 2026-11-08 (v1) — APROBADO CON OBSERVACIONES.
 - Detalle: [revisiones/RN-001.md](/revisiones/RN-001.md)

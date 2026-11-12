@@ -143,5 +143,5 @@ Los porcentajes se redondean a 2 decimales para mostrarlos, pero se comparan sin
 **Cambios de la v2 contra la v1:** el descuento real se calcula contra el precio habitual, no contra el "precio de mercado" único; se agrega la ventaja contra el mercado; nuevas marcas "descuento anunciado no comprobado" y "comparación insuficiente"; "sin historial de tienda" pasa a "sin historial suficiente"; "mercado ya barato" descarta solo para reventa; "coincidencia dudosa" pasa a RN-013; se agrega el filtro previo. El ejemplo B de la v1 (taladro $79) se reemplaza; la sierra se conserva como ejemplo E.
 
 ## 14. Revisión de consistencia
-- Última revisión: 2026-11-08 (v1) — APROBADO CON OBSERVACIONES. **La v2 está pendiente de revisión.**
+- Última revisión: 2026-11-11 (v2) — **RECHAZADO**: corregir y reinspeccionar. Revisión anterior: 2026-11-08 (v1) — APROBADO CON OBSERVACIONES.
 - Detalle: [revisiones/RN-003.md](/revisiones/RN-003.md)

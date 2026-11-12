@@ -148,5 +148,5 @@ Saber si un producto **realmente se puede comprar**, venga de donde venga. En ti
 **Cambios de la v2 contra la v1:** la regla de tienda física queda **igual**; se agregan los estados en línea (§4.2) y la vigencia de publicaciones de particulares (§4.3), con sus ejemplos E y F. La v1 excluía las compras en línea; ya no.
 
 ## 14. Revisión de consistencia
-- Última revisión: 2026-11-08 (v1) — APROBADO CON OBSERVACIONES. **La v2 está pendiente de revisión.**
+- Última revisión: 2026-11-11 (v2) — **APROBADO CON OBSERVACIONES**. Revisión anterior: 2026-11-08 (v1) — APROBADO CON OBSERVACIONES.
 - Detalle: [revisiones/RN-007.md](/revisiones/RN-007.md)

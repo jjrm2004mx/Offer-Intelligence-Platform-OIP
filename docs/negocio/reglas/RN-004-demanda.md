@@ -103,5 +103,5 @@ Advertencia (no descarta): **DEMANDA A LA BAJA** si el ranking empeoró más de 
 **Cambios de la v2 contra la v1:** la regla queda acotada al canal Amazon FBM (grupo `amazon`); se aclara que el ranking es popularidad; su fuente pasa a ser la API oficial o Keepa, y sin fuente la regla no se aplica. Umbrales y ejemplos, iguales que la v1.
 
 ## 14. Revisión de consistencia
-- Última revisión: 2026-11-08 (v1) — APROBADO CON OBSERVACIONES. **La v2 está pendiente de revisión.**
+- Última revisión: 2026-11-11 (v2) — APROBADO CON OBSERVACIONES. Revisión anterior: 2026-11-08 (v1) — APROBADO CON OBSERVACIONES.
 - Detalle: [revisiones/RN-004.md](/revisiones/RN-004.md)

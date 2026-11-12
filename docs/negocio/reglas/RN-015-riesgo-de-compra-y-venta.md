@@ -128,5 +128,5 @@ El nivel final es **el más alto** de las señales, con los ajustes "sube un niv
 | 2026-11-11 | Particulares con captura manual (DEC-150) | Jesús |
 
 ## 14. Revisión de consistencia
-- Última revisión: pendiente.
-- Detalle: `revisiones/RN-015.md` (por crear)
+- Última revisión: 2026-11-11 (v1) — **APROBADO CON OBSERVACIONES**.
+- Detalle: [revisiones/RN-015.md](/revisiones/RN-015.md)

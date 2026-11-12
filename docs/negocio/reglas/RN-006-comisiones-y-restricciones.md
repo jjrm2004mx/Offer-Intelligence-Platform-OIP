@@ -54,7 +54,7 @@ Mientras no exista cuenta de vendedor, el sistema usa una **tabla manual** de co
 | 3 a 6 kg | $14 | Por confirmar |
 | más de 6 kg | Revisar manualmente | — |
 
-**Restricciones** — si un producto cae aquí y no hay aprobación, se marca **NO VENDIBLE EN AMAZON (POR AHORA)**: no genera alerta, pero se muestra en el tablero con el motivo.
+**Restricciones** — si un producto cae aquí y no hay aprobación, se marca **NO VENDIBLE EN AMAZON (POR AHORA)**: el canal Amazon queda descartado para esa oferta (RN-018) y se muestra el motivo; la oferta **sigue evaluándose en venta local**.
 
 | Caso | Tipo de restricción | ¿Confirmado? |
 |---|---|---|
@@ -75,7 +75,7 @@ Mientras no exista cuenta de vendedor, el sistema usa una **tabla manual** de co
 - Comisión 119 × 15% = **$17.85**. Envío (3 a 6 kg): **$14**. Vendible.
 
 **Ejemplo C — Perfume con 70% de descuento real**
-- Categoría perfumes → posible material peligroso, sin aprobación → **NO VENDIBLE EN AMAZON (POR AHORA)**. No se alerta, aunque el margen sea alto.
+- Categoría perfumes → posible material peligroso, sin aprobación → **NO VENDIBLE EN AMAZON (POR AHORA)**. No se alerta por Amazon, aunque el margen sea alto; se evalúa en venta local.
 
 **Ejemplo D — Comisión por definir**
 - Reloj con categoría "por definir" → no se calcula margen; se marca "comisión desconocida" y no se alerta.
@@ -126,5 +126,5 @@ Mientras no exista cuenta de vendedor, el sistema usa una **tabla manual** de co
 **Cambios de la v2 contra la v1:** la regla queda en el grupo `amazon`; se agregan la restricción de usados, la exclusión de voluminosos y los ejemplos E y F. Tablas, ejemplos A a D y preguntas, iguales que la v1.
 
 ## 14. Revisión de consistencia
-- Última revisión: 2026-11-08 (v1) — APROBADO CON OBSERVACIONES. **La v2 está pendiente de revisión.**
+- Última revisión: 2026-11-11 (v2) — APROBADO CON OBSERVACIONES. Revisión anterior: 2026-11-08 (v1) — APROBADO CON OBSERVACIONES.
 - Detalle: [revisiones/RN-006.md](/revisiones/RN-006.md)

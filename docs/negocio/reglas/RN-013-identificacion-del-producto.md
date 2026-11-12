@@ -114,5 +114,5 @@ Cada publicación se identifica con el dato más confiable que tenga. El mejor e
 | 2026-11-11 | Particulares con captura manual en el Inc. 1 (DEC-150) | Jesús |
 
 ## 14. Revisión de consistencia
-- Última revisión: pendiente.
-- Detalle: `revisiones/RN-013.md` (por crear)
+- Última revisión: 2026-11-11 (v1) — **APROBADO CON OBSERVACIONES**.
+- Detalle: [revisiones/RN-013.md](/revisiones/RN-013.md)

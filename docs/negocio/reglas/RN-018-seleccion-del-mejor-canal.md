@@ -31,26 +31,34 @@ Para cada canal donde el producto se puede vender, se calcula el margen (RN-001)
 
 **Canales del Inc. 1** (DEC-151):
 
-| Canal | Está activo cuando… |
+Cada canal pasa por tres preguntas, en orden:
+
+| Pregunta | Amazon FBM | Venta local (OfferUp, Facebook Marketplace y venta personal) |
+|---|---|---|
+| 1. ¿**Tiene datos**? (canal activo) | Hay fuente de datos de Amazon: API oficial o Keepa (DEC-156) | Hay precio de venta local (RN-016) |
+| 2. ¿Está **descartado**? | No vendible (RN-006) o demanda insuficiente (RN-004) | Demanda saturada (RN-017) |
+| 3. ¿Es **elegible**? | Margen ajustado **≥ $10 por unidad** y **≥ 25%** (el mínimo del nivel D de RN-009) | Igual |
+
+Los productos voluminosos quedan descartados en todos los canales (DEC-159).
+
+**Resultado que recibe RN-009:**
+
+| Situación | Resultado |
 |---|---|
-| **Amazon FBM** | Hay fuente de datos de Amazon (API oficial o Keepa, DEC-156) **y** el producto es vendible (RN-006) |
-| **Venta local** (OfferUp, Facebook Marketplace y venta personal) | Hay precio de venta local (RN-016) y la demanda no está saturada (RN-017) |
+| Ningún canal tiene datos | **REVISIÓN MANUAL** (sin precio de venta) |
+| Todos los canales con datos están descartados | **DESCARTADA** |
+| Hay canales no descartados, pero ninguno es elegible | **No es oportunidad**; se informa el de mayor margen ajustado para la **vigilancia de precio** |
+| Al menos un canal es elegible | Se elige uno (abajo) y RN-009 asigna el nivel |
 
-**Un canal es elegible** si, en ese canal:
-1. Está activo.
-2. La demanda no lo descarta (RN-004 suficiente; RN-017 no saturada).
-3. El margen ajustado es **≥ $10 por unidad** (RN-005).
-
-**Elección:**
-1. Gana el canal elegible con **mayor rendimiento mensual** (RN-005).
+**Elección entre canales elegibles:**
+1. Gana el de **mayor rendimiento mensual** (RN-005).
 2. Empate (diferencia menor a 1 punto): gana el de **mayor margen ajustado en $**.
 3. Si sigue el empate: **venta local** (cobra al entregar y no tiene devoluciones de plataforma).
-4. Si ningún canal es elegible, se informa el que tuvo **mayor margen ajustado**, para la vigilancia de precio de RN-009.
 
 | Valor | Qué es | Valor inicial | ¿Confirmado? |
 |---|---|---|---|
 | Diferencia para empate | Puntos de rendimiento mensual | 1 | Por confirmar |
-| Margen mínimo por canal | $ por unidad | $10 (igual que RN-009) | Por confirmar |
+| Margen mínimo por canal | $ por unidad y % | $10 y 25% (iguales que RN-009) | Por confirmar |
 
 ## 5. ¿Cómo sabremos que funciona? — Ejemplos con números
 
@@ -60,12 +68,12 @@ Para cada canal donde el producto se puede vender, se calcula el margen (RN-001)
 - **Venta local:** venta esperada $109; entrega $9.50 → margen neto = 109 − 74.35 − 9.50 = **$25.15**. Castigo 109 × 5% = $5.45 → margen ajustado **$19.70** (26.50%). Demanda probada → 7 días → rendimiento mensual = 26.50% × 30 ÷ 7 = **113.56%**.
 - Resultado: **venta local**.
 
-**Ejemplo B — Amazon inactivo (etapa 1)**
-- Sin fuente de Amazon (DEC-156) → solo se evalúa la venta local. Si no es elegible, no hay canal; la oferta queda para vigilancia de precio.
+**Ejemplo B — Amazon sin datos (etapa 1)**
+- Sin fuente de Amazon (DEC-156) → solo se evalúa la venta local. Si la venta local está saturada → **DESCARTADA**. Si no está saturada pero no es elegible → no es oportunidad, con vigilancia de precio.
 
 **Ejemplo C — Ningún canal elegible (baterías DEWALT, RN-005 ejemplo C)**
 - Amazon: no vendible (baterías de litio, RN-006). Venta local: margen ajustado **$2.85** → no elegible.
-- Resultado: sin canal; se informa venta local ($2.85) para la vigilancia de precio.
+- Resultado: Amazon descartado; venta local no descartada pero no elegible → **no es oportunidad**; se informa venta local ($2.85) para la vigilancia de precio.
 
 **Ejemplo D — Gana Amazon (sierra circular, RN-005 ejemplo B, con venta local supuesta)**
 - Amazon FBM: margen ajustado $45.92 (146.9%), 21 días → rendimiento **209.9%**.
@@ -93,7 +101,7 @@ Para cada canal donde el producto se puede vender, se calcula el margen (RN-001)
 ## 11. ¿Qué pasa si…?
 | Situación | Qué hace el sistema |
 |---|---|
-| Ningún canal está activo | Revisión manual (RN-009) |
+| Ningún canal tiene datos | Revisión manual (RN-009) |
 | Jesús vende por un canal distinto al elegido | Se registra el canal real y el resultado |
 | Un canal se activa después (llega Keepa) | Las oportunidades vigentes se vuelven a evaluar |
 
@@ -109,5 +117,5 @@ Para cada canal donde el producto se puede vender, se calcula el margen (RN-001)
 | 2026-11-11 | Amazon FBM se activa con fuente de Amazon (DEC-156) | Jesús |
 
 ## 14. Revisión de consistencia
-- Última revisión: pendiente.
-- Detalle: `revisiones/RN-018.md` (por crear)
+- Última revisión: 2026-11-11 (v1) — RECHAZADO.
+- Detalle: [revisiones/RN-018.md](/revisiones/RN-018.md)

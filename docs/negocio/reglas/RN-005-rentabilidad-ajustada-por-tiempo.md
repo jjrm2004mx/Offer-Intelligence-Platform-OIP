@@ -57,7 +57,7 @@ unidades recomendadas  = ventas al mes ÷ (vendedores + 1), redondeado hacia aba
 | Días de pago | 14 (Amazon) | **0**: pago al entregar |
 | Unidades recomendadas | Fórmula de arriba | Máximo **2** mientras la demanda local no sea "probada"; con "probada", máximo 3 |
 
-**Riesgo de inventario (compra por oportunidad, DEC-141):** si los días para recuperar pasan de **60**, la oportunidad se marca **"riesgo de inventario"**. No se descarta: el rendimiento mensual ya la pone abajo en el orden.
+**Riesgo de inventario (compra por oportunidad, DEC-141):** si los días para recuperar pasan de **45**, la oportunidad se marca **"riesgo de inventario"**. No se descarta: el rendimiento mensual ya la pone abajo en el orden.
 
 Días estimados de venta según el ranking (RN-004):
 
@@ -75,7 +75,7 @@ Días estimados de venta según el ranking (RN-004):
 | Días de pago de Amazon | Lo que tarda Amazon en depositar | 14 | Por confirmar |
 | Castigo por baja en venta local | % del precio esperado | 5% | Por confirmar |
 | Unidades máximas en venta local | Sin / con demanda probada | 2 / 3 | Por confirmar |
-| Límite de riesgo de inventario | Días para recuperar | 60 | Por confirmar |
+| Límite de riesgo de inventario | Días para recuperar | 45 | Por confirmar |
 | Tabla de días por ranking | Ver arriba | Ver arriba | Por confirmar |
 
 > Nota para el documento técnico (de la v1): esta regla usa **rendimiento mensual** en lugar del "ROI anualizado" del documento de arquitectura v1.2, porque se entiende mejor. También agrega la "pérdida por devolución" y el castigo por baja con peso de 50%. Hay que actualizar el documento técnico cuando se apruebe.
@@ -107,7 +107,7 @@ Días estimados de venta según el ranking (RN-004):
 - Margen menor a $10 por unidad → no alcanza los requisitos de RN-009.
 
 **Ejemplo D — Oportunidad de inversión (ANL-001)**
-- Compra de $70 en los dos casos. Uno deja $50 en 90 días: 71.43% × 30 ÷ 90 = **23.81% al mes**, y se marca "riesgo de inventario" (más de 60 días). El otro deja $30 en 3 días: 42.86% × 30 ÷ 3 = **428.57% al mes**.
+- Compra de $70 en los dos casos. Uno deja $50 en 90 días: 71.43% × 30 ÷ 90 = **23.81% al mes**, y se marca "riesgo de inventario" (más de 45 días). El otro deja $30 en 3 días: 42.86% × 30 ÷ 3 = **428.57% al mes**.
 - Con menos ganancia, el segundo queda muy arriba en el orden.
 
 ## 6. ¿Qué información necesitamos?
@@ -154,5 +154,5 @@ Días estimados de venta según el ranking (RN-004):
 **Cambios de la v2 contra la v1:** se agrega la tabla de lo que cambia por canal, el riesgo de inventario y los ejemplos C y D. Fórmulas y ejemplos A y B de Amazon, iguales que la v1.
 
 ## 14. Revisión de consistencia
-- Última revisión: 2026-11-08 (v1) — APROBADO CON OBSERVACIONES. **La v2 está pendiente de revisión.**
+- Última revisión: 2026-11-11 (v2) — APROBADO CON OBSERVACIONES. Revisión anterior: 2026-11-08 (v1) — APROBADO CON OBSERVACIONES.
 - Detalle: [revisiones/RN-005.md](/revisiones/RN-005.md)

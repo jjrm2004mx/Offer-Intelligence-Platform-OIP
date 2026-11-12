@@ -167,5 +167,5 @@ precio de venta esperado en Amazon FBM = el MÁS BAJO entre:
 **Cambios de la v2 contra la v1:** el "precio de mercado" único se divide en precio de mercado hoy y precio habitual; se agregan mínimos, MSRP y precio tachado con usos definidos; cuentan solo publicaciones comparables (vendedor, disponibilidad, condición); la fuente pasa a ser por etapas; el precio de venta local se mueve a RN-016. Los ejemplos A, B y C de la v1 (taladro, sierra, dato viejo) se reemplazan por A a E.
 
 ## 14. Revisión de consistencia
-- Última revisión: 2026-11-08 (v1) — APROBADO CON OBSERVACIONES. **La v2 está pendiente de revisión.**
+- Última revisión: 2026-11-11 (v2) — **RECHAZADO**: corregir y reinspeccionar. Revisión anterior: 2026-11-08 (v1) — APROBADO CON OBSERVACIONES.
 - Detalle: [revisiones/RN-002.md](/revisiones/RN-002.md)
