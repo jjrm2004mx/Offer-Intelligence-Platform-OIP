@@ -2,8 +2,8 @@
 
 ## Arquitectura técnica
 
-**Versión:** 2.0 — texto **consolidado**: cada sección contiene solo lo vigente. Sin decisiones nuevas: el contenido es el de la v1.4, y donde un texto anterior contradecía una nota *(v1.4)* se reescribió según la nota. Lo reemplazado ya no aparece aquí y se consulta en las versiones anteriores (tabla "Archivo vigente").
-**Fecha:** 16 de noviembre de 2026
+**Versión:** 2.1 — texto **consolidado**: cada sección contiene solo lo vigente (DEC-191). La v2.1 cambia el contrato de ingesta (§8: `taxLocation` y tabla cerrada de códigos) y nombra las funcionalidades **F1** y **F2** (DEC-199, DEC-213, DEC-220; REQ-2026-0001 v2.6). Lo reemplazado ya no aparece aquí y se consulta en las versiones anteriores (tabla "Archivo vigente").
+**Fecha:** 17 de noviembre de 2026
 **Estado:** Línea base aprobada para construir por incrementos; las decisiones marcadas "PoC" se cierran con datos
 **Tipo de producto:** Herramienta interna, uso propio, operación todo el año
 **Idioma:** Español
@@ -12,13 +12,14 @@
 >
 > | Versión | Fecha | Dónde |
 > |---|---|---|
-> | **v2.0** (vigente) | 2026-11-16 | Este archivo (consolidación de la v1.4, sin decisiones nuevas) |
+> | **v2.1** (vigente) | 2026-11-17 | Este archivo (contrato de ingesta con `taxLocation` y códigos cerrados; funcionalidades F1 y F2) |
+> | v2.0 | 2026-11-16 | [enlace permanente](https://github.com/jjrm2004mx/Offer-Intelligence-Platform-OIP/blob/f5f10c3631a3d14b33faa6772eff670d03152385/docs/arquitectura/arquitectura-tecnica.md) — consolidación de la v1.4, sin decisiones nuevas |
 > | v1.4 | 2026-11-16 | [enlace permanente](https://github.com/jjrm2004mx/Offer-Intelligence-Platform-OIP/blob/640c9f863d7e5177db662835eaa42aad6959202c/docs/arquitectura/arquitectura-tecnica.md) — con las marcas *(v1.2)*, *(v1.3)* y *(v1.4)* y la redacción anterior |
 > | v1.3 | 2026-11-09 | [enlace permanente](https://github.com/jjrm2004mx/Offer-Intelligence-Platform-OIP/blob/a00af3f0191d2f78390cd8c4f1c16316214521f9/docs/arquitectura/arquitectura-tecnica.md) |
 > | v1.2 | 2026-11-08 | [enlace permanente](https://github.com/jjrm2004mx/Offer-Intelligence-Platform-OIP/blob/a13c81801642f5ac49958fa92a9fd65e425b5948/docs/arquitectura/OIP_Arquitectura_Tecnica_Integrada_v1.2.md) |
 > | v1.1 y v1.0 | 2026-11-08 | Fuera del repo: documentos del proyecto en Claude y carpeta OIP del Drive (la v1.0 en `otros/`) |
 
-> **Fuentes:** DEC-001 a DEC-190 del registro de decisiones y las RN v2. La revisión independiente de los diseños contra estos ADR la hará `oip-arquitecto`, que se crea la primera vez que un REQ toque un ADR (DEC-172).
+> **Fuentes:** DEC-001 a DEC-190, DEC-199, DEC-213 y DEC-220 del registro de decisiones y las RN v2. La revisión independiente de los diseños contra estos ADR la hará `oip-arquitecto`, que se crea la primera vez que un REQ toque un ADR (DEC-172).
 
 > **Precedencia.** En reglas de negocio mandan las **RN** (`docs/negocio/reglas/`): esta arquitectura las cita y no copia sus fórmulas completas. En decisiones técnicas manda este documento. Las decisiones están en `docs/proceso/registro-de-decisiones.md` (DEC-xxx).
 
@@ -75,6 +76,7 @@ Historial de cambios desde la v1.0. Los ID se conservan; la sección donde qued�
 | C-41 | *(v1.4)* **Guía de estilo** y formato de los avisos de Telegram; los emoji ⚡ ✅ 👍 🛑 🧪 reemplazan 🔴🟠🟡⚪. | DEC-184 a DEC-190. |
 | C-42 | *(v1.4)* **Alineación con las RN v2:** franjas del descuento real (20% / 25%), umbrales de niveles y mínimo por unidad, mínimo de 60 días (no 90), pago de Amazon a 30 días (no 14), demanda por percentil de la categoría, zonas desde la garita, confianza en tienda, consulta responsable escalonada. | DEC-155 a DEC-171; RN v2. |
 | C-43 | *(v2.0)* **Consolidación:** las secciones quedan solo con el texto vigente; el historial se conserva en los enlaces permanentes y en esta tabla. Sin decisiones nuevas respecto a la v1.4. | DEC-191. |
+| C-44 | *(v2.1)* **Contrato de ingesta 3.0** (§8): manda sobre el REQ, que solo lo cita; agrega `taxLocation` y la **tabla cerrada de códigos** de `availability.state`, `category` y `condition` (inglés, snake_case; español solo en avisos y Metabase); dice qué campos son obligatorios. Las funcionalidades pasan a llamarse **F1** (reventa) y **F2** (servicio a clientes); "parte A a D" queda para el REQ (§1, §3.1, §5.4). | DEC-199, DEC-213, DEC-220; EXT-005, EXT-019. |
 
 ---
 
@@ -90,8 +92,10 @@ Dos funcionalidades comparten el mismo motor de adquisición (API · HTTP · nav
 
 | | Funcionalidad | Disparo | Resultado | Reglas |
 |---|---|---|---|---|
-| **A** | Búsqueda automatizada de ofertas (reventa) | Periódica (scheduler) | Oportunidades con canal, nivel y avisos | RN-001 a RN-009, RN-012 a RN-018 |
-| **B** | Búsqueda particular por artículo (servicio a clientes) | Bajo demanda: Jesús captura la solicitud del cliente | Alternativas ordenadas: la más económica entre las disponibles | RN-011 |
+| **F1** | Búsqueda automatizada de ofertas (reventa) | Periódica (scheduler) | Oportunidades con canal, nivel y avisos | RN-001 a RN-009, RN-012 a RN-018 |
+| **F2** | Búsqueda particular por artículo (servicio a clientes) | Bajo demanda: Jesús captura la solicitud del cliente | Alternativas ordenadas: la más económica entre las disponibles | RN-011 |
+
+Los nombres **F1** y **F2** son de la arquitectura; las **partes A a D** son del REQ-2026-0001 (F1 = partes A a C; F2 = parte D) (DEC-213).
 
 **Topología:** **OIP Core** en el servidor de Jesús y **Scraper Worker** en un VPS, en **dos repositorios** (§3.4.1). La casa nunca consulta comercios.
 
@@ -248,7 +252,7 @@ Cada oportunidad se evalúa **por canal** y se elige uno (RN-018, DEC-140, DEC-1
 | Dimensión | Alcance |
 |---|---|
 | Operación | Todo el año, con perfiles de temporada (frecuencia mayor en temporadas altas) |
-| Funcionalidades | **A.** Búsqueda automatizada de ofertas. **B.** Búsqueda particular por artículo: en el Inc. 1 el cliente pide a Jesús y Jesús captura en OIP; la solicitud directa del cliente (p. ej. WhatsApp) es futura |
+| Funcionalidades | **F1.** Búsqueda automatizada de ofertas. **F2.** Búsqueda particular por artículo: en el Inc. 1 el cliente pide a Jesús y Jesús captura en OIP; la solicitud directa del cliente (p. ej. WhatsApp) es futura |
 | Comercios (Inc. 1) | **Home Depot, Walmart, Target, Best Buy, GameStop, Nintendo Store** y la ficha de Amazon, para las dos funcionalidades; solo tiendas de EE. UU. y USD (DEC-132). Cada comercio es un conector configurable |
 | Categorías | Las que más consume la gente, priorizadas por temporada (DEC-138, DEC-153): herramientas (prioridad), hogar y cocina, tecnología, juguetes y videojuegos, relojes, joyería, perfumes |
 | Orígenes de compra | En línea, tienda física (radio por zonas desde la garita, §6.3) y particulares por captura manual |
@@ -486,9 +490,9 @@ flowchart LR
 
 ### 5.4 Flujos de las dos funcionalidades
 
-**A. Búsqueda automatizada:** scheduler del Core → `schedule` (descubrimiento o seguimiento) → el Worker consulta los comercios con los controles de §3.5 → bandeja de salida → `ingest` → catálogo e identificación → referencias de precio → motor de oportunidad **por canal** (RN-001 a RN-009, RN-012 a RN-018) → elección de canal → resultado y nivel → avisos y tablero.
+**F1. Búsqueda automatizada:** scheduler del Core → `schedule` (descubrimiento o seguimiento) → el Worker consulta los comercios con los controles de §3.5 → bandeja de salida → `ingest` → catálogo e identificación → referencias de precio → motor de oportunidad **por canal** (RN-001 a RN-009, RN-012 a RN-018) → elección de canal → resultado y nivel → avisos y tablero.
 
-**B. Búsqueda por artículo:** Jesús captura la solicitud (`client_request`: alias del cliente, 1 a 3 modelos, cantidad, estados aceptados, modalidad) → el Core usa la caché de **1 hora o menos** → para lo que falte, `schedule` con prioridad sobre los trabajos periódicos y los mismos límites → `ingest` → ordenamiento de RN-011 (disponibles por precio total; el resto aparte, con su motivo) → resultado consultable y exportable. Tiendas físicas: Zonas 1 y 2, máximo 5 por comercio. En la modalidad "Jesús compra y entrega", el viaje y la entrega se muestran aparte y **no cambian el orden** (DEC-166, DEC-168). Las opciones de **vendedor externo** se marcan y no se recomiendan por defecto; los canales especiales (Walmart Business) se marcan "puede requerir cuenta especial" (DEC-135). Las **sugerencias** de ofertas relacionadas (DEC-139) se agregan cuando RN-011 defina su criterio.
+**F2. Búsqueda por artículo:** Jesús captura la solicitud (`client_request`: alias del cliente, 1 a 3 modelos, cantidad, estados aceptados, modalidad) → el Core usa la caché de **1 hora o menos** → para lo que falte, `schedule` con prioridad sobre los trabajos periódicos y los mismos límites → `ingest` → ordenamiento de RN-011 (disponibles por precio total; el resto aparte, con su motivo) → resultado consultable y exportable. Tiendas físicas: Zonas 1 y 2, máximo 5 por comercio. En la modalidad "Jesús compra y entrega", el viaje y la entrega se muestran aparte y **no cambian el orden** (DEC-166, DEC-168). Las opciones de **vendedor externo** se marcan y no se recomiendan por defecto; los canales especiales (Walmart Business) se marcan "puede requerir cuenta especial" (DEC-135). Las **sugerencias** de ofertas relacionadas (DEC-139) se agregan cuando RN-011 defina su criterio.
 
 **Amazon** se consulta como un comercio más: la **ficha de Amazon** (botón de compra, vendedores de nuevo, ranking, reseñas y "comprados el mes pasado") la lee el Worker.
 
@@ -641,11 +645,11 @@ Dos contratos, `schedule` (Core → Worker) e `ingest` (Worker → Core), escrit
 - Un cambio de contrato se crea en los dos repos con el mismo `Change: <id>`.
 - **Autenticación:** token por servicio (`podman secret`), solo por WireGuard.
 
-**Contrato de ingesta 2.0** (también para las capturas manuales de Jesús):
+**Contrato de ingesta 3.0** (también para las capturas manuales de Jesús y la carga por archivo; manda sobre el REQ, que solo lo cita, DEC-199). Es versión mayor porque `condition` pasa de español a inglés; como todavía no hay código que use la 2.0, no hay transición N-1:
 
 ```json
 {
-  "schemaVersion": "2.0",
+  "schemaVersion": "3.0",
   "crawlJobId": "uuid",
   "idempotencyKey": "homedepot|https://.../p/123|hd-0123|2026-11-16T18:00",
   "retailerCode": "homedepot",
@@ -662,10 +666,11 @@ Dos contratos, `schedule` (Core → Worker) e `ingest` (Worker → Core), escrit
   "dimsCm": null,
   "price": { "current": "29.00", "was": "129.00", "currency": "USD" },
   "seller": "comercio",
-  "condition": "nuevo",
-  "availability": { "state": "in_stock_confirmed", "text": "3 disponibles", "quantity": 3, "scope": "store", "addToCart": true },
+  "condition": "new",
+  "availability": { "state": "in_stock", "text": "3 disponibles", "quantity": 3, "scope": "store", "addToCart": null },
   "isClearance": true,
   "purchaseMode": "tienda",
+  "taxLocation": "chula_vista",
   "shipping": { "toMeCost": "0.00", "days": null, "mode": "pickup" },
   "msrp": { "value": "149.00", "source": "fabricante", "date": "2026-11-10" },
   "amazonListing": null,
@@ -677,7 +682,41 @@ Dos contratos, `schedule` (Core → Worker) e `ingest` (Worker → Core), escrit
 ```
 
 - **Montos como texto decimal** (`"29.00"`), para leerlos con `Decimal` sin pasar por `float`.
-- `seller`: `comercio · externo · particular · desconocido`. `availability.state` en línea: disponible confirmada · existencia limitada · no confirmada · agotado (RN-007). `purchaseMode`: `envio · recoleccion · tienda · particular`.
+- **Obligatorios:** `retailerCode`, `productUrl` (también en particulares: `https` y de una plataforma de la lista permitida, DEC-212), `title`, `category`, `price.current`, `seller`, `availability`, `purchaseMode`, `extractedAt` y `blocked`. Los demás son opcionales.
+- `seller`: `comercio · externo · particular · desconocido`. `purchaseMode`: `envio · recoleccion · tienda · particular`.
+- `taxLocation` (DEC-220): código de la ubicación del impuesto en la tabla de impuestos de la configuración versionada. En tienda física y recoger en tienda, la de la sucursal; con envío, la del PO Box. Sin ubicación cargada, el Core usa la tasa de respaldo (7.75%).
+- **Códigos cerrados** (DEC-199): `availability.state`, `category` y `condition` solo aceptan los códigos de estas tablas, en inglés y snake_case. Las etiquetas en español solo se muestran en los avisos y en Metabase. Agregar un código es un cambio de contrato (mismo `Change: <id>` en los dos repos).
+
+| `availability.state` | En línea (RN-007 §4.2) | En tienda (RN-007 §4.1; la cantidad va en `quantity`) |
+|---|---|---|
+| `in_stock_confirmed` | Disponible confirmada | — |
+| `in_stock` | — | "En existencia" o cantidad exacta |
+| `limited_stock` | Existencia limitada | "Pocas unidades" o "existencia limitada" |
+| `unconfirmed` | No confirmada | — |
+| `out_of_stock` | Agotado | Agotado |
+
+| `category` | Etiqueta |
+|---|---|
+| `tools` | Herramientas |
+| `home_lighting` | Hogar e iluminación |
+| `home_kitchen` | Hogar y cocina |
+| `electronics` | Tecnología (electrónica de consumo) |
+| `video_game_consoles` | Consolas de videojuegos |
+| `video_games` | Videojuegos y accesorios |
+| `toys` | Juguetes |
+| `watches` | Relojes |
+| `jewelry` | Joyería |
+| `beauty` | Perfumes y belleza |
+
+| `condition` (RN-014) | Etiqueta |
+|---|---|
+| `new` | Nuevo |
+| `open_box` | Caja abierta |
+| `refurbished` | Reacondicionado |
+| `used` | Usado |
+| `for_parts` | Para piezas |
+
+- Una categoría de esta tabla puede no tener comisión o tasa en la configuración: el canal Amazon queda cerrado como dicen las RN (RN-006; REQ B17 y B27).
 - `amazonListing` (solo en la ficha de Amazon): `buyBoxPrice` o `null` (sin oferta hoy), `sellersNew`, `rankMain`, `rankSub`, `reviews`, `boughtLastMonth`.
 - Las capturas manuales usan `retailerCode: "particular"` o `"manual"`, sin datos personales.
 - `blocked: true` alimenta la pausa por bloqueo y no genera observación.
