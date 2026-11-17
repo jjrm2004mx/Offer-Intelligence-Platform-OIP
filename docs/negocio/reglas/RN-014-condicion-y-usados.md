@@ -42,7 +42,7 @@ valor de referencia (no nuevo) = mediana de usados comparables, mismo producto (
 ```
 
 - Se necesitan **al menos 3** comparables; con menos, "sin referencia de usados" → revisión manual.
-- Los comparables cuentan solo **en la zona de venta local** (RN-016) o en plataformas con envío nacional; las publicaciones de otras ciudades sin envío no cuentan.
+- Los comparables cuentan solo **en la zona de venta local**: Tijuana y todo el condado de San Diego (RN-016, DEC-171).
 - Este valor reemplaza al precio habitual en el **descuento real** (RN-003) y sirve de base para el precio de venta local (RN-016).
 - **Amazon y usados:** joyería, relojes y belleza usados no se venden en Amazon (RN-006); en las demás categorías, por confirmar con la cuenta de vendedor.
 - **Compra a particulares:**

@@ -58,7 +58,7 @@ descuento real (%)      = (1 − precio de oferta ÷ precio habitual) × 100
 | **SOLO REFERENCIA** | Descuento real de 20% a menos de 25% | Solo tablero |
 | **SIN HISTORIAL SUFICIENTE** | No hay precio habitual (RN-002) | No se calcula descuento real; va a revisión manual sin aviso |
 | **DESCUENTO ANUNCIADO NO COMPROBADO** | Hay precio tachado, pero no hay historial suficiente de esa tienda para comprobarlo | Se avisa en el tablero; no impide evaluar el descuento real |
-| **COINCIDENCIA NO CONFIRMADA** | El producto no se identificó por código (RN-013) | Se evalúa, pero va a revisión manual sin aviso |
+| **COINCIDENCIA NO CONFIRMADA** | El producto no se identificó por código ni por modelo + marca (RN-013) | Se evalúa, pero va a revisión manual sin aviso |
 
 | Valor | Qué es | Valor inicial | ¿Confirmado? |
 |---|---|---|---|

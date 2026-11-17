@@ -46,7 +46,7 @@ Que, cuando un cliente necesita un producto concreto (por ejemplo, un Nintendo S
 1. **Más económico:** se ordena por **precio total = precio + envío**, por el total del pedido. El **impuesto se muestra, pero no ordena**, porque depende del código postal de entrega (RN-011 · P1).
 2. **Disponible:** se recomienda la más económica **entre las disponibles**:
    - En línea: estado **disponible confirmada** (RN-007: "en existencia" y permite agregar al carrito).
-   - Recoger en tienda: como en línea; si Jesús va por él, suma el viaje (RN-008).
+   - Recoger en tienda: como en línea.
    - Tienda física: confianza **Alta o Media** (RN-007).
 
 **4.2 Precio de Amazon:** el del vendedor que gana el **botón de compra**, de 1 hora o menos (RN-011 · P8).
@@ -55,7 +55,7 @@ Que, cuando un cliente necesita un producto concreto (por ejemplo, un Nintendo S
 
 | Grupo | Qué contiene | Orden |
 |---|---|---|
-| **Opciones disponibles** | Cumplen 4.1, mismo artículo confirmado por código, vendidas por el comercio, en un estado que el cliente acepta | Por precio total. **La primera es la recomendada** |
+| **Opciones disponibles** | Cumplen 4.1, mismo artículo confirmado (RN-013), vendidas por el comercio, en un estado que el cliente acepta | Por precio total. **La primera es la recomendada** |
 | **Otras opciones** | No disponibles; confianza Baja o sin dato; **vendedor externo** (DEC-135); **identificadas solo por nombre** hasta que Jesús las verifique (RN-011 · P9); "puede requerir cuenta especial" (Walmart Business); **"requiere membresía"**; piezas insuficientes | Por precio total, cada una con su motivo |
 
 - **Cupones:** solo los que aparecen en la ficha del comercio.
@@ -71,10 +71,10 @@ Que, cuando un cliente necesita un producto concreto (por ejemplo, un Nintendo S
 
 **4.5 Modalidad del servicio** (RN-011 · P2)
 
-| Modalidad | Cuándo por defecto | Qué se suma |
+| Modalidad | Cuándo por defecto | Costos de Jesús |
 |---|---|---|
-| **Solo enlace** | La recomendada es en línea | Nada |
-| **Jesús compra y entrega** | La recomendada es en tienda física | Viaje (RN-008) y entrega (DEC-142) |
+| **Solo enlace** | La recomendada es en línea | Ninguno |
+| **Jesús compra y entrega** | La recomendada es en tienda física (o recoger en tienda) | Viaje (RN-008) y entrega (DEC-142): **se muestran aparte y no cambian el orden** |
 
 **4.6 Tiendas físicas a revisar:** las de **Zona 1 y Zona 2** (hasta 40 km de la garita, RN-008), **máximo 5 por comercio**, ordenadas por cercanía a la garita, para no exceder RN-010.
 
@@ -111,7 +111,8 @@ Datos encontrados (mismo código UPC, todos nuevos, vendidos por el comercio):
 Resultado:
 - **Opciones disponibles:** 1. **Walmart Chula Vista, $299.00 (recomendada)**, modalidad "Jesús compra y entrega"; 2. Walmart en línea, $329.00; 3. Amazon, $339.99.
 - **Otras opciones:** Walmart National City, $289.00: más barata, pero con confianza Baja.
-- Ahorro de la recomendada frente a la siguiente: 329.00 − 299.00 = **$30.00**. A eso se le suman viaje y entrega, que Jesús considera al fijar su tarifa.
+- Ahorro en precio de la recomendada frente a la siguiente: 329.00 − 299.00 = **$30.00**.
+- Aparte, como dato para Jesús: viaje a Chula Vista $55.00 (RN-008) + entrega $9.50 = **$64.50**. No cambian el orden; Jesús los considera al decidir la modalidad y su tarifa.
 
 **Ejemplo B — Nada disponible**
 - Solo una opción, con "existencia limitada" hace 3 h (Baja) → **sin opciones disponibles**; aviso "repetir la búsqueda más tarde".
@@ -178,6 +179,7 @@ Resultado:
 | 2026-11-16 | Tiendas de Zonas 1 y 2, máximo 5 por comercio | Jesús (propuesta de Claude) |
 | 2026-11-16 | Respuesta en 1 hora, máximo el mismo día | Jesús (propuesta de Claude) |
 | 2026-11-16 | El cobro lo define Jesús; OIP muestra el ahorro | Jesús (propuesta de Claude) |
+| 2026-11-16 | Viaje y entrega se muestran aparte y no ordenan las opciones (DEC-168) | Jesús |
 
 ## 14. Revisión de consistencia
 - Última revisión: 2026-11-16 (v2) — RECHAZADO

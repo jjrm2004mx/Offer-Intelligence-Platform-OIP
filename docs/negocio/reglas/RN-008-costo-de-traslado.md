@@ -51,7 +51,8 @@ Cada tienda tiene una zona según qué tan lejos está de la garita. Se suma la 
 ```
 horas del viaje    = horas de manejo (ida y vuelta) + horas de espera en la garita + 0.5 h por cada tienda
 costo del viaje    = km totales × costo por km + horas del viaje × valor de la hora + costos fijos
-ganancia del viaje = Σ (margen ajustado por unidad × unidades recomendadas) de las oportunidades de la ruta
+ganancia del viaje = Σ (margen ajustado por unidad × unidades recomendadas, del canal elegido por RN-018)
+                     de las oportunidades de la ruta
                      − costo del viaje
 ```
 

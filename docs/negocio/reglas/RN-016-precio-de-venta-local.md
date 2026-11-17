@@ -41,7 +41,7 @@ precio pedido          = el MENOR entre precio estimado y techo local
 precio de venta local  = precio pedido × (1 − 10%)        ← margen de negociación
 ```
 
-- **Zona de venta local:** Tijuana y las Zonas 1 y 2 de San Diego (RN-008).
+- **Zona de venta local:** Tijuana y **todo el condado de San Diego** (DEC-171).
 - Solo cuentan publicaciones del **mismo producto y estado** (RN-013, RN-014); las de otras ciudades no cuentan (CASO-005).
 - Siempre se marca **"estimado"**.
 
@@ -49,7 +49,7 @@ precio de venta local  = precio pedido × (1 − 10%)        ← margen de negoc
 |---|---|---|---|
 | Porcentaje del precio de mercado | Sin estimado de Jesús | 85% | **Propuesta (por aceptar)** |
 | Margen de negociación | Descuento sobre el precio pedido | 10% | **Propuesta (por aceptar)** |
-| Zona de venta local | Dónde cuentan los comparables | Tijuana y Zonas 1 y 2 de San Diego | **Propuesta (por aceptar)** |
+| Zona de venta local | Dónde cuentan los comparables | Tijuana y todo el condado de San Diego | Jesús (DEC-171) |
 
 Todos los valores son iniciales y configurables.
 
@@ -63,8 +63,8 @@ Todos los valores son iniciales y configurables.
 - Precio de mercado hoy $149 → 85% = $126.65. Techo $135 → precio pedido $126.65 → × 0.90 = **$113.99**.
 
 **Ejemplo C — Baterías Milwaukee (CASO-005)**
-- Jesús estima $110. Los comparables están en Vista (más de 40 km de la garita) y Houston: **no cuentan** → **sin comparables locales**, sin techo.
-- Precio pedido $110 → precio de venta local = 110 × 0.90 = **$99.00**, marcado "sin comparables locales".
+- Jesús estima $110. Comparable en el condado: $99 (Vista); los de Houston no cuentan → techo **$99**.
+- Precio pedido = menor(110, 99) = $99 → precio de venta local = 99 × 0.90 = **$89.10**.
 
 ## 6. ¿Qué información necesitamos?
 - Estimado de Jesús, si lo hay.
@@ -99,6 +99,7 @@ Todos los valores son iniciales y configurables.
 |---|---|---|
 | 2026-11-11 | Venta directa con precio estimado que captura Jesús o porcentaje del precio de mercado, marcado "estimado" (DEC-140) | Jesús |
 | 2026-11-11 | Venta local = OfferUp, Marketplace y venta personal juntas (DEC-151) | Jesús |
+| 2026-11-16 | Zona de comparables: Tijuana y todo el condado de San Diego (DEC-171) | Jesús |
 
 ## 14. Revisión de consistencia
 - Última revisión: 2026-11-16 (v1) — RECHAZADO

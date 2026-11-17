@@ -38,7 +38,7 @@ Lo más seguro es el **código de barras** del producto (UPC/EAN/GTIN). Si no ha
 | Evidencia | Resultado |
 |---|---|
 | 1. Código de barras válido (con su dígito verificador) y mismo contenido | **Confirmada** |
-| 2. Número de modelo del fabricante + marca, mismo contenido | **Confirmada**, si el modelo distingue kits y ediciones; si no, no confirmada |
+| 2. Número de modelo del fabricante + marca, mismo contenido | **Confirmada** (DEC-169), siempre que el modelo distinga kits y ediciones; si no, no confirmada |
 | 3. Solo nombre, marca y características | **COINCIDENCIA NO CONFIRMADA** → revisión manual (RN-009) o "otras opciones" (RN-011) |
 
 - Kit contra herramienta sola, paquete de 2 contra 1, color o capacidad distintos: **productos distintos**.
@@ -101,7 +101,8 @@ Lo más seguro es el **código de barras** del producto (UPC/EAN/GTIN). Si no ha
 | Fecha | Decisión | Quién |
 |---|---|---|
 | 2026-11-11 | Datos de cada observación (DEC-134) | Jesús |
-| 2026-11-11 | Sin código, la comparación queda "no confirmada" (DEC-134) | Jesús |
+| 2026-11-11 | Sin código, la comparación queda "no confirmada" (DEC-134) | Jesús (**precisada** por DEC-169) |
+| 2026-11-16 | Confirman el producto el código de barras **o** el modelo del fabricante + marca con el mismo contenido (DEC-169) | Jesús |
 
 ## 14. Revisión de consistencia
 - Última revisión: 2026-11-16 (v1) — RECHAZADO
