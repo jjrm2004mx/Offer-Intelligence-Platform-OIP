@@ -260,7 +260,7 @@ RN-003 (v2) ──► REQ-2026-0001 (#2) ──► [INSPECCIÓN] (#3) ──► 
 | Entrada | Cómo se usa | Dónde vive |
 |---|---|---|
 | **Diseño de estilo** (cómo debe verse el sistema) | Se convierte en una **guía de estilo** (colores, tipografía, componentes, ejemplos de pantallas). La citan el analista en cada propuesta con interfaz, el developer al construir y el tester al verificar. En el Inc. 1 aplica al **formato de los avisos de Telegram** (la interfaz es Metabase); completa desde el Inc. 2 (interfaz propia) | `docs/diseno/` |
-| **Arquitectura propuesta por Gemini** | Es un **insumo, no un reemplazo**. Se compara punto por punto contra la v1.3, los ADR, el registro de decisiones y las RN v2: qué conviene adoptar, qué choca con un ADR y por qué. Con lo que apruebe Jesús sale la **v1.4**, sin borrar contenido | `docs/arquitectura/` |
+| **Arquitectura GemIA (stack de tickets)** | **Resuelta (2026-11-16):** analizada en `docs/arquitectura/insumos/referencia-stack-tickets.md`; su encaje quedó decidido en DEC-173 a DEC-183 y se anota en la v1.4. Es un **insumo, no un reemplazo**. Se compara punto por punto contra la v1.3, los ADR, el registro de decisiones y las RN v2: qué conviene adoptar, qué choca con un ADR y por qué. Con lo que apruebe Jesús sale la **v1.4**, sin borrar contenido | `docs/arquitectura/` |
 
 ### 12.2 Modelo y esfuerzo por actividad fuerte
 
@@ -268,7 +268,7 @@ Antes de cada actividad, Claude avisa cuál toca para ajustar el selector. Fable
 
 | Actividad | Modelo | Esfuerzo | Por qué |
 |---|---|---|---|
-| Análisis de la arquitectura de Gemini y redacción de la v1.4 | **Fable 5.2** (hasta el 16-nov-2026); después, Opus | **Alto** | Cruzar contra ADR, decisiones y RN v2; un error ahí se arrastra a todo el código |
+| Análisis de la arquitectura GemIA (stack de tickets, hecho) y redacción de la v1.4 | **Fable 5.2** (hasta el 16-nov-2026); después, Opus | **Alto** | Cruzar contra ADR, decisiones y RN v2; un error ahí se arrastra a todo el código |
 | Reescritura de reglas de negocio y revisión de consistencia | Opus | **Alto** | Fórmulas encadenadas entre reglas; hay que rehacer todas las cuentas |
 | Guía de estilo a partir del diseño | Opus o Sonnet | Medio | Extraer y ordenar; el criterio lo pone Jesús |
 | Redacción del REQ (v2 en adelante) | Opus (Fable 5.2 si sigue disponible) | **Alto** | Escenarios con números que deben cuadrar con todas las reglas |
