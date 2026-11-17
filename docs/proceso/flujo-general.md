@@ -250,3 +250,31 @@ RN-003 (v2) ──► REQ-2026-0001 (#2) ──► [INSPECCIÓN] (#3) ──► 
 | **OIP_TRACE** | Comentario oculto en un issue que registra qué agente hizo qué, sobre qué y con qué resultado |
 | **`oip-egress`** | Contenedor por el que sale todo el scraping; protege la IP de casa |
 | **GitHub Project** | Tablero de seguimiento por etapas, separado del repositorio |
+
+---
+
+## 12. Guía personal de trabajo con Claude (2026-11-16)
+
+### 12.1 Entradas externas
+
+| Entrada | Cómo se usa | Dónde vive |
+|---|---|---|
+| **Diseño de estilo** (cómo debe verse el sistema) | Se convierte en una **guía de estilo** (colores, tipografía, componentes, ejemplos de pantallas). La citan el analista en cada propuesta con interfaz, el developer al construir y el tester al verificar. En el Inc. 1 aplica al **formato de los avisos de Telegram** (la interfaz es Metabase); completa desde el Inc. 2 (interfaz propia) | `docs/diseno/` |
+| **Arquitectura propuesta por Gemini** | Es un **insumo, no un reemplazo**. Se compara punto por punto contra la v1.3, los ADR, el registro de decisiones y las RN v2: qué conviene adoptar, qué choca con un ADR y por qué. Con lo que apruebe Jesús sale la **v1.4**, sin borrar contenido | `docs/arquitectura/` |
+
+### 12.2 Modelo y esfuerzo por actividad fuerte
+
+Antes de cada actividad, Claude avisa cuál toca para ajustar el selector.
+
+| Actividad | Modelo | Esfuerzo | Por qué |
+|---|---|---|---|
+| Análisis de la arquitectura de Gemini y redacción de la v1.4 | Opus (o Fable, si está disponible) | **Alto** | Cruzar contra ADR, decisiones y RN v2; un error ahí se arrastra a todo el código |
+| Reescritura de reglas de negocio y revisión de consistencia | Opus | **Alto** | Fórmulas encadenadas entre reglas; hay que rehacer todas las cuentas |
+| Guía de estilo a partir del diseño | Opus o Sonnet | Medio | Extraer y ordenar; el criterio lo pone Jesús |
+| Redacción del REQ (v2 en adelante) | Opus | **Alto** | Escenarios con números que deben cuadrar con todas las reglas |
+| Inspección del REQ (`oip-inspector`) | Opus | **Alto** | Contexto aislado; es el gate formal |
+| Arranque técnico (Etapa 3) | Opus | Medio | Mucha configuración; las instrucciones de los agentes nuevos piden cuidado |
+| Propuesta OpenSpec (`oip-analista`) | Opus | Alto | Traduce criterios del REQ a escenarios y diseño |
+| Codificación (`oip-developer`) | Sonnet u Opus | Medio | Tareas acotadas (1 tarea = 1 PR) con pruebas por escenario |
+| Pruebas (`oip-tester`) | Sonnet | Medio | Mecánico una vez que los escenarios están bien escritos |
+| Capturas, preguntas y ajustes pequeños | Cualquiera | Bajo | Transcribir y ordenar |
