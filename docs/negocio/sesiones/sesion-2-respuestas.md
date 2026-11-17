@@ -3,11 +3,12 @@
 ```yaml
 fecha_sesion: 2026-11-16
 capturo: Jesús (con Claude)
-estado: EN_CAPTURA
+estado: CAPTURA_COMPLETA
 fuente_preguntas: revisiones/preguntas-consolidadas.md
 ```
 
 > Respuestas del experto citadas como `RN-00X · P#`. Lo que quedó sin definir se marca **PENDIENTE**.
+> **Criterio general (Jesús, 2026-11-16):** todos los valores numéricos de estas respuestas son **valores iniciales y configurables**; se calibran con los resultados reales.
 > Ya resueltas antes de la sesión (no se preguntaron): RN-002 · P1 (DEC-147), RN-002 · P2 (DEC-130), RN-011 · P3 (DEC-149), RN-011 · P5 (DEC-132).
 
 ## Bloque 1 — Costos de compra y de venta en Amazon
@@ -119,16 +120,40 @@ fuente_preguntas: revisiones/preguntas-consolidadas.md
 
 ## Bloque 10 — RN-010 Consulta responsable
 
-> **Propuestas de Claude**, PROVISIONAL hasta que Jesús las acepte (o indique lo que respondió el experto).
+> **Propuestas de Claude**, aceptadas por Jesús el 2026-11-16 **como valores iniciales configurables**; quedan por validar con el experto.
 
 | Pregunta | Propuesta | Estado | Afecta |
 |---|---|---|---|
-| RN-010 · P1 | Se mantienen **≤ 6 consultas por minuto por comercio**, una a la vez, con pausas de **10 a 15 s** | PROVISIONAL (propuesta de Claude) | RN-010 |
-| RN-010 · P2 | **Sí se respeta robots.txt por defecto.** Una excepción para un comercio solo por decisión manual de Jesús, registrada con fecha y motivo (como el cambio a stealth, G5). Coincide con DEC-116: OIP no pretende ocultarse | PROVISIONAL (propuesta de Claude) | RN-010 |
-| RN-010 · P8 | Opción **(b) comercio por comercio**: se revisan los términos de uso de cada comercio antes de activarlo y la decisión queda registrada; se prefiere siempre la vía oficial (API o programa de afiliados, DEC-133) cuando exista. Lo que se acepte queda como riesgo R-09 | PROVISIONAL (propuesta de Claude) | RN-010 |
-| RN-010 · P3 | **1 hora** de antigüedad máxima para la búsqueda del cliente, mostrando siempre "consultado hace X" | PROVISIONAL (propuesta de Claude) | RN-010, RN-011 |
-| RN-010 · P7 | Opción **(a) siempre**: antes de salir a una tienda se re-consulta el comercio, aunque haya un dato reciente. Una consulta cuesta poco; un viaje en vano, mucho (bloques 7 y 8) | PROVISIONAL (propuesta de Claude) | RN-010, RN-007 |
-| RN-010 · P4 | **24 horas** para la primera pausa por bloqueo | PROVISIONAL (propuesta de Claude) | RN-010 |
-| RN-010 · P5 | Para pausar se piden **al menos 10 consultas** en la última hora y **más de 20%** bloqueadas | PROVISIONAL (propuesta de Claude) | RN-010 |
-| RN-010 · P9 | Pausas **escalonadas**: 1.ª pausa 24 h y reanuda sola; si vuelve a bloquear en los 7 días siguientes, 2.ª pausa **48 h** y reanuda sola; a la 3.ª, el comercio queda **pausado hasta que Jesús lo autorice**. Cada pausa avisa por Telegram | PROVISIONAL (propuesta de Claude) | RN-010 |
-| RN-010 · P6 | Opción **(a) el cliente pasa primero**, con los mismos límites por comercio (coincide con la arquitectura v1.3, §5.4) | PROVISIONAL (propuesta de Claude) | RN-010, RN-011 |
+| RN-010 · P1 | Se mantienen **≤ 6 consultas por minuto por comercio**, una a la vez, con pausas de **10 a 15 s** | ACEPTADA POR JESÚS (valor inicial configurable) | RN-010 |
+| RN-010 · P2 | **Sí se respeta robots.txt por defecto.** Una excepción para un comercio solo por decisión manual de Jesús, registrada con fecha y motivo (como el cambio a stealth, G5). Coincide con DEC-116: OIP no pretende ocultarse | ACEPTADA POR JESÚS (valor inicial configurable) | RN-010 |
+| RN-010 · P8 | Opción **(b) comercio por comercio**: se revisan los términos de uso de cada comercio antes de activarlo y la decisión queda registrada; se prefiere siempre la vía oficial (API o programa de afiliados, DEC-133) cuando exista. Lo que se acepte queda como riesgo R-09 | ACEPTADA POR JESÚS (valor inicial configurable) | RN-010 |
+| RN-010 · P3 | **1 hora** de antigüedad máxima para la búsqueda del cliente, mostrando siempre "consultado hace X" | ACEPTADA POR JESÚS (valor inicial configurable) | RN-010, RN-011 |
+| RN-010 · P7 | Opción **(a) siempre**: antes de salir a una tienda se re-consulta el comercio, aunque haya un dato reciente. Una consulta cuesta poco; un viaje en vano, mucho (bloques 7 y 8) | ACEPTADA POR JESÚS (valor inicial configurable) | RN-010, RN-007 |
+| RN-010 · P4 | **24 horas** para la primera pausa por bloqueo | ACEPTADA POR JESÚS (valor inicial configurable) | RN-010 |
+| RN-010 · P5 | Para pausar se piden **al menos 10 consultas** en la última hora y **más de 20%** bloqueadas | ACEPTADA POR JESÚS (valor inicial configurable) | RN-010 |
+| RN-010 · P9 | Pausas **escalonadas**: 1.ª pausa 24 h y reanuda sola; si vuelve a bloquear en los 7 días siguientes, 2.ª pausa **48 h** y reanuda sola; a la 3.ª, el comercio queda **pausado hasta que Jesús lo autorice**. Cada pausa avisa por Telegram | ACEPTADA POR JESÚS (valor inicial configurable) | RN-010 |
+| RN-010 · P6 | Opción **(a) el cliente pasa primero**, con los mismos límites por comercio (coincide con la arquitectura v1.3, §5.4) | ACEPTADA POR JESÚS (valor inicial configurable) | RN-010, RN-011 |
+
+## Bloque 11 — RN-011 Búsqueda por artículo
+
+> **Propuestas de Claude**, aceptadas por Jesús el 2026-11-16 como valores iniciales configurables; quedan por validar con el experto. Ya decidido antes: reacondicionados y usados (DEC-149), comercios (DEC-132), vendedor externo marcado y no recomendado (DEC-135), 1 a 3 modelos por solicitud (DEC-152), sugerencias (DEC-139).
+
+| Pregunta | Propuesta | Estado | Afecta |
+|---|---|---|---|
+| RN-011 · P6 | Sí: se recomienda la **más económica entre las disponibles confirmadas**; una más barata con disponibilidad dudosa se muestra aparte y no se recomienda | ACEPTADA POR JESÚS (valor inicial configurable) | RN-011 |
+| RN-011 · P1 | El **impuesto se muestra pero no ordena**: depende del código postal de entrega. Se ordena por **precio + envío** | ACEPTADA POR JESÚS (valor inicial configurable) | RN-011 |
+| RN-011 · P8 | Precio de Amazon para el cliente: **el del botón de compra** (igual que el bloque 2), con antigüedad máxima de **1 hora** (bloque 10); con Keepa diferido (DEC-124) ya no hay costo por consulta pagada | ACEPTADA POR JESÚS (valor inicial configurable) | RN-011, RN-002 |
+| RN-011 · P7 | "Disponible" en línea cuenta como **confirmada** solo si la ficha dice "en existencia" **y** permite agregar al carrito. "Recoger en tienda" con pedido en línea se trata como **compra en línea** en la confianza (la tienda confirma el pedido), pero **suma el costo del viaje** (RN-008) si Jesús va por él | ACEPTADA POR JESÚS (valor inicial configurable) | RN-011, RN-007 |
+| RN-011 · P9 | Una opción encontrada **solo por nombre** (sin código de barras) **va aparte** hasta que Jesús la verifique, aunque sea la más barata (DEC-134) | ACEPTADA POR JESÚS (valor inicial configurable) | RN-011, RN-013 |
+| RN-011 · P10 | (a) Sí, se compara el **total del pedido con envío**; (b) una opción **sin suficientes piezas va aparte**, marcada "solo N piezas"; (c) se vale juntar piezas en **máximo 2 comercios**, como opción adicional, solo si ahorra **10% o más** frente a la mejor opción en un solo comercio | ACEPTADA POR JESÚS (valor inicial configurable) | RN-011 |
+| RN-011 · P2 | Dos modalidades: **"solo enlace"** (predeterminada para compras en línea) y **"Jesús compra y entrega"** (predeterminada cuando la mejor opción es tienda física); en la segunda se suman el viaje (RN-008) y la entrega (DEC-142) | ACEPTADA POR JESÚS (valor inicial configurable) | RN-011, RN-008 |
+| RN-011 · P11 | Se revisan las tiendas de **Zona 1 y Zona 2** (≤ 40 km de la garita, bloque 8), **máximo 5 por comercio**, ordenadas por cercanía a la garita, para no exceder los límites de RN-010 | ACEPTADA POR JESÚS (valor inicial configurable) | RN-011, RN-008, RN-010 |
+| RN-011 · P12 | Objetivo de respuesta al cliente: **1 hora**; máximo **el mismo día** | ACEPTADA POR JESÚS (valor inicial configurable) | RN-011, RN-010 |
+| RN-011 · P4 | El cobro del servicio lo **define Jesús**, fuera de OIP en el Inc. 1. OIP solo muestra el **ahorro** de la recomendada frente a la siguiente opción, para respaldar la tarifa | ACEPTADA POR JESÚS (valor inicial configurable) | RN-011 |
+
+## Resumen
+
+- **Respondidas por el experto:** bloques 1 a 3 (con aclaraciones de Jesús).
+- **Propuestas de Claude aceptadas por Jesús:** bloques 4 a 11. Se presentan al experto en la sesión 3 para validarlas.
+- **Pendientes:** dirección del PO Box (RN-001 · P6) y empaques (RN-001 · P3, P4).
+- **Siguiente paso:** reescribir RN-001 a RN-011 a v2 y crear RN-012 a RN-018 (DEC-143, DEC-145), pasarlas por `oip-revisor-rn` y registrar las decisiones en `docs/proceso/registro-de-decisiones.md`.

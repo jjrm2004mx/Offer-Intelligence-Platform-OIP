@@ -23,6 +23,8 @@
   - [ANL-001 Abastecimiento y comercialización](/analisis/ANL-001-modelo-abastecimiento-comercializacion.md)
   - [ANL-002 Inventario de reglas](/analisis/ANL-002-inventario-de-reglas.md)
   - [Pendientes de consolidación](/analisis/pendientes-de-consolidacion.md)
+- Sesiones con el experto
+  - [Sesión 2 — respuestas](/sesiones/sesion-2-respuestas.md)
 - Revisión de consistencia
   - [Preguntas consolidadas](/revisiones/preguntas-consolidadas.md)
   - [RN-001](/revisiones/RN-001.md)
