@@ -2,7 +2,7 @@
 
 ## Arquitectura técnica
 
-**Versión:** 2.1 — texto **consolidado**: cada sección contiene solo lo vigente (DEC-191). La v2.1 cambia el contrato de ingesta (§8: `taxLocation` y tabla cerrada de códigos) y nombra las funcionalidades **F1** y **F2** (DEC-199, DEC-213, DEC-220; REQ-2026-0001 v2.6). Lo reemplazado ya no aparece aquí y se consulta en las versiones anteriores (tabla "Archivo vigente").
+**Versión:** 2.2 — texto **consolidado**: cada sección contiene solo lo vigente (DEC-191). La v2.2 alinea la arquitectura con el REQ-2026-0001 v2.7: redondeo de DEC-207 (§2.1), nivel del aviso (§2.7) y capturas de Jesús con el contrato de ingesta 3.1 (§5.4, §8) (DEC-221 a DEC-223). Lo reemplazado ya no aparece aquí y se consulta en las versiones anteriores (tabla "Archivo vigente").
 **Fecha:** 17 de noviembre de 2026
 **Estado:** Línea base aprobada para construir por incrementos; las decisiones marcadas "PoC" se cierran con datos
 **Tipo de producto:** Herramienta interna, uso propio, operación todo el año
@@ -12,14 +12,15 @@
 >
 > | Versión | Fecha | Dónde |
 > |---|---|---|
-> | **v2.1** (vigente) | 2026-11-17 | Este archivo (contrato de ingesta con `taxLocation` y códigos cerrados; funcionalidades F1 y F2) |
+> | **v2.2** (vigente) | 2026-11-17 | Este archivo (redondeo de DEC-207; nivel del aviso; contrato de ingesta 3.1 con `listed`, `pickupLocation` y capturas por `recordType`) |
+> | v2.1 | 2026-11-17 | [enlace permanente](https://github.com/jjrm2004mx/Offer-Intelligence-Platform-OIP/blob/da87f9d08b291db35d25f8be5c760884ca7c7660/docs/arquitectura/arquitectura-tecnica.md) — contrato de ingesta 3.0 con `taxLocation` y códigos cerrados; funcionalidades F1 y F2 |
 > | v2.0 | 2026-11-16 | [enlace permanente](https://github.com/jjrm2004mx/Offer-Intelligence-Platform-OIP/blob/f5f10c3631a3d14b33faa6772eff670d03152385/docs/arquitectura/arquitectura-tecnica.md) — consolidación de la v1.4, sin decisiones nuevas |
 > | v1.4 | 2026-11-16 | [enlace permanente](https://github.com/jjrm2004mx/Offer-Intelligence-Platform-OIP/blob/640c9f863d7e5177db662835eaa42aad6959202c/docs/arquitectura/arquitectura-tecnica.md) — con las marcas *(v1.2)*, *(v1.3)* y *(v1.4)* y la redacción anterior |
 > | v1.3 | 2026-11-09 | [enlace permanente](https://github.com/jjrm2004mx/Offer-Intelligence-Platform-OIP/blob/a00af3f0191d2f78390cd8c4f1c16316214521f9/docs/arquitectura/arquitectura-tecnica.md) |
 > | v1.2 | 2026-11-08 | [enlace permanente](https://github.com/jjrm2004mx/Offer-Intelligence-Platform-OIP/blob/a13c81801642f5ac49958fa92a9fd65e425b5948/docs/arquitectura/OIP_Arquitectura_Tecnica_Integrada_v1.2.md) |
 > | v1.1 y v1.0 | 2026-11-08 | Fuera del repo: documentos del proyecto en Claude y carpeta OIP del Drive (la v1.0 en `otros/`) |
 
-> **Fuentes:** DEC-001 a DEC-190, DEC-199, DEC-213 y DEC-220 del registro de decisiones y las RN v2. La revisión independiente de los diseños contra estos ADR la hará `oip-arquitecto`, que se crea la primera vez que un REQ toque un ADR (DEC-172).
+> **Fuentes:** DEC-001 a DEC-190, DEC-199, DEC-207, DEC-213, DEC-219 a DEC-223 del registro de decisiones y las RN v2. La revisión independiente de los diseños contra estos ADR la hará `oip-arquitecto`, que se crea la primera vez que un REQ toque un ADR (DEC-172).
 
 > **Precedencia.** En reglas de negocio mandan las **RN** (`docs/negocio/reglas/`): esta arquitectura las cita y no copia sus fórmulas completas. En decisiones técnicas manda este documento. Las decisiones están en `docs/proceso/registro-de-decisiones.md` (DEC-xxx).
 
@@ -77,6 +78,7 @@ Historial de cambios desde la v1.0. Los ID se conservan; la sección donde qued�
 | C-42 | *(v1.4)* **Alineación con las RN v2:** franjas del descuento real (20% / 25%), umbrales de niveles y mínimo por unidad, mínimo de 60 días (no 90), pago de Amazon a 30 días (no 14), demanda por percentil de la categoría, zonas desde la garita, confianza en tienda, consulta responsable escalonada. | DEC-155 a DEC-171; RN v2. |
 | C-43 | *(v2.0)* **Consolidación:** las secciones quedan solo con el texto vigente; el historial se conserva en los enlaces permanentes y en esta tabla. Sin decisiones nuevas respecto a la v1.4. | DEC-191. |
 | C-44 | *(v2.1)* **Contrato de ingesta 3.0** (§8): manda sobre el REQ, que solo lo cita; agrega `taxLocation` y la **tabla cerrada de códigos** de `availability.state`, `category` y `condition` (inglés, snake_case; español solo en avisos y Metabase); dice qué campos son obligatorios. Las funcionalidades pasan a llamarse **F1** (reventa) y **F2** (servicio a clientes); "parte A a D" queda para el REQ (§1, §3.1, §5.4). | DEC-199, DEC-213, DEC-220; EXT-005, EXT-019. |
+| C-45 | *(v2.2)* **Alineación con el REQ-2026-0001 v2.7** (reinspección v8): el redondeo sigue la lista cerrada de DEC-207, una vez por fórmula (§2.1); el aviso usa el nivel más alto entre los canales (§2.7, S-33 del REQ); **contrato de ingesta 3.1** (§8): código `listed` en `availability.state` y campo opcional `pickupLocation` para la publicación de un particular; las demás capturas de Jesús tienen su propio esquema, con `recordType` (§5.4). | DEC-221, DEC-222, DEC-223; D-039, D-040, D-041 de la inspección v8. |
 
 ---
 
@@ -131,7 +133,7 @@ margen neto (%)        = margen neto ($) ÷ costo de compra × 100
 - Margen % **sobre lo invertido**.
 - Las compras en línea van a un **PO Box en San Diego** (impuesto de esa zona; dirección pendiente). La cuota mensual de Amazon es un gasto fijo, fuera del margen por unidad (DEC-156).
 - El costo del **viaje a tienda** no entra en el margen por unidad: se evalúa por viaje completo (§6.3, RN-008).
-- **Redondeo** (DEC-060): montos con `Decimal`, a centavos con el medio centavo hacia arriba en cada paso; porcentajes sin redondear para calcular y comparar, mostrados con 1 decimal.
+- **Redondeo** (DEC-060, precisada por DEC-207 y DEC-222): montos con `Decimal`. Solo se redondean a centavos, con el medio centavo hacia arriba, los montos de la **lista cerrada** del REQ-2026-0001 §5 (impuesto, costo de compra, comisión, envío, devoluciones, castigo, precio de venta local, valor de referencia de usados, traslados, margen neto, margen ajustado y ganancia total), y cada fórmula de varios factores se redondea **una sola vez, al final** (venta local = mercado hoy × 85% × 90%). Porcentajes sin redondear para calcular y comparar, mostrados con 1 decimal.
 
 ### 2.2 Referencias de precio
 
@@ -240,7 +242,7 @@ Cada oportunidad se evalúa **por canal** y se elige uno (RN-018, DEC-140, DEC-1
 
 - **Estado de cada canal:** cerrado, por revisar o disponible (REQ-2026-0001 §3.2.1). Un canal cerrado no cierra la oferta.
 - **Elección:** mayor ganancia total del lote (margen ajustado × unidades); si la diferencia contra la mayor es < 10%, desempata el rendimiento mensual.
-- El tablero muestra **los dos canales** con sus números; el aviso usa el del canal elegido.
+- El tablero muestra **los dos canales** con sus números. El aviso usa el **nivel más alto entre los canales con nivel**, aunque el canal elegido sea otro, y muestra aparte el canal con mejor ganancia y el de mejor nivel (DEC-219, DEC-221; REQ-2026-0001 S-33, que prevalece sobre RN-018 §4 y RN-009 §3 hasta el cambio en bloque de las RN).
 - **Compra por oportunidad** (DEC-141): se puede comprar por precio excepcional y conservar el producto hasta encontrar comprador; el riesgo se mide con los días para vender y el rendimiento mensual.
 
 ---
@@ -496,7 +498,7 @@ flowchart LR
 
 **Amazon** se consulta como un comercio más: la **ficha de Amazon** (botón de compra, vendedores de nuevo, ranking, reseñas y "comprados el mes pasado") la lee el Worker.
 
-**Capturas manuales** de Jesús (publicaciones de particulares, comparables locales, precio local estimado, demanda local, MSRP) entran por el Core con el mismo contrato de observación (§8).
+**Capturas manuales** de Jesús (DEC-223): entran por el Core con un solo cargador (archivo en el Inc. 1). La **publicación de un particular** es una observación del contrato de ingesta 3.1 (§8: `seller` y `purchaseMode` `particular`, `availability.state: listed`, `pickupLocation`). Las demás capturas (comparables locales, estimado local, MSRP, demanda local, visitas, resultados reales y solicitudes de clientes) **no son observaciones**: tienen su propio esquema, con `recordType` y sus campos obligatorios (REQ-2026-0001 §6); los nombres y los tipos los fija el `design.md` de la parte B.
 
 ### 5.5 IA opcional (DEC-177)
 
@@ -645,11 +647,11 @@ Dos contratos, `schedule` (Core → Worker) e `ingest` (Worker → Core), escrit
 - Un cambio de contrato se crea en los dos repos con el mismo `Change: <id>`.
 - **Autenticación:** token por servicio (`podman secret`), solo por WireGuard.
 
-**Contrato de ingesta 3.0** (también para las capturas manuales de Jesús y la carga por archivo; manda sobre el REQ, que solo lo cita, DEC-199). Es versión mayor porque `condition` pasa de español a inglés; como todavía no hay código que use la 2.0, no hay transición N-1:
+**Contrato de ingesta 3.1** (también para la publicación de un particular y para las observaciones de la carga por archivo; manda sobre el REQ, que solo lo cita, DEC-199, DEC-223). La 3.0 fue versión mayor porque `condition` pasó de español a inglés. La 3.1 es **menor y compatible**: agrega el código `listed` y el campo opcional `pickupLocation`:
 
 ```json
 {
-  "schemaVersion": "3.0",
+  "schemaVersion": "3.1",
   "crawlJobId": "uuid",
   "idempotencyKey": "homedepot|https://.../p/123|hd-0123|2026-11-16T18:00",
   "retailerCode": "homedepot",
@@ -684,6 +686,7 @@ Dos contratos, `schedule` (Core → Worker) e `ingest` (Worker → Core), escrit
 - **Montos como texto decimal** (`"29.00"`), para leerlos con `Decimal` sin pasar por `float`.
 - **Obligatorios:** `retailerCode`, `productUrl` (también en particulares: `https` y de una plataforma de la lista permitida, DEC-212), `title`, `category`, `price.current`, `seller`, `availability`, `purchaseMode`, `extractedAt` y `blocked`. Los demás son opcionales.
 - `seller`: `comercio · externo · particular · desconocido`. `purchaseMode`: `envio · recoleccion · tienda · particular`.
+- `pickupLocation` (DEC-223): solo en la publicación de un particular. Código de la ciudad de recogida, de la lista de ciudades de la configuración versionada (con km y tiempo para RN-008). Solo la ciudad, nunca una dirección (R-20).
 - `taxLocation` (DEC-220): código de la ubicación del impuesto en la tabla de impuestos de la configuración versionada. En tienda física y recoger en tienda, la de la sucursal; con envío, la del PO Box. Sin ubicación cargada, el Core usa la tasa de respaldo (7.75%).
 - **Códigos cerrados** (DEC-199): `availability.state`, `category` y `condition` solo aceptan los códigos de estas tablas, en inglés y snake_case. Las etiquetas en español solo se muestran en los avisos y en Metabase. Agregar un código es un cambio de contrato (mismo `Change: <id>` en los dos repos).
 
@@ -694,6 +697,7 @@ Dos contratos, `schedule` (Core → Worker) e `ingest` (Worker → Core), escrit
 | `limited_stock` | Existencia limitada | "Pocas unidades" o "existencia limitada" |
 | `unconfirmed` | No confirmada | — |
 | `out_of_stock` | Agotado | Agotado |
+| `listed` | Publicado: publicación de un particular (DEC-223) | — |
 
 | `category` | Etiqueta |
 |---|---|
@@ -718,7 +722,7 @@ Dos contratos, `schedule` (Core → Worker) e `ingest` (Worker → Core), escrit
 
 - Una categoría de esta tabla puede no tener comisión o tasa en la configuración: el canal Amazon queda cerrado como dicen las RN (RN-006; REQ B17 y B27).
 - `amazonListing` (solo en la ficha de Amazon): `buyBoxPrice` o `null` (sin oferta hoy), `sellersNew`, `rankMain`, `rankSub`, `reviews`, `boughtLastMonth`.
-- Las capturas manuales usan `retailerCode: "particular"` o `"manual"`, sin datos personales.
+- La publicación de un particular usa `retailerCode`, `seller` y `purchaseMode` `particular`; su `title` es marca + modelo, armado por el Core, sin texto del vendedor ni datos personales (DEC-212). Las demás capturas de Jesús no usan este contrato (§5.4).
 - `blocked: true` alimenta la pausa por bloqueo y no genera observación.
 - **Idempotencia:** `retailer + canonical_url + store_code + extractedAt` (truncado a ventana). El Core la guarda en `ingest_receipt` y descarta los duplicados.
 - **Bandeja de salida** en el Worker (DEC-175): cada resultado se guarda `PENDIENTE → ENTREGADO`, se reintenta con espera creciente si el Core o el túnel no responden y tiene retención corta.
