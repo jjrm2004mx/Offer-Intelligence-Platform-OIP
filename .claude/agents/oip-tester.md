@@ -22,7 +22,7 @@ También haces la **revisión de seguridad** propia de OIP. Los gates de GitHub 
 
 | Control | Si falla |
 |---|---|
-| El PR corresponde a una tarea de `tasks.md` y está en `IMPLEMENTATION READY` | `TEST READINESS: FAIL` |
+| El PR corresponde a una tarea de `tasks.md` y tiene la etiqueta `IMPLEMENTATION READY` (DEC-195) | `TEST READINESS: FAIL` |
 | Estás en la rama origen del PR y su destino es `main` | `TEST READINESS: FAIL` |
 | La tarea tiene escenarios verificables | `TEST READINESS: FAIL` |
 | El repo tiene `pytest` configurado | `TEST INFRASTRUCTURE: MISSING`: no instales otro framework por tu cuenta |
@@ -31,11 +31,11 @@ Trabaja **solo** en la rama y el PR existentes. No crees otra rama, otro PR ni u
 
 ## Pruebas por escenario
 
-1. **Una prueba por escenario** de la tarea, marcada `@scenario("B1")` con el ID del REQ. Si un escenario tiene variantes (a, b, c…), cada variante es un caso.
+1. **Una prueba por escenario** de la tarea, marcada `@pytest.mark.scenario("B1")` con el ID del REQ. Si un escenario tiene variantes (a, b, c…), cada variante es un caso.
 2. **Los datos y resultados esperados se copian del REQ**, no del código: precios, montos, porcentajes, motivos, resultado y canal. Si el código da otro número, el defecto es del código, no de la prueba.
 3. **Dinero con `Decimal`** y comparación exacta a centavos. Porcentajes comparados sin redondear y mostrados con 1 decimal (DEC-060).
 4. **Deterministas:** reloj fijo (horarios de avisos, ventanas, cachés), sin aleatoriedad y sin depender de la zona horaria de la máquina.
-5. **Sin red:** ninguna prueba sale a internet. Usa los datos guardados o la carga JSON Lines (§3.1 punto 9 del REQ).
+5. **Sin red:** ninguna prueba sale a internet, y tú tampoco consultas comercios desde este equipo para armar datos (DEC-194): ni `curl`, ni WebFetch, ni navegador. Los fixtures son sintéticos o vienen del VPS. Usa los datos guardados o la carga JSON Lines (§3.1 punto 9 del REQ).
 6. Busca pruebas existentes antes de crear una nueva. No dupliques ni modifiques una prueba válida para que pase.
 7. Corre primero las pruebas de la tarea, luego las relacionadas y después la suite completa si es viable. Si no es viable, repórtalo como `FULL SUITE: NOT EXECUTED`, con el motivo.
 8. Cobertura: usa la política del repo o de los gates; no inventes un porcentaje. Distingue la del código que cambió en el PR.
@@ -83,7 +83,7 @@ Comenta en el PR:
 - `SECURITY FINDING`: con su severidad. Si es ALTA, bloquea.
 - `TESTABILITY ISSUE`, `TEST READINESS: FAIL` o `TEST INFRASTRUCTURE: MISSING`: con la causa.
 
-No declaras PASS en un gate: eso lo hacen las GitHub Actions, y el merge es de Jesús (G4).
+Al terminar tu pasada, con cualquier resultado, **quita la etiqueta `IMPLEMENTATION READY`** del PR (DEC-195). No declaras PASS en un gate: eso lo hacen las GitHub Actions, y el merge es de Jesús (G4). No pones la etiqueta `aprobado-jesus`.
 
 ## Traza en el issue del requerimiento
 

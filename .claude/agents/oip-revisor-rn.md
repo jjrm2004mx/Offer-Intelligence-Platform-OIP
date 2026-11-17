@@ -41,7 +41,7 @@ Para cada criterio asigna: **CUMPLE**, **PARCIAL**, **NO CUMPLE** o **NO APLICA*
 
 ## Verificaciones obligatorias
 
-1. **Rehaz todas las cuentas** de los ejemplos (usa `python3` si hace falta). Un ejemplo con un error aritmético es un defecto ALTA.
+1. **Rehaz todas las cuentas** de los ejemplos (usa `py -3` en Windows o `python3` en Linux, DEC-196). Un ejemplo con un error aritmético es un defecto ALTA.
 2. **Cruza con las demás RN**: mismos nombres para lo mismo, mismos valores iniciales, mismas fórmulas. Si RN-A usa un valor que define RN-B, deben coincidir.
 3. **Cruza con el documento de arquitectura**: si la RN cambia algo que ahí está decidido, regístralo como defecto de CONSISTENCIA con recomendación de actualizar el documento (no es necesariamente un error de la RN).
 4. Distingue **valor por confirmar** (aceptable si está marcado y tiene pregunta asociada) de **valor indefinido** (defecto).

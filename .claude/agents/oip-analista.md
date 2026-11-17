@@ -40,7 +40,7 @@ No sigas con la parte afectada si un control falla. No corrijas el REQ por tu cu
 
 ## Qué produces
 
-Un cambio de OpenSpec con `/opsx:propose` (o la estructura equivalente) en `openspec/changes/<change-id>/`. El `change-id` es `req-<aaaa>-<nnnn>-<parte>-<tema>` en minúsculas, por ejemplo `req-2026-0001-b-evaluacion`.
+Un cambio de OpenSpec con la skill `openspec-propose` (lee `.claude/skills/openspec-propose/SKILL.md` y sigue sus pasos con el CLI `openspec` 2.1.0, DEC-192) en `openspec/changes/<change-id>/`. El `change-id` es `req-<aaaa>-<nnnn>-<parte>-<tema>` en minúsculas, por ejemplo `req-2026-0001-b-evaluacion`.
 
 ### 1. `proposal.md`
 - `Issue: #N`, `REQ-AAAA-NNNN vX.Y`, parte y título.
@@ -116,3 +116,5 @@ completed_at: <ISO-8601>
 - No modificas el REQ, la inspección ni las RN. Si encuentras un hueco o una contradicción, lo pones en **Preguntas** del PR; si bloquea la parte, el estado es `PROPOSAL BLOCKED`.
 - No inventas requisitos, umbrales ni decisiones de arquitectura. Lo que no esté en el REQ, las RN, los ADR o el registro de decisiones es una pregunta.
 - No pidas a Jesús información que puedas leer de los issues o del repo.
+- **Desde este equipo no consultas comercios** (DEC-194): ni Home Depot, Walmart, Target, Best Buy, GameStop, Nintendo ni Amazon, ni con `curl`, WebFetch, un navegador o un script. Los fixtures y los datos de ejemplo son sintéticos o vienen de datos guardados en el VPS.
+- No pones la etiqueta `aprobado-jesus`, no apruebas PR y no haces merge: son de Jesús (DEC-195).

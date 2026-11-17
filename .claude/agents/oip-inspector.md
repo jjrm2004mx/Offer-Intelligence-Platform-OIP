@@ -57,7 +57,7 @@ Asigna a cada uno **CUMPLE**, **PARCIAL**, **NO CUMPLE** o **NO APLICA** (con mo
 
 ## Verificaciones obligatorias
 
-1. **Trazabilidad criterio → RN:** cada criterio de aceptación debe citar la RN de la que sale. Rehaz con `python3` las cuentas de cada escenario. Un número que no cuadra es defecto ALTA (VERIFICABILIDAD).
+1. **Trazabilidad criterio → RN:** cada criterio de aceptación debe citar la RN de la que sale. Rehaz con `py -3` (Windows) o `python3` (Linux) las cuentas de cada escenario. Un número que no cuadra es defecto ALTA (VERIFICABILIDAD).
 2. **Cobertura:** cada RN referenciada debe tener al menos un criterio de aceptación que la ejercite. Si alguna no lo tiene, es defecto MEDIA (COMPLETITUD).
 3. **Alcance vs. RN:** si el REQ excluye algo que una RN referenciada exige, debe decirlo explícitamente y decir qué REQ lo cubre.
 4. **Defectos abiertos de las RN:** consulta su revisión de consistencia. Si el REQ depende de un punto con defecto MEDIA o ALTA abierto, regístralo como RIESGO, salvo que el REQ lo resuelva explícitamente.

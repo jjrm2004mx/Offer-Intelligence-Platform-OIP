@@ -92,7 +92,7 @@
 |---|---|---|---|
 | DEC-070 | Repositorio **GitHub privado** `jjrm2004mx/Offer-Intelligence-Platform-OIP`, **sin licencia** (todos los derechos reservados) | VIGENTE | Repo |
 | DEC-071 | Trabajo en **ramas con PR** hacia `main`; commits con los trailers `Refs: #N` y `Change: <id>` | VIGENTE | Repo |
-| DEC-072 | **OpenSpec** como columna vertebral técnica, desde la etapa de análisis (`/opsx:propose`, `/opsx:apply`, `/opsx:archive`) con Claude Code | VIGENTE | Etapa 4 |
+| DEC-072 | **OpenSpec** como columna vertebral técnica, desde la etapa de análisis (`/opsx:propose`, `/opsx:apply`, `/opsx:archive`) con Claude Code | VIGENTE, **precisada por DEC-192** (OpenSpec 2.1.0 usa skills en lugar de comandos `/opsx:*`) | Etapa 4 |
 | DEC-073 | **Squad** no se usa por ahora (alfa, orientado a Copilot); se puede probar en un cambio aislado del Inc. 2 | VIGENTE | — |
 | DEC-074 | **Dos capas:** regla de negocio (RN, lenguaje llano, la ve el experto) y requerimiento formal (REQ, issue, no lo ve el experto) | VIGENTE | Etapas 1–2 |
 | DEC-075 | El **requerimiento para el experto es indispensable**; la información del experto llega por las RN | VIGENTE | Etapa 1 |
@@ -243,6 +243,18 @@ Fuentes: `docs/arquitectura/insumos/referencia-stack-tickets.md` (PR #14), con l
 |---|---|---|---|---|
 | DEC-191 | **La arquitectura vigente se lee limpia.** Desde la **v2.0**, `arquitectura-tecnica.md` contiene **solo el texto vigente** en cada sección. **Nada se borra del historial**: cada versión anterior queda con su enlace permanente a un commit fijo ("Archivo vigente") y §0 conserva el registro de cambios (C-01 en adelante). Las versiones siguientes editan el texto vigente y agregan su fila en §0 y en "Archivo vigente"; ya no se usan marcas *(vX.Y)* dentro de las secciones. Reemplaza la regla "lo modificado se marca y conserva la redacción anterior" | VIGENTE (Jesús, 2026-11-16) | Con tres capas (v1.2, v1.3, v1.4) era difícil saber qué valía hoy, y un agente podía tomar un dato viejo como vigente | `docs/arquitectura/arquitectura-tecnica.md`; `oip-analista` |
 
+## 9.5 Etapa 3 mínima (2026-11-17)
+
+Origen: revisión externa 2026-11 (`docs/proceso/revisiones/revision-externa-2026-11.md`), hallazgos EXT-001, EXT-003, EXT-034 a EXT-037.
+
+| ID | Decisión | Estado | Motivo | Dónde aplica |
+|---|---|---|---|---|
+| DEC-192 | **OpenSpec 2.1.0, versión fijada.** Trae skills en lugar de comandos: `openspec-propose`, `openspec-apply-change` y `openspec-archive-change` sustituyen a `/opsx:propose`, `/opsx:apply` y `/opsx:archive`. Las skills viven en `.claude/skills/` como carpetas reales (sin enlaces simbólicos, por Windows). Telemetría apagada (`OPENSPEC_TELEMETRY=0`). El gate valida con la misma versión | VIGENTE (Jesús, 2026-11-17) | Los agentes citaban comandos que la versión actual no tiene (EXT-001) | `CLAUDE.md` §5; `openspec/`; agentes; DEC-072 |
+| DEC-193 | **Hook de commits:** todo commit lleva `Change: <id>`; `Refs: #N` es obligatorio salvo con `Change: docs` (solo documentación). Se aceptan `Refs: jjrm2004mx/<repo>#N` (DEC-174) y los commits que genera git (merge, revert, fixup). El mismo script corre en el hook local y en el gate de trazabilidad | VIGENTE (Jesús, 2026-11-17) | Los commits de documentación no tienen `change-id` (EXT-036) | `scripts/check-commit-msg.sh`, `.githooks/`; DEC-071 |
+| DEC-194 | **Los agentes no consultan comercios desde el equipo de Jesús**, ni con `curl`, WebFetch, navegador o script; los fixtures son sintéticos o vienen del VPS. `.claude/settings.json` lo refuerza con reglas `deny` por dominio y bloquea `curl`, `wget` e `Invoke-WebRequest`. Las reglas son una barrera parcial (un script podría saltarlas): la regla escrita manda | VIGENTE (Jesús, 2026-11-17) | El firewall de DEC-122 protege los contenedores del servidor, no el equipo donde corren los agentes (EXT-003) | `CLAUDE.md` §2; agentes; DEC-041, DEC-122 |
+| DEC-195 | **Etiquetas de PR:** `IMPLEMENTATION READY` la pone `oip-developer` y la quita `oip-tester`. `aprobado-jesus` la pone **solo Jesús, a mano**, y marca G2, G3 y G4. Las reglas `deny` impiden a los agentes ponerla, aprobar un PR o hacer merge | VIGENTE (Jesús, 2026-11-17) | GitHub no permite aprobar un PR propio, y los PR salen de la cuenta de Jesús (EXT-035, EXT-037) | `CLAUDE.md` §6; agentes; gates G2 a G4 |
+| DEC-196 | **`py -3` en Windows** para las cuentas de los agentes y el entorno; `python3` en Linux | VIGENTE (Jesús, 2026-11-17) | En el equipo de Jesús, `python3` abre la Microsoft Store (EXT-034) | `CLAUDE.md` §4; `oip-inspector`, `oip-revisor-rn` |
+
 ## 10. Pendientes abiertos
 
 | Pendiente | Dueño | Bloquea |
@@ -256,7 +268,7 @@ Fuentes: `docs/arquitectura/insumos/referencia-stack-tickets.md` (PR #14), con l
 | ~~Contratar Keepa (confirmar plan)~~ **Diferido por DEC-124**: se contrata por meses solo ante una necesidad concreta | Jesús | — |
 | VPS en EE. UU. para `oip-egress` | Jesús | PoC-A |
 | ~~Arquitectura v1.3 (DEC-028): redactada, pendiente de tu revisión (PR)~~ **Hecho**: v1.3 fusionada; la vigente es la **v1.4** | — | — |
-| Etapa 3, arranque técnico (OpenSpec, `CLAUDE.md`, agentes restantes, gates). **Agentes hechos** (PR #18); faltan OpenSpec, `CLAUDE.md`, estructura, hook, gates y comandos | Claude | Etapa 4 |
+| Etapa 3, arranque técnico. **Etapa 3 mínima hecha** (2026-11-17, DEC-192 a DEC-196). Faltan para la completa: gitleaks y umbral de cobertura, comandos `/oip:*`, `deploy/` y separación Core / Worker (DEC-173) | Claude | Primera línea del Worker |
 | Decidir sobre la Action "Requiere reinspección" (DEC-086) | Jesús | — |
 | **RN-002: separar "precio de mercado hoy" (competitividad) de "precio habitual" (descuento)** (DEC-128, DEC-129). Hoy la fórmula toma el más bajo entre el precio de hoy y la mediana de 90 días; falta que Jesús confirme el cambio | Jesús | RN-002 v2 |
 | ~~Vendedor externo en la búsqueda de ofertas (A)~~ **Resuelto por DEC-137** (revisión manual) | — | — |

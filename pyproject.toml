@@ -1,0 +1,39 @@
+[project]
+name = "oip-core"
+version = "0.0.0"
+description = "Offer Intelligence Platform (OIP), Core. Proyecto personal y privado."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3",
+    "pytest-cov>=6.0",
+    "ruff>=0.8",
+]
+
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-ra --strict-markers"
+markers = [
+    "scenario(id): escenario del REQ que cubre la prueba, por ejemplo scenario('B1')",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S", "DTZ"]
+# S101: assert es la forma normal de verificar en pytest.
+per-file-ignores = { "tests/**" = ["S101"] }
