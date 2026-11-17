@@ -264,11 +264,11 @@ RN-003 (v2) ──► REQ-2026-0001 (#2) ──► [INSPECCIÓN] (#3) ──► 
 
 ### 12.2 Modelo y esfuerzo por actividad fuerte
 
-Antes de cada actividad, Claude avisa cuál toca para ajustar el selector.
+Antes de cada actividad, Claude avisa cuál toca para ajustar el selector. Fable 5.2 estuvo incluido en el plan solo hasta el 16-nov-2026 (consume el uso más rápido que Opus); desde entonces, la opción para lo más pesado es Opus con esfuerzo alto.
 
 | Actividad | Modelo | Esfuerzo | Por qué |
 |---|---|---|---|
-| Análisis de la arquitectura de Gemini y redacción de la v1.4 | Opus (o Fable, si está disponible) | **Alto** | Cruzar contra ADR, decisiones y RN v2; un error ahí se arrastra a todo el código |
+| Análisis de la arquitectura de Gemini y redacción de la v1.4 | Opus | **Alto** | Cruzar contra ADR, decisiones y RN v2; un error ahí se arrastra a todo el código |
 | Reescritura de reglas de negocio y revisión de consistencia | Opus | **Alto** | Fórmulas encadenadas entre reglas; hay que rehacer todas las cuentas |
 | Guía de estilo a partir del diseño | Opus o Sonnet | Medio | Extraer y ordenar; el criterio lo pone Jesús |
 | Redacción del REQ (v2 en adelante) | Opus | **Alto** | Escenarios con números que deben cuadrar con todas las reglas |
