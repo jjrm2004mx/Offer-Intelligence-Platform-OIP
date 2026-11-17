@@ -7,7 +7,7 @@ Reglas obligatorias para Claude Code en este repo. Proyecto personal y privado d
 | Tema | Fuente |
 |---|---|
 | Qué y por qué | El requerimiento (issue con etiqueta `Requerimiento`) y las RN de `docs/negocio/reglas/`, en la versión que cita el REQ |
-| Cómo | `docs/arquitectura/arquitectura-tecnica.md` (v2.1, ADR-001 a ADR-028) |
+| Cómo | `docs/arquitectura/arquitectura-tecnica.md` (v2.2, ADR-001 a ADR-028) |
 | Decisiones | `docs/proceso/registro-de-decisiones.md` (DEC-xxx). Una DEC `REEMPLAZADA` no aplica |
 | Proceso | `docs/proceso/flujo-general.md` |
 | Avisos e interfaz | `docs/diseno/guia-de-estilo.md` |
