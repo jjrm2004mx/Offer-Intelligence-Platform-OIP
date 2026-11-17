@@ -147,5 +147,5 @@ Todos los valores son iniciales y configurables.
 | 2026-11-16 | Competencia mucho más barata que Amazon baja un nivel | Experto (umbral propuesto en RN-002) |
 
 ## 14. Revisión de consistencia
-- Última revisión: 2026-11-16 (v2) — APROBADO CON OBSERVACIONES
+- Última revisión: 2026-11-16 (v2.1) — APROBADO CON OBSERVACIONES
 - Detalle: [revisiones/RN-009.md](/revisiones/RN-009.md)

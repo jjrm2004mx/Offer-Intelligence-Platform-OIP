@@ -165,5 +165,5 @@ Todos los valores son iniciales y configurables.
 | 2026-11-16 | Se cuenta hasta vender la última unidad | Jesús (propuesta de Claude) |
 
 ## 14. Revisión de consistencia
-- Última revisión: 2026-11-16 (v2) — RECHAZADO
+- Última revisión: 2026-11-16 (v2.1) — APROBADO CON OBSERVACIONES
 - Detalle: [revisiones/RN-005.md](/revisiones/RN-005.md)

@@ -182,5 +182,5 @@ Resultado:
 | 2026-11-16 | Viaje y entrega se muestran aparte y no ordenan las opciones (DEC-168) | Jesús |
 
 ## 14. Revisión de consistencia
-- Última revisión: 2026-11-16 (v2) — RECHAZADO
+- Última revisión: 2026-11-16 (v2.1) — APROBADO CON OBSERVACIONES
 - Detalle: [revisiones/RN-011.md](/revisiones/RN-011.md)

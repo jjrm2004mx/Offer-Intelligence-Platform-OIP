@@ -206,7 +206,7 @@ Las preguntas marcadas **(nueva)** salieron de esta revisión. Las demás ya est
 - **RN-012 · P1 a P3** — 15 % para "Buena oferta"; precio menor (no igual) al mínimo para "Oferta excepcional"; 2 comercios de comparación.
 - **RN-012 · P4** (nueva) — El "precio más bajo visto" para "Oferta excepcional": ¿(a) el último año, (b) todo el historial, o (c) los últimos 90 días?
 - **RN-013 · P1** — Otros casos de mismo modelo con contenido distinto.
-- **RN-013 · P2** (nueva) — Sin código de barras, pero con modelo y marca: ¿(a) se confía si la caja trae lo mismo en las dos tiendas, o (b) siempre lo revisa Jesús?
+- ✅ **Respondida por Jesús (DEC-169, 2026-11-16).** **RN-013 · P2** (nueva) — Sin código de barras, pero con modelo y marca: ¿(a) se confía si la caja trae lo mismo en las dos tiendas, o (b) siempre lo revisa Jesús?
 
 **3. Demanda, rentabilidad y restricciones en Amazon**
 - **RN-004 · P1 a P3** — 0.5 % de la categoría (y primeros 100 en relojes y joyería); 20 vendedores; promedios de 7 días.
@@ -226,23 +226,23 @@ Las preguntas marcadas **(nueva)** salieron de esta revisión. Las demás ya est
 - **RN-009 · P1, P2** — Nombres nuevos y "Vigilar" desde 25 % / 25 %; mínimo por unidad.
 - **RN-009 · P3** (nueva) — Como cualquier nivel ya pide ganar 25 % del costo, el "10 % del costo" nunca se aplica. ¿Qué quería proteger? (a) basta con $10; (b) 10 % del **precio de venta**; (c) un monto mayor para productos caros.
 - **RN-018 · P1** — Preferir Amazon con menos de 10 puntos de diferencia.
-- **RN-018 · P2** (nueva) — Si una oferta es "Recomendable" en Amazon y "Muy recomendable" en venta local, con ganancias parecidas: ¿(a) gana el mejor nivel, (b) gana Amazon, o (c) gana Amazon pero el aviso llega de inmediato?
+- ✅ **Respondida por Jesús (DEC-170, 2026-11-16).** **RN-018 · P2** (nueva) — Si una oferta es "Recomendable" en Amazon y "Muy recomendable" en venta local, con ganancias parecidas: ¿(a) gana el mejor nivel, (b) gana Amazon, o (c) gana Amazon pero el aviso llega de inmediato?
 
 **6. Consulta a los comercios y búsqueda para clientes**
 - **RN-010 · P1, P2** — Valores iniciales; robots.txt y términos de uso.
 - **RN-011 · P1, P2** — Solo producto nuevo por defecto; juntar piezas con 10 % de ahorro.
-- **RN-011 · P3** (nueva) — Tienda física que Jesús compra y entrega contra opción en línea: ¿(a) se suman viaje y entrega al precio y gana el menor total, o (b) no se suman porque Jesús aprovecha viajes? Ejemplo: $299 + $55 + $9.50 = $363.50 contra $329 en línea.
+- ✅ **Respondida por Jesús (DEC-168, 2026-11-16).** **RN-011 · P3** (nueva) — Tienda física que Jesús compra y entrega contra opción en línea: ¿(a) se suman viaje y entrega al precio y gana el menor total, o (b) no se suman porque Jesús aprovecha viajes? Ejemplo: $299 + $55 + $9.50 = $363.50 contra $329 en línea.
 - **RN-011 · P4** (nueva) — Sugerencias al cliente: ¿(a) otra generación o edición, (b) otras ofertas de la misma categoría, o (c) las dos? ¿Cuántas como máximo?
 
 **7. Usados, riesgo y venta local**
 - **RN-014 · P1, P2** — 85 % de los precios pedidos; 3 comparables.
-- **RN-014 · P3** (nueva) — Para el valor de un usado, ¿cuentan publicaciones de otras ciudades con envío nacional, o solo Tijuana y San Diego?
+- ✅ **Respondida por Jesús (DEC-171, 2026-11-16).** **RN-014 · P3** (nueva) — Para el valor de un usado, ¿cuentan publicaciones de otras ciudades con envío nacional, o solo Tijuana y San Diego?
 - **RN-014 · P4** (nueva) — En el primer incremento, ¿un usado se evalúa solo para venta local o también para Amazon?
 - **RN-014 · P5** (nueva) — Un usado queda en unos 76 % de lo que piden otros (85 % y luego 10 % por negociación). ¿Bien o demasiado prudente?
 - **RN-015 · P1, P2** — Más productos para "evitar siempre"; más categorías con riesgo de falsificación.
 - **RN-015 · P3** (nueva) — ¿Qué marcas de perfumes y relojes considera "de lujo"?
 - **RN-016 · P1, P2** — 85 % del precio de mercado; 10 % de negociación.
-- **RN-016 · P3** (nueva) — Publicaciones que cuentan para el precio de la competencia local: ¿(a) Tijuana y San Diego hasta 40 km de la garita, (b) todo el condado de San Diego, o (c) otra?
+- ✅ **Respondida por Jesús (DEC-171, 2026-11-16).** **RN-016 · P3** (nueva) — Publicaciones que cuentan para el precio de la competencia local: ¿(a) Tijuana y San Diego hasta 40 km de la garita, (b) todo el condado de San Diego, o (c) otra?
 - **RN-017 · P1** — Cuánto tarda en venderse en persona una herramienta o un electrónico.
 - **RN-017 · P2** (nueva) — Con ventas reales, ¿a partir de cuántos días ya no conviene comprar para venta local? ¿21, 30 o 45?
 

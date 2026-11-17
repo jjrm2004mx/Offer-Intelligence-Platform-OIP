@@ -102,5 +102,5 @@ Todos los valores son iniciales y configurables.
 | 2026-11-16 | Zona de comparables: Tijuana y todo el condado de San Diego (DEC-171) | Jesús |
 
 ## 14. Revisión de consistencia
-- Última revisión: 2026-11-16 (v1) — RECHAZADO
+- Última revisión: 2026-11-16 (v2.1) — APROBADO CON OBSERVACIONES
 - Detalle: [revisiones/RN-016.md](/revisiones/RN-016.md)

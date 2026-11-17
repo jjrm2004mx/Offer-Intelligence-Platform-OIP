@@ -103,5 +103,5 @@ Todos los valores son iniciales y configurables.
 | 2026-11-11 | Particulares con captura manual en el Inc. 1 (DEC-150) | Jesús |
 
 ## 14. Revisión de consistencia
-- Última revisión: 2026-11-16 (v1) — APROBADO CON OBSERVACIONES
+- Última revisión: 2026-11-16 (v2.1) — APROBADO CON OBSERVACIONES
 - Detalle: [revisiones/RN-014.md](/revisiones/RN-014.md)

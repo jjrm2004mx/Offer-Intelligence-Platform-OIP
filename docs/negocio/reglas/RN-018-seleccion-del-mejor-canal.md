@@ -38,7 +38,7 @@ Se calculan los dos canales (Amazon y venta local). Los que no son viables se de
 **Elección:**
 1. Si ningún canal tiene nivel → la oferta queda sin nivel.
 2. Si solo uno tiene nivel → ese.
-3. Si los dos → el de **mayor ganancia total** = margen ajustado por unidad × unidades recomendadas (RN-005). Si la diferencia es **menor de 10%**, gana el de **mayor rendimiento mensual** (DEC-170).
+3. Si los dos → el de **mayor ganancia total** = margen ajustado por unidad × unidades recomendadas (RN-005). Si la diferencia, medida **contra la ganancia mayor**, es **menor de 10%**, gana el de **mayor rendimiento mensual** (DEC-170).
 - El tablero muestra **los dos canales** con sus números; el aviso usa el nivel del canal elegido.
 
 | Valor | Qué es | Valor inicial | ¿Confirmado? |
@@ -55,10 +55,10 @@ Se calculan los dos canales (Amazon y venta local). Los que no son viables se de
 **Ejemplo B — Sierra → Amazon** (situación base, RN-002 ejemplo B)
 - Amazon: Muy recomendable; $44.73 × 3 unidades = **$134.19**; rendimiento 116.1%.
 - Venta local, sin estimado de Jesús (RN-016): 119 × 85% = $101.15 → × 0.90 = $91.04; margen 91.04 − 31.25 − 9.50 = $50.29 (160.9%), Muy recomendable; demanda media → 2 unidades → **$100.58**; rendimiento 160.9%.
-- Ganancia total: 134.19 contra 100.58 → diferencia 25.0% (más de 10%) → **Amazon, Muy recomendable**, aunque la venta local rinda más rápido.
+- Ganancia total: 134.19 contra 100.58 → diferencia (134.19 − 100.58) ÷ 134.19 = 25.0% (más de 10%) → **Amazon, Muy recomendable**, aunque la venta local rinda más rápido.
 
 **Ejemplo C — Casi empate**
-- Amazon deja $100.00 en total (rendimiento 40.0%) y venta local $105.00 (rendimiento 60.0%): diferencia 5% (menor de 10%) → gana el de mayor rendimiento → **venta local**.
+- Amazon deja $100.00 en total (rendimiento 40.0%) y venta local $105.00 (rendimiento 60.0%): diferencia (105 − 100) ÷ 105 = 4.8% (menor de 10%) → gana el de mayor rendimiento → **venta local**.
 
 **Ejemplo D — Perfume restringido**
 - Amazon no vendible (RN-006). Venta local con nivel Recomendable → **venta local**.
@@ -98,5 +98,5 @@ Se calculan los dos canales (Amazon y venta local). Los que no son viables se de
 | 2026-11-16 | Se elige por ganancia total; el rendimiento mensual desempata (DEC-170) | Jesús |
 
 ## 14. Revisión de consistencia
-- Última revisión: 2026-11-16 (v1) — RECHAZADO
+- Última revisión: 2026-11-16 (v2.1) — APROBADO CON OBSERVACIONES
 - Detalle: [revisiones/RN-018.md](/revisiones/RN-018.md)

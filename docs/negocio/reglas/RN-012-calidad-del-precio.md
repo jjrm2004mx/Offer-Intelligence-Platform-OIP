@@ -41,7 +41,7 @@ Se asigna **la primera** clase que se cumpla, de arriba hacia abajo:
 
 | Clase | Condición |
 |---|---|
-| **Descuento cuestionable** | PRECIO ANTES INFLADO (RN-003); o vendedor externo sin confirmar (RN-015); o un **descuento anunciado** que solo se puede comparar contra **un comercio** (CASO-005) |
+| **Descuento cuestionable** | PRECIO ANTES INFLADO (RN-003); o vendedor externo sin confirmar (RN-015); o un **descuento anunciado** que solo se puede comparar contra **un comercio** (CASO-005). Distinto de la marca DESCUENTO ANUNCIADO NO COMPROBADO de RN-003, que no cambia la clase |
 | **Oferta excepcional** | Descuento ≥ **15%**, entre los más baratos y **menor** que el mínimo registrado (con al menos 90 días de historial). Igualar un mínimo anterior no basta |
 | **Buena oferta** | Descuento ≥ **15%** y entre los más baratos |
 | **Precio competitivo** | Entre los más baratos, pero con descuento menor de 15%; o **sin historial suficiente** (solo MSRP o comparación entre comercios), que nunca pasa de esta clase |
@@ -68,7 +68,7 @@ Todos los valores son iniciales y configurables.
 - Mínimo registrado: $79.99 (Black Friday 2025) → **igual, no menor** → no es excepcional → **Buena oferta**.
 
 **Ejemplo B — Sierra circular → Buena oferta**
-- Situación base (RN-002, ejemplo B): $29 contra habitual $119 → **75.6%** ✓. Mercado hoy $119 → 29 ≤ 121.38 ✓.
+- Situación base (RN-002, ejemplo B): $29 contra habitual $119 → **75.6%** ✓. Mercado hoy $119 (Amazon $119, Walmart $124: 2 comercios ✓) → 29 ≤ 121.38 ✓.
 - Solo 60 días de historial (menos de 90) → no puede ser excepcional → **Buena oferta**.
 
 **Ejemplo C — Baterías Milwaukee (CASO-005) → Descuento cuestionable**
@@ -101,7 +101,7 @@ Todos los valores son iniciales y configurables.
 | Situación | Qué hace el sistema |
 |---|---|
 | No hay precio de mercado hoy | No puede saber si está entre los más baratos → máximo "Precio competitivo" |
-| Menos de 2 comercios de comparación | Máximo "Precio competitivo"; si además hay un descuento anunciado que no se puede comprobar, Descuento cuestionable |
+| Menos de 2 comercios de comparación | Máximo "Precio competitivo"; si además el descuento anunciado solo se compara contra un comercio, Descuento cuestionable |
 | El precio está por encima del habitual | Precio normal |
 
 ## 12. Preguntas para el experto
@@ -117,5 +117,5 @@ Todos los valores son iniciales y configurables.
 | 2026-11-11 | Dos ejes: calidad del precio (esta regla) y oportunidad de reventa (RN-009) (DEC-131) | Jesús |
 
 ## 14. Revisión de consistencia
-- Última revisión: 2026-11-16 (v1) — APROBADO CON OBSERVACIONES
+- Última revisión: 2026-11-16 (v2.1) — APROBADO CON OBSERVACIONES
 - Detalle: [revisiones/RN-012.md](/revisiones/RN-012.md)
