@@ -87,10 +87,10 @@ Redactar REQ (issue) → visto bueno de Jesús → oip-inspector → ¿dictamen?
 ### Etapa 4 — Construcción, por cada REQ aprobado (con OpenSpec)
 
 ```
-oip-analista     /opsx:propose   proposal.md + specs + design.md + tasks.md             ◄── GATE: Jesús aprueba propuesta
+oip-analista     propose         proposal.md + specs + design.md + tasks.md             ◄── GATE: Jesús aprueba propuesta
                                  (escenarios = criterios del REQ; 1 tarea = 1 PR)
 [oip-arquitecto]                 solo si el REQ toca un ADR: revisa design.md contra los ADR (DEC-172)
-oip-developer    /opsx:apply     rama feat/<N>-<id> + código + PR
+oip-developer    apply-change    rama feat/<N>-<id> + código + PR
 oip-tester                       pruebas por escenario y revisión de seguridad (egress/IP, URLs,
                                  secretos, access_mode); reporta defectos sin tocar el código
 Gates (Actions)                  pruebas, cobertura, calidad, seguridad (incl. regla de egress),
@@ -104,7 +104,7 @@ Gates (Actions)                  pruebas, cobertura, calidad, seguridad (incl. r
 ### Etapa 5 — Cierre
 
 ```
-merge → /opsx:archive (plantilla de resumen; sin agente documentador, DEC-172) → openspec/specs/ actualizadas (CÓMO)
+merge → openspec-archive-change (plantilla de resumen; sin agente documentador, DEC-172) → openspec/specs/ actualizadas (CÓMO)
                                          → resumen para negocio en docs/negocio/ (QUÉ) → Vercel
 ```
 
@@ -130,7 +130,7 @@ RN-003 (v2) ──► REQ-2026-0001 (#2) ──► [INSPECCIÓN] (#3) ──► 
      │                                          │
      │                                          └──► PR (Closes #2) ──► pruebas ↔ escenarios
      │                                                     │
-     └──────────── resumen para negocio ◄── /opsx:archive ◄┘
+     └──────────── resumen para negocio ◄── archive-change ◄┘
 ```
 
 | Eslabón | Lleva el ID por medio de |
@@ -153,11 +153,11 @@ RN-003 (v2) ──► REQ-2026-0001 (#2) ──► [INSPECCIÓN] (#3) ──► 
 | `oip-revisor-rn` | 1 | Revisa la consistencia de las RN y redacta preguntas para el experto | ✅ Listo |
 | `oip-inspector` | 2 | Inspección formal del REQ (14 criterios) | ✅ Listo |
 | `oip-analista` | 4 | `proposal.md`, specs, `design.md` y `tasks.md` (absorbe analista, arquitecto y techlead) | ✅ Listo (Etapa 3) |
-| `oip-developer` | 4 | Implementación con `/opsx:apply` | ✅ Listo (Etapa 3) |
+| `oip-developer` | 4 | Implementación con la skill `openspec-apply-change` | ✅ Listo (Etapa 3) |
 | `oip-tester` | 4 | Pruebas por escenario y revisión de seguridad (absorbe seguridad) | ✅ Listo (Etapa 3) |
 | `oip-arquitecto` | 4 | Revisión independiente de `design.md` contra los ADR | **Se crea la primera vez que un REQ toque un ADR** (previsto: REQ-2026-0003, conectores) |
-| ~~`oip-negocio`~~, ~~`oip-techlead`~~, ~~`oip-seguridad`~~, ~~`oip-documentador`~~ | — | Absorbidos: la RN se redacta en el chat; `tasks.md` lo hace el analista; seguridad, el tester y los gates; el cierre, `/opsx:archive` | No se crean (DEC-172) |
-| **OpenSpec** | 4–5 | Especificación técnica por cambio (el plano) | Se instala en la Etapa 3 |
+| ~~`oip-negocio`~~, ~~`oip-techlead`~~, ~~`oip-seguridad`~~, ~~`oip-documentador`~~ | — | Absorbidos: la RN se redacta en el chat; `tasks.md` lo hace el analista; seguridad, el tester y los gates; el cierre, la skill `openspec-archive-change` | No se crean (DEC-172) |
+| **OpenSpec** | 4–5 | Especificación técnica por cambio (el plano). Versión 2.1.0, con skills en lugar de comandos `/opsx:*` (DEC-192) | ✅ Instalado (Etapa 3 mínima) |
 | **GitHub Issues** | 2–5 | REQ, inspecciones, trazas | ✅ En uso |
 | **GitHub Project** | Todas | Tablero de etapas (el semáforo) | Lo crea Jesús |
 | **Vercel** | 1 y 5 | Sitio del experto (`docs/negocio/`) | ✅ Publicado |
@@ -223,15 +223,15 @@ RN-003 (v2) ──► REQ-2026-0001 (#2) ──► [INSPECCIÓN] (#3) ──► 
 
 ---
 
-## 10. Estado actual (2026-11-16)
+## 10. Estado actual (2026-11-17)
 
 | Etapa | Estado |
 |---|---|
 | 1. Negocio | RN-001 a RN-011 v2 y RN-012 a RN-018 v1 publicadas; revisión de consistencia v2.1 sin defectos ALTA. Sesiones 1 y 2 con el experto hechas; **pendiente la sesión 3** (validar DEC-159 a DEC-167, empaques y PO Box) |
 | 2. Requerimiento | REQ-2026-0001 (#2) v2.5; inspección v7 (#3) **APROBADO → CONTINUAR**. #2 y #3 en la columna "Análisis" del Project |
 | — | Arquitectura **v2.0** (2026-11-16): consolidación de la v1.4 (DEC-123 a DEC-190 y RN v2) con solo el texto vigente (DEC-191) |
-| 3. Arranque técnico | Los 5 agentes de DEC-172 en `.claude/agents/` (PR #18). Pendiente: `openspec init`, `CLAUDE.md`, estructura `src/` y `tests/`, hook de commits, gates, comandos `/oip:*` y separación Core / Worker (DEC-173) |
-| 4–6 | No iniciado. Siguiente: análisis de la parte B de REQ-2026-0001 con `oip-analista` (G3) |
+| 3. Arranque técnico | **Etapa 3 mínima hecha (2026-11-17, EXT-001):** los 5 agentes (PR #18), OpenSpec 2.1.0, `CLAUDE.md`, `src/` y `tests/`, `pyproject.toml` (pytest y ruff), hook de commits, gates de GitHub Actions y reglas `deny` (DEC-192 a DEC-196). Pendiente para la Etapa 3 completa: gitleaks y umbral de cobertura, comandos `/oip:*`, `deploy/` y separación Core / Worker (DEC-173, antes de la primera línea del Worker) |
+| 4–6 | No iniciado. Siguiente: **REQ-2026-0001 v2.6** con las decisiones sobre la revisión externa, reinspección v8 de lo que cambie y, después, análisis de la parte B con `oip-analista` (G3) |
 | Tablero | GitHub Project "OIP" creado (Requerimiento → Inspección → Análisis → Desarrollo → Hecho) |
 | Infraestructura | Vercel ✅ · VPS por contratar (2 vCPU / 4 GB para arrancar, DEC-127) · Keepa diferido (DEC-124) |
 

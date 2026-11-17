@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Hook de commits de OIP. Se activa una vez por clon con:
+#   git config core.hooksPath .githooks
+exec "$(git rev-parse --show-toplevel)/scripts/check-commit-msg.sh" "$1"

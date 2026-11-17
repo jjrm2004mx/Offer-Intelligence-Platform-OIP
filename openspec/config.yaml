@@ -1,0 +1,37 @@
+schema: spec-driven
+
+# OpenSpec 2.1.0, fijado en CLAUDE.md (DEC-192).
+context: |
+  Language: es
+  All artifacts must be written in es.
+  Keep OpenSpec structural headings and SHALL/MUST keywords in English.
+
+  Proyecto: Offer Intelligence Platform (OIP), herramienta personal y privada de Jesús
+  para detectar oportunidades de reventa. Repo del Core (DEC-173).
+
+  Antes de escribir cualquier artefacto, lee CLAUDE.md del repo. Fuentes que mandan:
+  - Qué y por qué: el requerimiento (issue con etiqueta "Requerimiento") y las RN de
+    docs/negocio/reglas/ en la versión que cita el REQ.
+  - Cómo: docs/arquitectura/arquitectura-tecnica.md (v2.0, ADR-001 a ADR-028) y
+    docs/proceso/registro-de-decisiones.md.
+  - Avisos e interfaz: docs/diseno/guia-de-estilo.md.
+
+  Reglas que no se negocian:
+  - La IP de casa nunca consulta comercios (DEC-041, DEC-122). El Core no tiene spiders
+    ni clientes HTTP hacia comercios (DEC-173).
+  - Dinero con Decimal y ROUND_HALF_UP a centavos; porcentajes sin redondear para
+    comparar (DEC-060).
+  - Cada criterio de aceptación del REQ es un escenario con el mismo ID (B1, C7...).
+
+rules:
+  proposal:
+    - "Cita Issue: #N, la versión del REQ y la parte (A, B, C o D)."
+    - "Copia el alcance del REQ sin ampliarlo; lo que falte va a Preguntas."
+  specs:
+    - "Cada requisito cita su RN con versión, y su supuesto S-xx si aplica."
+    - "Cada escenario conserva el ID, los datos y los resultados del REQ."
+  design:
+    - "Incluye la tabla de ADR con respeta / toca."
+  tasks:
+    - "1 tarea = 1 PR, con escenarios, dependencias, horas y Definition of Done."
+    - "Termina con la matriz de cobertura: escenario, requisito, tarea, RN."

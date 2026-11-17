@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "env": {
+    "OPENSPEC_TELEMETRY": "0"
+  },
+  "permissions": {
+    "deny": [
+      "WebFetch(domain:homedepot.com)",
+      "WebFetch(domain:*.homedepot.com)",
+      "Bash(*homedepot.com*)",
+      "WebFetch(domain:walmart.com)",
+      "WebFetch(domain:*.walmart.com)",
+      "Bash(*walmart.com*)",
+      "WebFetch(domain:target.com)",
+      "WebFetch(domain:*.target.com)",
+      "Bash(*target.com*)",
+      "WebFetch(domain:bestbuy.com)",
+      "WebFetch(domain:*.bestbuy.com)",
+      "Bash(*bestbuy.com*)",
+      "WebFetch(domain:gamestop.com)",
+      "WebFetch(domain:*.gamestop.com)",
+      "Bash(*gamestop.com*)",
+      "WebFetch(domain:nintendo.com)",
+      "WebFetch(domain:*.nintendo.com)",
+      "Bash(*nintendo.com*)",
+      "WebFetch(domain:amazon.com)",
+      "WebFetch(domain:*.amazon.com)",
+      "Bash(*amazon.com*)",
+      "Bash(curl *)",
+      "Bash(wget *)",
+      "Bash(*Invoke-WebRequest*)",
+      "Bash(*Invoke-RestMethod*)",
+      "Bash(gh pr merge*)",
+      "Bash(*/merge*)",
+      "Bash(gh pr review*--approve*)",
+      "Bash(*aprobado-jesus*)"
+    ]
+  }
+}

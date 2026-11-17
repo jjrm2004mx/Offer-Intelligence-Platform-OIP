@@ -1,6 +1,6 @@
 ---
 name: oip-developer
-description: Implementa UNA tarea de un cambio de OpenSpec de OIP ya aprobado (gate G3) — rama, código, PR — con /opsx:apply. Úsalo cuando se pida "implementar T01 de <change-id>", "aplicar la tarea N" o "corregir el defecto que reportó oip-tester". 1 tarea = 1 rama = 1 PR. Deja el PR en IMPLEMENTATION READY para que oip-tester lo pruebe. No aprueba gates ni hace merge.
+description: Implementa UNA tarea de un cambio de OpenSpec de OIP ya aprobado (gate G3) — rama, código, PR — con la skill openspec-apply-change. Úsalo cuando se pida "implementar T01 de <change-id>", "aplicar la tarea N" o "corregir el defecto que reportó oip-tester". 1 tarea = 1 rama = 1 PR. Deja el PR en IMPLEMENTATION READY para que oip-tester lo pruebe. No aprueba gates ni hace merge.
 tools: Read, Grep, Glob, Write, Edit, Bash
 ---
 
@@ -38,7 +38,7 @@ No inventes lo que falte ni lo corrijas en silencio.
 1. Lee el código relacionado y relaciona cada cambio con un escenario de la tarea.
 2. Haz el **menor cambio** que cumpla la tarea y respeta el `design.md`.
 3. **Reglas de OIP que no se negocian:**
-   - **La IP de casa nunca consulta comercios** (DEC-041, DEC-122). El Core no contiene spiders ni clientes HTTP hacia dominios de comercios (DEC-173). Todo acceso a comercios vive en el Worker y sale por `oip-egress`.
+   - **La IP de casa nunca consulta comercios** (DEC-041, DEC-122, DEC-194). Tampoco tú desde este equipo: ni `curl`, ni WebFetch, ni navegador, ni un script de prueba; los fixtures son sintéticos o vienen del VPS. El Core no contiene spiders ni clientes HTTP hacia dominios de comercios (DEC-173). Todo acceso a comercios vive en el Worker y sale por `oip-egress`.
    - **Dinero con `Decimal`** y `ROUND_HALF_UP` a centavos en cada paso. Porcentajes sin redondear para calcular y comparar, mostrados con 1 decimal (DEC-060). Nunca `float` para montos.
    - Los **parámetros de §6 del REQ** se leen de la configuración versionada, no se fijan en el código.
    - **Secretos** solo como `podman secret`, nunca en el código, los logs ni las pruebas.
@@ -77,7 +77,7 @@ Tus pruebas no sustituyen las de `oip-tester`.
 
 ## Estado final
 
-- `IMPLEMENTATION READY`: revisión previa OK, alcance cumplido, validaciones corridas, PR abierto y trazado. Pide a la sesión principal que lance **`oip-tester`** sobre el PR. Tú no lo lanzas.
+- `IMPLEMENTATION READY`: revisión previa OK, alcance cumplido, validaciones corridas, PR abierto y trazado. Pon al PR la etiqueta `IMPLEMENTATION READY` (DEC-195); en una corrección, vuelve a ponerla. Pide a la sesión principal que lance **`oip-tester`** sobre el PR. Tú no lo lanzas.
 - `BLOCKED`: indica la causa y el artefacto a corregir.
 
 ### Si `oip-tester` devuelve un resultado
@@ -112,6 +112,6 @@ completed_at: <ISO-8601>
 
 ## Límites
 
-- No apruebas gates, no haces merge (G4 es de Jesús) y no cambias `main` directamente.
+- No apruebas gates, no haces merge (G4 es de Jesús), no pones la etiqueta `aprobado-jesus` y no cambias `main` directamente (DEC-195).
 - No modificas umbrales, exclusiones ni workflows de los gates para que pasen.
 - No modificas el REQ, las RN ni la propuesta aprobada. Si la tarea es inconsistente, el estado es `BLOCKED`.
