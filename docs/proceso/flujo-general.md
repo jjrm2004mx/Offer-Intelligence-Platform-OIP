@@ -268,10 +268,10 @@ Antes de cada actividad, Claude avisa cuál toca para ajustar el selector. Fable
 
 | Actividad | Modelo | Esfuerzo | Por qué |
 |---|---|---|---|
-| Análisis de la arquitectura de Gemini y redacción de la v1.4 | Opus | **Alto** | Cruzar contra ADR, decisiones y RN v2; un error ahí se arrastra a todo el código |
+| Análisis de la arquitectura de Gemini y redacción de la v1.4 | **Fable 5.2** (hasta el 16-nov-2026); después, Opus | **Alto** | Cruzar contra ADR, decisiones y RN v2; un error ahí se arrastra a todo el código |
 | Reescritura de reglas de negocio y revisión de consistencia | Opus | **Alto** | Fórmulas encadenadas entre reglas; hay que rehacer todas las cuentas |
 | Guía de estilo a partir del diseño | Opus o Sonnet | Medio | Extraer y ordenar; el criterio lo pone Jesús |
-| Redacción del REQ (v2 en adelante) | Opus | **Alto** | Escenarios con números que deben cuadrar con todas las reglas |
+| Redacción del REQ (v2 en adelante) | Opus (Fable 5.2 si sigue disponible) | **Alto** | Escenarios con números que deben cuadrar con todas las reglas |
 | Inspección del REQ (`oip-inspector`) | Opus | **Alto** | Contexto aislado; es el gate formal |
 | Arranque técnico (Etapa 3) | Opus | Medio | Mucha configuración; las instrucciones de los agentes nuevos piden cuidado |
 | Propuesta OpenSpec (`oip-analista`) | Opus | Alto | Traduce criterios del REQ a escenarios y diseño |
