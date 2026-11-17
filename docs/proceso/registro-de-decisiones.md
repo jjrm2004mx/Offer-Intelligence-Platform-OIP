@@ -249,15 +249,15 @@ Fuentes: `docs/arquitectura/insumos/referencia-stack-tickets.md` (PR #14), con l
 | Crear el GitHub Project "OIP" y asociar el #2 | Jesús | D-002 de la inspección |
 | ~~Contratar Keepa (confirmar plan)~~ **Diferido por DEC-124**: se contrata por meses solo ante una necesidad concreta | Jesús | — |
 | VPS en EE. UU. para `oip-egress` | Jesús | PoC-A |
-| Arquitectura v1.3 (DEC-028): **redactada**, pendiente de tu revisión (PR) | Jesús | — |
-| Etapa 3, arranque técnico (OpenSpec, `CLAUDE.md`, agentes restantes, gates) | Claude | Etapa 4 |
+| ~~Arquitectura v1.3 (DEC-028): redactada, pendiente de tu revisión (PR)~~ **Hecho**: v1.3 fusionada; la vigente es la **v1.4** | — | — |
+| Etapa 3, arranque técnico (OpenSpec, `CLAUDE.md`, agentes restantes, gates). **Agentes hechos** (PR #18); faltan OpenSpec, `CLAUDE.md`, estructura, hook, gates y comandos | Claude | Etapa 4 |
 | Decidir sobre la Action "Requiere reinspección" (DEC-086) | Jesús | — |
 | **RN-002: separar "precio de mercado hoy" (competitividad) de "precio habitual" (descuento)** (DEC-128, DEC-129). Hoy la fórmula toma el más bajo entre el precio de hoy y la mediana de 90 días; falta que Jesús confirme el cambio | Jesús | RN-002 v2 |
 | ~~Vendedor externo en la búsqueda de ofertas (A)~~ **Resuelto por DEC-137** (revisión manual) | — | — |
 | ~~Reescribir RN-002, RN-003, RN-004, RN-009 y RN-011 (v2) y crear RN-012~~ **Hecho el 2026-11-16**: RN-001 a RN-011 v2 y RN-012 a RN-018 (§9.2) | — | — |
-| Anotar en la arquitectura (§2.2, §4.3, §6, §7, §9, §12, ADR-007) las decisiones DEC-123 a DEC-136 | Claude | — |
-| Anotar en la arquitectura **v1.4** las decisiones DEC-173 a DEC-190 (§9.3): ADR-022 y §9 por los dos repos; §8 por los contratos y la bandeja de salida; §5.2 por los estados y el barrido; §9.2 por los puertos; §2.4 por los emojis de los avisos; §10 por los logs. La arquitectura GemIA (stack de tickets, `flujo-general.md` §12.1) ya está analizada en el insumo, así que la v1.4 sale de DEC-123 a DEC-136, DEC-173 a DEC-190 y la alineación con las RN v2 | Claude | Etapa 3 |
-| Fusionar los PR #14 (insumo) y #15 (guía de estilo), que son la fuente de §9.3 | Jesús | — |
+| ~~Anotar en la arquitectura (§2.2, §4.3, §6, §7, §9, §12, ADR-007) las decisiones DEC-123 a DEC-136~~ **Hecho en la arquitectura v1.4** | — | — |
+| ~~Anotar en la arquitectura **v1.4** las decisiones DEC-173 a DEC-190~~ **Hecho en la arquitectura v1.4** (C-27 a C-42, ADR-026 a ADR-028). Detalle original (§9.3): ADR-022 y §9 por los dos repos; §8 por los contratos y la bandeja de salida; §5.2 por los estados y el barrido; §9.2 por los puertos; §2.4 por los emojis de los avisos; §10 por los logs. La arquitectura GemIA (stack de tickets, `flujo-general.md` §12.1) ya está analizada en el insumo, así que la v1.4 sale de DEC-123 a DEC-136, DEC-173 a DEC-190 y la alineación con las RN v2 | Claude | Etapa 3 |
+| ~~Fusionar los PR #14 (insumo) y #15 (guía de estilo), que son la fuente de §9.3~~ **Hecho** | — | — |
 | Corregir el `--text-tertiary` en `prometheus-automation-shopper` (60 % → 44 %, DEC-187) | Jesús | — |
 | **Canales de venta (análisis del 2026-11-11):** el modelo actual (RN-001 a RN-009) está orientado a Amazon FBM. Propuesta del análisis: evaluar cada oportunidad **por canal** (marketplace: Amazon, Facebook Marketplace u otros; **venta directa**: contactos, grupos locales, clientes; **compra por oportunidad**: comprar y conservar hasta encontrar comprador, con riesgo de inventario) y elegir el de mayor rentabilidad con posibilidad razonable de venta. Ejemplo: compra $79; Amazon a $119 con comisión $17.85 (15%), envío $12 y empaque $2 → margen **$8.15**; venta directa a $109 con entrega $5 y otros $1 → margen **$24.00**. Afecta RN-001, RN-002, RN-004, RN-005, RN-006 y RN-008 (tiempo de entrega). **Decidido** en DEC-140 y DEC-141; queda la propuesta DEC-142 | Claude | RN-001 a RN-009 v2 |
 | **Consolidación de los ejercicios:** todas las preguntas y propuestas abiertas de CASO-001 a CASO-006 y ANL-001 están en `docs/negocio/analisis/pendientes-de-consolidacion.md` | Jesús | RN v2 |

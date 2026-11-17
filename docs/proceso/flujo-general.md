@@ -40,7 +40,7 @@
 
 | Documento | Qué define | Quién lo cambia | Cuándo |
 |---|---|---|---|
-| **Arquitectura** (`docs/arquitectura/`) | Stack (Python/FastAPI, Scrapy, Playwright, PostgreSQL/Timescale, Keepa, Telegram), despliegue (Rocky + Podman Quadlets), protección de la IP de casa (`oip-egress`), los 4 repos base, los ADR | Jesús + Claude; lo revisa `oip-arquitecto` | Cuando una RN o un diseño contradice un ADR. **Pendiente: v1.3** para alinearla con las RN validadas |
+| **Arquitectura** (`docs/arquitectura/`) | Stack (Python/FastAPI, Scrapy, Playwright, PostgreSQL/Timescale, Keepa —diferido, DEC-124—, Telegram), despliegue (Rocky + Podman Quadlets), protección de la IP de casa (`oip-egress`), los 4 repos base, los ADR | Jesús + Claude; lo revisa `oip-arquitecto` | Cuando una RN o un diseño contradice un ADR. **Vigente: v1.4** (2026-11-16), alineada con las RN v2 y con DEC-123 a DEC-190 |
 | **Reglas de negocio** (`docs/negocio/reglas/`) | Cómo se calcula el margen, qué es un descuento falso, niveles, etc. | Jesús + experto | Después de cada sesión con el experto |
 
 **Prioridad:** en reglas de negocio mandan las RN. En decisiones técnicas manda la arquitectura.
@@ -69,7 +69,7 @@ Redactar REQ (issue) → visto bueno de Jesús → oip-inspector → ¿dictamen?
 
 - **Salida:** issue `Requerimiento` con un issue `[INSPECCIÓN]` que recomienda **CONTINUAR**.
 - **Gate humano:** visto bueno de Jesús antes de cada inspección.
-- **Al terminar las primeras RN validadas:** actualizar la **arquitectura a v1.3**.
+- **Al terminar las primeras RN validadas:** actualizar la **arquitectura a v1.3**. *(Hecho: v1.3 el 2026-11-09 y v1.4 el 2026-11-16, con las RN v2.)*
 
 ### Etapa 3 — Arranque técnico (una sola vez)
 
@@ -223,17 +223,17 @@ RN-003 (v2) ──► REQ-2026-0001 (#2) ──► [INSPECCIÓN] (#3) ──► 
 
 ---
 
-## 10. Estado actual (2026-11-08)
+## 10. Estado actual (2026-11-16)
 
 | Etapa | Estado |
 |---|---|
-| 1. Negocio | RN-001…009 v1 publicadas; revisión de consistencia v1 hecha. **Pendiente: sesión con el experto** |
-| 2. Requerimiento | REQ-2026-0001 (#2) v1; inspección v1 (#3) **RECHAZADO**. Pendiente: correcciones de autor → tu visto bueno → (después del experto) reinspección v2 |
-| — | Arquitectura v1.3 pendiente (alinear con las RN validadas) |
-| 3. Arranque técnico | No iniciado |
-| 4–6 | No iniciado |
-| Tablero | Lo crea Jesús (guía entregada) |
-| Infraestructura | Vercel ✅ · VPS para `oip-egress` pendiente · Keepa pendiente de contratar |
+| 1. Negocio | RN-001 a RN-011 v2 y RN-012 a RN-018 v1 publicadas; revisión de consistencia v2.1 sin defectos ALTA. Sesiones 1 y 2 con el experto hechas; **pendiente la sesión 3** (validar DEC-159 a DEC-167, empaques y PO Box) |
+| 2. Requerimiento | REQ-2026-0001 (#2) v2.5; inspección v7 (#3) **APROBADO → CONTINUAR**. #2 y #3 en la columna "Análisis" del Project |
+| — | Arquitectura **v1.4** (2026-11-16): DEC-123 a DEC-190 y alineación con las RN v2 |
+| 3. Arranque técnico | Los 5 agentes de DEC-172 en `.claude/agents/` (PR #18). Pendiente: `openspec init`, `CLAUDE.md`, estructura `src/` y `tests/`, hook de commits, gates, comandos `/oip:*` y separación Core / Worker (DEC-173) |
+| 4–6 | No iniciado. Siguiente: análisis de la parte B de REQ-2026-0001 con `oip-analista` (G3) |
+| Tablero | GitHub Project "OIP" creado (Requerimiento → Inspección → Análisis → Desarrollo → Hecho) |
+| Infraestructura | Vercel ✅ · VPS por contratar (2 vCPU / 4 GB para arrancar, DEC-127) · Keepa diferido (DEC-124) |
 
 ---
 
