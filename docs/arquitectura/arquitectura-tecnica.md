@@ -1,31 +1,34 @@
 # Offer Intelligence Platform (OIP)
 
-## Propuesta de alcance, auditoría de repositorios Open Source y arquitectura técnica
+## Arquitectura técnica
 
-**Versión:** 1.4 — referencia de precio por etapas (Keepa diferido), dos repositorios Core y Worker, contratos versionados, IA opcional, operación endurecida, guía de estilo y alineación con las RN v2 (sobre v1.3, sin eliminar contenido: lo modificado se marca *(v1.4)* y conserva la redacción anterior)
-> *(v1.4)* Redacción anterior: **Versión:** 1.3 — dos funcionalidades (búsqueda automatizada y búsqueda por artículo), topología Core/Worker, consulta responsable y alineación con las reglas de negocio (sobre v1.2, sin eliminar contenido: lo modificado se marca *(v1.3)* y conserva la redacción anterior)
-
-**Fecha:** 16 de noviembre de 2026 (v1.4) · v1.3: 9 de noviembre de 2026 · v1.2: 8 de noviembre de 2026
-**Fuentes de la v1.4:** DEC-123 a DEC-136 (fuentes de mercado), DEC-137 a DEC-172 y las RN v2 (RN-001 a RN-011 v2, RN-012 a RN-018 v1), DEC-173 a DEC-190 (insumo del stack de tickets y guía de estilo). **En reglas de negocio prevalecen las RN**: esta arquitectura las referencia y no copia sus fórmulas completas
-**Estado:** Línea base aprobada para construcción por incrementos; decisiones marcadas "PoC" se cierran con datos
+**Versión:** 2.0 — texto **consolidado**: cada sección contiene solo lo vigente. Sin decisiones nuevas: el contenido es el de la v1.4, y donde un texto anterior contradecía una nota *(v1.4)* se reescribió según la nota. Lo reemplazado ya no aparece aquí y se consulta en las versiones anteriores (tabla "Archivo vigente").
+**Fecha:** 16 de noviembre de 2026
+**Estado:** Línea base aprobada para construir por incrementos; las decisiones marcadas "PoC" se cierran con datos
 **Tipo de producto:** Herramienta interna, uso propio, operación todo el año
 **Idioma:** Español
 
-> **Archivo vigente.** La arquitectura vive en un solo archivo; GitHub guarda el historial. Las versiones anteriores se consultan con estos enlaces permanentes (apuntan a un commit fijo y no cambian):
+> **Archivo vigente.** La arquitectura vive en un solo archivo. **Nada se borra del historial**: cada versión anterior queda con un enlace permanente a un commit fijo, y §0 conserva el registro de cambios. El texto de las secciones es solo el vigente (DEC-191).
 >
 > | Versión | Fecha | Dónde |
 > |---|---|---|
-> | **v1.4** (vigente) | 2026-11-16 | Este archivo |
-> | v1.3 | 2026-11-09 | [enlace permanente al archivo único](https://github.com/jjrm2004mx/Offer-Intelligence-Platform-OIP/blob/a00af3f0191d2f78390cd8c4f1c16316214521f9/docs/arquitectura/arquitectura-tecnica.md) · [enlace permanente original](https://github.com/jjrm2004mx/Offer-Intelligence-Platform-OIP/blob/a13c81801642f5ac49958fa92a9fd65e425b5948/docs/arquitectura/OIP_Arquitectura_Tecnica_Integrada_v1.3.md) |
+> | **v2.0** (vigente) | 2026-11-16 | Este archivo (consolidación de la v1.4, sin decisiones nuevas) |
+> | v1.4 | 2026-11-16 | [enlace permanente](https://github.com/jjrm2004mx/Offer-Intelligence-Platform-OIP/blob/640c9f863d7e5177db662835eaa42aad6959202c/docs/arquitectura/arquitectura-tecnica.md) — con las marcas *(v1.2)*, *(v1.3)* y *(v1.4)* y la redacción anterior |
+> | v1.3 | 2026-11-09 | [enlace permanente](https://github.com/jjrm2004mx/Offer-Intelligence-Platform-OIP/blob/a00af3f0191d2f78390cd8c4f1c16316214521f9/docs/arquitectura/arquitectura-tecnica.md) |
 > | v1.2 | 2026-11-08 | [enlace permanente](https://github.com/jjrm2004mx/Offer-Intelligence-Platform-OIP/blob/a13c81801642f5ac49958fa92a9fd65e425b5948/docs/arquitectura/OIP_Arquitectura_Tecnica_Integrada_v1.2.md) |
 > | v1.1 y v1.0 | 2026-11-08 | Fuera del repo: documentos del proyecto en Claude y carpeta OIP del Drive (la v1.0 en `otros/`) |
 
-> **Convención de certeza** (se conserva de v1.0): **Verificado** = observado en código/documentación;
-> **Propuesta** = decisión arquitectónica recomendada; **PoC** = no se da por resuelto hasta probarlo.
+> **Fuentes:** DEC-001 a DEC-190 del registro de decisiones y las RN v2. La revisión independiente de los diseños contra estos ADR la hará `oip-arquitecto`, que se crea la primera vez que un REQ toque un ADR (DEC-172).
+
+> **Precedencia.** En reglas de negocio mandan las **RN** (`docs/negocio/reglas/`): esta arquitectura las cita y no copia sus fórmulas completas. En decisiones técnicas manda este documento. Las decisiones están en `docs/proceso/registro-de-decisiones.md` (DEC-xxx).
+
+> **Convención de certeza:** **Verificado** = observado en código o documentación · **Propuesta** = decisión recomendada · **PoC** = no se da por resuelto hasta probarlo.
 
 ---
 
-## 0. Cambios respecto a v1.0
+## 0. Registro de cambios
+
+Historial de cambios desde la v1.0. Los ID se conservan; la sección donde quedó cada cambio está en el texto vigente.
 
 | # | Cambio | Motivo |
 |---|---|---|
@@ -71,156 +74,170 @@
 | C-40 | *(v1.4)* **Operación endurecida:** puertos en `127.0.0.1`, migraciones versionadas, Metabase con rol de solo lectura, logs sin contenido, runbook con trampas conocidas. | DEC-178 a DEC-183. |
 | C-41 | *(v1.4)* **Guía de estilo** y formato de los avisos de Telegram; los emoji ⚡ ✅ 👍 🛑 🧪 reemplazan 🔴🟠🟡⚪. | DEC-184 a DEC-190. |
 | C-42 | *(v1.4)* **Alineación con las RN v2:** franjas del descuento real (20% / 25%), umbrales de niveles y mínimo por unidad, mínimo de 60 días (no 90), pago de Amazon a 30 días (no 14), demanda por percentil de la categoría, zonas desde la garita, confianza en tienda, consulta responsable escalonada. | DEC-155 a DEC-171; RN v2. |
+| C-43 | *(v2.0)* **Consolidación:** las secciones quedan solo con el texto vigente; el historial se conserva en los enlaces permanentes y en esta tabla. Sin decisiones nuevas respecto a la v1.4. | DEC-191. |
 
 ---
 
 ## 1. Resumen ejecutivo
 
-OIP es una herramienta interna que **detecta productos que se pueden comprar muy por debajo de su precio real de mercado y revender con margen**. Funciona todo el año, con picos de temporada (Buen Fin, Black Friday, Navidad, regreso a clases, liquidaciones de fin de temporada).
+OIP es una herramienta interna que **detecta productos que se pueden comprar muy por debajo de su precio real de mercado y revender con margen**, y que **ayuda a Jesús a conseguir para sus clientes el artículo que piden donde esté más económico y disponible**. Funciona todo el año, con picos de temporada (Black Friday, Navidad, regreso a clases, liquidaciones de fin de temporada).
 
 El flujo central:
 
-> **Descubrir ofertas** (online y en tienda física) → **identificar el producto** (UPC/GTIN → ASIN) →
-> **obtener su precio real de mercado y demanda** (Amazon/Keepa + otros comercios + historial propio) →
-> **descartar descuentos inflados** → **calcular margen neto** (incluyendo comisiones y traslado) →
-> **filtrar restricciones** → **alertar** las que superen el umbral.
+> **Descubrir ofertas** (en línea, tienda física y particulares por captura manual) → **identificar el producto** (código de barras o modelo + marca, RN-013) → **referencias de precio** del historial propio y de la comparación entre comercios (RN-002) → **descuento real y calidad del precio** (RN-003, RN-012) → **margen por canal** (Amazon FBM y venta local) → **elegir canal** (RN-018) → **nivel o revisión manual** (RN-009) → **avisar** por Telegram y mostrar en el tablero.
 
-*(v1.3)* OIP tiene **dos funcionalidades** que comparten el mismo motor de adquisición (API · HTTP · navegador) y los mismos controles de consulta responsable:
+Dos funcionalidades comparten el mismo motor de adquisición (API · HTTP · navegador) y los mismos controles de consulta responsable (RN-010):
 
 | | Funcionalidad | Disparo | Resultado | Reglas |
 |---|---|---|---|---|
-| **A** | Búsqueda automatizada de ofertas (reventa) | Periódica (scheduler) | Oportunidades con nivel y alertas | RN-001 a RN-009 |
+| **A** | Búsqueda automatizada de ofertas (reventa) | Periódica (scheduler) | Oportunidades con canal, nivel y avisos | RN-001 a RN-009, RN-012 a RN-018 |
 | **B** | Búsqueda particular por artículo (servicio a clientes) | Bajo demanda: Jesús captura la solicitud del cliente | Alternativas ordenadas: la más económica entre las disponibles | RN-011 |
 
-Ambas respetan RN-010 (consulta responsable). *(v1.3)* Topología: **OIP Core** en el servidor de Jesús y **Scraper Worker** en un VPS (§3.4, §9).
+**Topología:** **OIP Core** en el servidor de Jesús y **Scraper Worker** en un VPS, en **dos repositorios** (§3.4.1). La casa nunca consulta comercios.
 
-Stack: Python (FastAPI + Scrapy + Playwright), PostgreSQL/TimescaleDB, Keepa API, Telegram, desplegado con Podman Quadlets en Rocky Linux. Unos 5–6 contenedores en el primer incremento.
-
-> *(v1.4)* **Flujo vigente:** descubrir ofertas (con filtro previo) → identificar el producto (código de barras o modelo + marca, RN-013) → **referencias de precio del historial propio y de la comparación entre comercios** (RN-002; Keepa diferido, DEC-124) → descuento real y calidad del precio (RN-003, RN-012) → **margen por canal** (Amazon FBM y venta local) → elegir canal (RN-018) → nivel o revisión manual (RN-009) → avisar. **Stack del Inc. 1 sin Keepa**: Python (FastAPI + Scrapy + Playwright), PostgreSQL/TimescaleDB, Telegram, Metabase; Rocky + Podman en el servidor de Jesús (Core) y en el VPS (Worker), en **dos repositorios** (§3.4.1).
+**Stack del Inc. 1:** Python (FastAPI + Scrapy + scrapy-playwright), PostgreSQL + TimescaleDB, Telegram y Metabase, desplegado con Podman rootless y Quadlets en Rocky Linux, en el Core y en el VPS. **Keepa está diferido** (§4.3).
 
 ---
 
 ## 2. Definición de oportunidad comercial
 
-### 2.1 Las tres métricas
+### 2.1 Indicadores y margen
 
-| Métrica | Fórmula | Uso |
+**Tres indicadores que no se mezclan** (DEC-128):
+
+| Indicador | Contra qué | Regla |
 |---|---|---|
-| **Descuento declarado** | `1 − precio_oferta / precio_antes_comercio` | Solo para **descubrir candidatos**. No decide nada. |
-| **Descuento real** | `1 − precio_oferta / precio_referencia_mercado` | Decide si de verdad está barato. |
-| **Margen neto** | `precio_venta_esperado − costo_total_adquisición − costo_venta` | Decide si conviene comprarlo. |
+| **Descuento** | Precio habitual (historial) | RN-003 |
+| **Competitividad** | Precio de mercado hoy (otros comercios) | RN-012 |
+| **Demanda** | Ranking y vendedores en Amazon; demanda local | RN-004, RN-017 |
 
-Donde:
+El **descuento anunciado** (`1 − oferta ÷ precio tachado`) solo sirve para **descubrir** candidatos; no decide nada.
+
+**Margen, por canal** (RN-001):
 
 ```
-costo_total_adquisición = precio_oferta + impuesto_venta + costo_traslado (tienda física) + costo_envío_a_mí (online)
-# (v1.3) Alineado con RN-001/RN-008: el costo_traslado NO entra en el margen por unidad;
-#        se evalúa por viaje completo (RN-008). Por unidad: precio + impuesto + envío hacia mí.
-costo_venta             = comisión_canal + envío_al_cliente (FBM) + empaque + otros_costos_venta (default 0)
-margen_neto_%           = margen_neto / costo_total_adquisición
+costo de compra        = precio + impuesto de venta + envío hacia mí
+                         (+ recogida, en compras a particulares, RN-008)
+costo de venta (canal) = Amazon FBM:  comisión + envío al cliente + empaque + otros   (RN-006)
+                         Venta local: costo de entrega (RN-008) + otros
+margen neto ($)        = precio de venta esperado (canal) − costo de compra − costo de venta (canal)
+margen neto (%)        = margen neto ($) ÷ costo de compra × 100
 ```
 
-> *(v1.4, alineado con RN-001 v2, RN-003 v2 y DEC-128)* Son **tres indicadores que no se mezclan**: **descuento** (contra el precio habitual, RN-003), **competitividad** (contra el precio de mercado hoy, RN-012) y **demanda** (RN-004 y RN-017). El margen se calcula **por canal**: `costo de compra = precio + impuesto + envío hacia mí` (más la recogida en compras a particulares, RN-008); `costo de venta` = comisión + envío al cliente + empaque (Amazon, RN-006) o costo de entrega (venta local, RN-008). Margen % sobre lo invertido. Las compras en línea van a un **PO Box en San Diego** (impuesto de esa zona; dirección pendiente) y la cuota mensual de Amazon es un gasto fijo fuera del margen por unidad (DEC-156). Montos con `Decimal`, a centavos con el medio centavo hacia arriba; porcentajes sin redondear para calcular y comparar (DEC-060).
+- Margen % **sobre lo invertido**.
+- Las compras en línea van a un **PO Box en San Diego** (impuesto de esa zona; dirección pendiente). La cuota mensual de Amazon es un gasto fijo, fuera del margen por unidad (DEC-156).
+- El costo del **viaje a tienda** no entra en el margen por unidad: se evalúa por viaje completo (§6.3, RN-008).
+- **Redondeo** (DEC-060): montos con `Decimal`, a centavos con el medio centavo hacia arriba en cada paso; porcentajes sin redondear para calcular y comparar, mostrados con 1 decimal.
 
-### 2.2 Precio de referencia de mercado
+### 2.2 Referencias de precio
 
-Se calcula con varias fuentes y se guarda cuál se usó:
+**Cuatro referencias separadas** (RN-002, DEC-129, DEC-147):
 
-1. **Amazon — precio habitual:** mediana de 90 días del precio Buy Box / nuevo (Keepa).
-2. **Amazon — precio actual** (Keepa; SP-API cuando haya cuenta de vendedor).
-3. **Otros comercios seguidos por OIP:** precio vigente del mismo producto en Walmart/Target/HD/etc.
-4. **Historial propio del comercio que oferta:** mediana de los últimos 60 días en ese comercio.
-
-`precio_referencia_mercado` = mínimo razonable entre (1) y (3) — el precio al que el comprador final puede conseguirlo hoy. `precio_venta_esperado` = (1) ajustado por competencia actual (número de vendedores, Buy Box).
-
-> *(v1.3, alineado con RN-002)* `precio_referencia_mercado` = **el más bajo** entre (2) Amazon hoy, (1) mediana de 90 días y (3) otros comercios con dato ≤ 48 h. `precio_venta_esperado` = **el más bajo entre (2) y (1)**, sin ajuste por competencia (la competencia se evalúa en la demanda, RN-004). Sin oferta de Amazon hoy: se usa la mediana y la evaluación va a revisión manual (REQ-2026-0001 §3.3).
-
-> *(v1.4, alineado con RN-002 v2, DEC-123, DEC-129, DEC-147 y DEC-157)* **Cuatro referencias separadas:** **precio habitual** (mediana de 60 días del historial propio, con historial suficiente, DEC-130) para el descuento real; **precio de mercado hoy** (el más bajo de hoy, dato ≤ 48 h, disponible, sin la oferta evaluada) para la competitividad; **MSRP** solo sin historial (la calidad no pasa de "Precio competitivo"); **precio tachado**, que nunca es referencia. **Precio de venta en Amazon** = botón de compra hoy; sin oferta hoy, precio habitual en Amazon marcado "sin oferta hoy" (ya **no** va a revisión manual). **Competencia más barata** (mercado hoy < venta en Amazon × 85%) baja un nivel en el canal Amazon. **Fuentes por etapas:** historial propio + comparación entre comercios → APIs oficiales → Keepa al final, detrás de una interfaz `PriceReferenceSource` que guarda la fuente usada.
-
-### 2.3 Reglas anti-descuento inflado (Verificables con datos propios)
-
-| Flag | Regla | Efecto |
+| Referencia | Cómo se obtiene | Para qué |
 |---|---|---|
-| `INFLATED_WAS_PRICE` | `precio_antes_comercio` > 1.5 × mediana 60 días del propio comercio | Se ignora el descuento declarado |
-| `MARKET_ALREADY_CHEAP` | descuento real < 20% aunque el declarado sea ≥ 50% · *(v1.3, RN-003: descuento real < 20%, **sin** condición sobre el declarado)* | Descartada (caso "lámpara") |
-| `NO_MARKET_REFERENCE` | sin match en Amazon ni en otros comercios | A revisión manual, no alerta |
-| `LOW_MATCH_CONFIDENCE` | match por título/similitud, sin UPC/GTIN | A revisión, no alerta automática |
+| **Precio habitual** | Mediana de 60 días del historial propio, con **historial suficiente**: ≥ 5 observaciones en ≥ 3 días distintos (DEC-130) | Descuento real |
+| **Precio de mercado hoy** | El más bajo de hoy (dato ≤ 48 h), disponible, en los comercios seguidos, sin la oferta evaluada | Competitividad y calidad del precio |
+| **MSRP** | Precio del fabricante, con fuente y fecha | Solo sin historial; la calidad no pasa de "Precio competitivo" |
+| **Precio tachado** | El "antes" del comercio | **Nunca es referencia**; solo detecta descuentos inflados |
 
-**Ejemplo (lámpara):** Walmart anuncia antes $200, ahora $20 (90% declarado). Amazon la vende habitualmente en $22. Descuento real 9%, margen negativo tras comisión → `MARKET_ALREADY_CHEAP`, descartada.
+- **Precio de venta en Amazon** = botón de compra hoy. Sin oferta nueva hoy: precio habitual en Amazon, marcado `SIN OFERTA HOY` (DEC-157).
+- **Mínimo de 60 días en Amazon:** lo usa el castigo por baja (§2.5.1).
+- **Competencia más barata:** precio de mercado hoy < venta en Amazon × 85% → el canal Amazon baja un nivel.
 
-> *(v1.4, alineado con RN-003 v2, RN-013 y DEC-158)* **Filtro previo** en el descubrimiento: descuento anunciado ≥ 40%, marca reconocida y categoría acordada (no califica la oferta). **Franjas del descuento real:** < 20% → `MERCADO YA BARATO` (descartada); 20% a < 25% → `SOLO REFERENCIA` (solo tablero); ≥ 25% → sigue. `PRECIO ANTES INFLADO`: tachado > 1.5 × mediana de 60 días de esa tienda (con historial suficiente). Sin precio habitual: `SIN HISTORIAL SUFICIENTE` → revisión manual. Identificación solo por nombre: `COINCIDENCIA NO CONFIRMADA` → revisión manual (equivalen a `NO_MARKET_REFERENCE` y `LOW_MATCH_CONFIDENCE`). Los nombres de las marcas en el código siguen las RN.
+**Fuentes, por etapas** (DEC-123): (1) **historial propio** de OIP reforzado con la comparación entre comercios (sin historial, solo la comparación); (2) **APIs oficiales** de los comercios cuando el producto madure; (3) **Keepa al final** (§4.3). Cada fuente se conecta por una interfaz intercambiable (`PriceReferenceSource`) y cada referencia guarda la fuente usada. Comparadores y sitios de seguimiento son **solo señal**: cada precio se confirma en la ficha del comercio (DEC-154).
 
-### 2.4 Niveles (configurables)
+### 2.3 Descuento real y descuentos falsos
 
-Aplicados sobre **descuento real**, con margen neto mínimo y demanda mínima:
+```
+descuento real (%) = (1 − precio de oferta ÷ precio habitual) × 100
+```
 
-| Nivel | Descuento real | Margen neto mínimo | Acción |
+- Franjas y marcas según RN-003 v2 (DEC-158).
+- **Filtro previo** (descubrimiento): se investigan las ofertas con descuento anunciado ≥ 40%, marca reconocida y categoría acordada. Es necesario por los límites de consulta (RN-010) y no califica la oferta.
+
+| Descuento real | Marca | Efecto |
+|---|---|---|
+| < 20% | `MERCADO YA BARATO` | Descartada (caso de la lámpara) |
+| 20% a < 25% | `SOLO REFERENCIA` | Solo tablero |
+| ≥ 25% | — | Sigue en evaluación |
+
+| Marca | Cuándo | Efecto |
+|---|---|---|
+| `PRECIO ANTES INFLADO` | Tachado > 1.5 × mediana de 60 días de esa tienda (con historial suficiente) | Se ignora el descuento anunciado |
+| `SIN HISTORIAL SUFICIENTE` | No hay precio habitual | Revisión manual, sin aviso |
+| `DESCUENTO ANUNCIADO NO COMPROBADO` | Hay tachado, pero no hay historial de esa tienda | Aviso en el tablero |
+| `COINCIDENCIA NO CONFIRMADA` | Identificado solo por nombre (RN-013) | Revisión manual, sin aviso |
+
+**Ejemplo (lámpara):** Walmart anuncia antes $200, ahora $20 (90% anunciado). El precio habitual es $22. Descuento real 9.1% → `MERCADO YA BARATO`, descartada.
+
+### 2.4 Niveles y precedencia
+
+**Niveles por canal** (RN-009, DEC-164): se asigna el más alto cuyas dos condiciones se cumplan.
+
+| Nivel | Descuento real | Margen ajustado % | Aviso |
 |---|---|---|---|
-| 🔴 Excepcional | ≥ 80% | ≥ 50% y ≥ $X | Alerta inmediata Telegram |
-| 🟠 Muy buena | 70–79% | ≥ 40% | Alerta inmediata |
-| 🟡 Buena | 50–69% | ≥ 30% | Resumen periódico |
-| ⚪ Interesante | 40–49% | ≥ 25% | Solo dashboard |
+| ⚡ **Comprar ya** | ≥ 80% | ≥ 50% | Inmediato |
+| ✅ **Muy recomendable** | ≥ 70% | ≥ 40% | Inmediato |
+| 👍 **Recomendable** | ≥ 50% | ≥ 30% | Resumen a las 8:00 y 18:00 (Tijuana) |
+| **Vigilar** | ≥ 25% | ≥ 25% | Solo tablero |
 
-Valores iniciales; se calibran con datos reales. `$X` = margen absoluto mínimo para que valga el esfuerzo (traslado, tiempo).
+- **Mínimo por unidad:** margen ajustado ≥ el mayor entre $10 y 10% del costo de compra.
+- **Tienda física:** confianza Alta o Media (§6.3.1).
+- **Precedencia:** DESCARTADA > SOLO REFERENCIA > REVISIÓN MANUAL > nivel. La revisión manual guarda su `nivel_calculado`.
+- **Avisos:** un aviso por cadena, con las sucursales ordenadas por cercanía a la garita; no se repite en 24 h salvo que suba de nivel o el precio baje ≥ 5%. Formato y emoji: guía de estilo §10 (DEC-189). El rojo se reserva para problemas operativos (🛑) y el modo desarrollo se marca 🧪.
+- **Dos ejes visibles a la vez** (DEC-131, DEC-186): nivel de oportunidad (RN-009) y **calidad del precio** (RN-012: Oferta excepcional · Buena oferta · Precio competitivo · Descuento cuestionable · Precio normal). La búsqueda por artículo usa solo la calidad del precio.
 
-> *(v1.3, alineado con RN-009)* Los niveles se definen por **mínimos** (no por rangos): se asigna **el nivel más alto cuyas dos condiciones se cumplan** (descuento real ≥ X y margen **ajustado** ≥ Y). Mínimo absoluto: **$10 por unidad**. Avisos: Excepcional y Muy buena inmediatos; Buena en resumen (8:00 y 18:00); Interesante solo en el tablero.
+Todos los valores son iniciales y configurables (DEC-155).
 
-> *(v1.4, alineado con RN-009 v2, DEC-164 y DEC-189)* **Niveles por canal** (mínimos de descuento real y margen ajustado %): ⚡ **Comprar ya** ≥ 80% / ≥ 50% (inmediato) · ✅ **Muy recomendable** ≥ 70% / ≥ 40% (inmediato) · 👍 **Recomendable** ≥ 50% / ≥ 30% (resumen 8:00 y 18:00) · **Vigilar** ≥ 25% / ≥ 25% (solo tablero). **Mínimo por unidad:** el mayor entre $10 y 10% del costo de compra. **Precedencia:** DESCARTADA > SOLO REFERENCIA > REVISIÓN MANUAL > nivel (la revisión manual guarda su nivel calculado). Un aviso por cadena; no se repite en 24 h salvo que suba de nivel o el precio baje ≥ 5%. Los emoji 🔴🟠🟡⚪ de la tabla de arriba quedan **reemplazados** (el rojo se reserva para problemas operativos, 🛑); formato completo en la guía de estilo §10. **Dos ejes visibles a la vez** (DEC-131, DEC-186): nivel (RN-009) y calidad del precio (RN-012: Oferta excepcional · Buena oferta · Precio competitivo · Descuento cuestionable · Precio normal).
+### 2.5 Demanda
 
-### 2.5 Demanda ("lo que la gente mueve")
-
-- **Ranking de ventas Amazon (BSR)** actual y tendencia 30/90 días (Keepa).
-- Número de ofertas/vendedores activos (saturación).
-- Umbral de BSR por categoría (configurable). Un producto barato que nadie compra no es oportunidad.
-
-> *(v1.4, alineado con RN-004 v2, RN-017 y DEC-159)* **Demanda en Amazon SUFICIENTE** = ranking en la categoría principal ≤ **0.5% del total de artículos** de la categoría (relojes y joyería: además primeros 100 de la subcategoría) **y** ≤ 20 vendedores de nuevo; promedios de 7 días; `DEMANDA A LA BAJA` si empeora > 50% contra hace 30 días (advertencia). Sin ranking o sin vendedores → `DEMANDA DESCONOCIDA` (canal Amazon "por revisar"). Demanda insuficiente **cierra el canal Amazon, no la oferta**: se evalúa la venta local. **Demanda local** (RN-017): alta 7 días por unidad, media 14 (valor inicial), baja → canal local no viable; se recalibra con 5 ventas reales. Sin Keepa, el ranking, los vendedores y "N+ comprados el mes pasado" salen de la **ficha de Amazon** consultada por el Worker.
+- **Amazon SUFICIENTE** (RN-004, DEC-159): ranking en la categoría principal ≤ **0.5% del total de artículos** de la categoría (relojes y joyería: además primeros 100 de la subcategoría) **y** ≤ 20 vendedores de nuevo. Se usan promedios de 7 días.
+- `DEMANDA A LA BAJA`: el promedio de 7 días empeora > 50% contra el de hace 30 días (advertencia).
+- Sin ranking, sin vendedores o sin tamaño de categoría: `DEMANDA DESCONOCIDA` → canal Amazon "por revisar".
+- Demanda insuficiente **cierra el canal Amazon, no la oferta**: se evalúa la venta local.
+- **Demanda local** (RN-017): alta 7 días por unidad, media 14 (valor inicial), baja → canal local no viable. Con 5 ventas reales se recalibra.
+- Sin Keepa, el ranking, los vendedores y "N+ comprados el mes pasado" salen de la **ficha de Amazon** que consulta el Worker.
 
 ### 2.5.1 Rentabilidad ajustada por tiempo
 
-Un margen alto que tarda meses en venderse puede valer menos que uno moderado que se vende en días. Se agregan:
+Un margen alto que tarda meses en venderse puede valer menos que uno moderado que se vende en días (RN-005, DEC-160):
 
-| Métrica | Cálculo | Uso |
-|---|---|---|
-| `dias_estimados_venta` | Función de BSR, número de vendedores y unidades a vender (Keepa) | Estimado, se calibra con `opportunity_outcome` |
-| `roi_anualizado` | `margen_neto_% × (365 / dias_estimados_venta)` | **Ordena** las oportunidades |
-| `riesgo_caida_precio` | Volatilidad del precio Amazon 90 días | Penaliza el margen esperado |
-| `unidades_recomendadas` | Máximo vendible en N días según demanda | Evita sobrecomprar |
-| `tasa_devolucion` | % configurable por categoría | Se descuenta del margen |
+```
+costo por devoluciones = venta × tasa de devolución × pérdida por devolución       (Amazon; local 0%)
+castigo por baja       = 50% × (venta − mínimo de 60 días en Amazon)               (sin mínimo: 10% de la venta)
+margen ajustado        = margen neto − costo por devoluciones − castigo por baja
+días para recuperar    = días de venta + días de pago
+rendimiento mensual    = margen ajustado % × 30 ÷ días para recuperar
+```
 
-`margen_neto_ajustado = margen_neto − (precio_venta_esperado × tasa_devolucion) − (precio_venta_esperado × riesgo_caida_precio)`
-
-Los niveles de §2.4 se evalúan sobre `margen_neto_ajustado`; el dashboard y las alertas se ordenan por `roi_anualizado`.
-
-> *(v1.3, alineado con RN-005)* Se reemplaza `roi_anualizado` por **`rendimiento_mensual` = margen ajustado % × 30 ÷ días para recuperar** (días de venta según ranking 7/21/45 + 14 días de pago de Amazon). Fórmula vigente del margen ajustado: `margen_neto − (precio_venta_esperado × tasa_devolucion × pérdida_por_devolución) − (precio_venta_esperado − mínimo_90d) × 50%`; sin mínimo de 90 días, castigo = 10% del precio de venta esperado. Unidades recomendadas = ventas al mes ÷ (vendedores + 1), con tope.
-
-> *(v1.4, alineado con RN-005 v2 y DEC-160)* Por canal: costo por devoluciones = venta × tasa × pérdida (Amazon; local 0%); castigo por baja = 50% × (venta − **mínimo de 60 días** en Amazon), sin mínimo 10% de la venta; **días para recuperar** = días de venta (Amazon por ranking 7 / 21 / 45; local según RN-017) + **días de pago** (Amazon **30** con cuenta nueva, 21 con historial; local 0). Unidades = el menor entre ventas al mes que le tocan a Jesús, disponibles, límite por cliente y **tope de primera compra** (3; 5 en casos muy buenos), que se levanta con resultados reales. Menos de 1 venta al mes → canal cerrado (`SIN ROTACIÓN`).
+- **Días de venta:** Amazon por ranking (< 10,000 → 7; 10,000 a 50,000 → 21; más → 45); local según RN-017.
+- **Días de pago:** Amazon **30** con cuenta nueva, 21 con historial; local 0.
+- **Unidades recomendadas:** el menor entre las ventas al mes que le tocan a Jesús, las disponibles, el límite por cliente y el **tope de primera compra** (3; 5 en casos muy buenos), que se levanta con resultados reales.
+- Menos de 1 venta al mes para Jesús → canal cerrado, `SIN ROTACIÓN`.
+- Dentro de cada nivel, las oportunidades se **ordenan por rendimiento mensual**.
 
 ### 2.6 Restricciones de venta
 
-Antes de alertar, marcar:
+- Tres niveles: **categoría, marca y producto** (RN-006, DEC-161). Material peligroso, usados en categorías sensibles y juguetes en temporada. Los productos con caducidad quedan fuera del alcance.
+- **Restringido en Amazon → se evalúa la venta local.**
+- Lista de productos que se **evitan siempre** → DESCARTADA. Riesgo de procedencia o vendedor externo → revisión manual (RN-015, DEC-137).
+- Envío FBM y empaque por tabla de peso; más de 6 kg, con cotización capturada.
+- Sin cuenta de vendedor: tabla manual configurable, marcada "estimado". Con cuenta: adaptador SP-API (preparado, desactivado).
 
-- Categorías/marcas que requieren aprobación en Amazon (joyería y relojes suelen requerirla — **confirmar en Seller Central**).
-- Posible clasificación de materiales peligrosos/hazmat (perfumes, aerosoles, baterías) — **confirmar**.
-- Productos restringidos por marca.
+### 2.7 Canales de venta y elección del mejor canal
 
-Sin cuenta de vendedor: tabla manual configurable. Con cuenta: adaptador SP-API (ya preparado, desactivado).
-
-> *(v1.4, alineado con RN-006 v2, RN-015 y DEC-161)* Restricciones en **tres niveles** (categoría, marca, producto), material peligroso, caducidad (fuera de alcance), usados en categorías sensibles y juguetes en temporada. **Restringido en Amazon → se evalúa la venta local.** Lista de productos que se **evitan siempre** (→ DESCARTADA) y riesgo de procedencia (→ revisión manual). Envío FBM por peso y empaque por tabla, cotizando lo que pase de 6 kg.
-
-### 2.7 *(v1.4)* Canales de venta y elección del mejor canal
-
-Cada oportunidad se evalúa **por canal** y se elige uno (RN-018, DEC-140, DEC-151, DEC-170). Origen de compra y canal de venta son **independientes** (DEC-146).
+Cada oportunidad se evalúa **por canal** y se elige uno (RN-018, DEC-140, DEC-151, DEC-170). El origen de compra y el canal de venta son **independientes** (DEC-146).
 
 | | Orígenes de compra (Inc. 1) | Canales de venta (Inc. 1) |
 |---|---|---|
-| 1 | Tienda en línea (envío al PO Box o recoger en tienda) | **Amazon FBM**: comisión, envío y restricciones estimados con tabla manual (sin cuenta de vendedor) |
-| 2 | Tienda física | **Venta local** (OfferUp, Facebook Marketplace y venta personal): precio estimado de RN-016 (estimado de Jesús o 85% del mercado hoy, con techo de comparables y 10% de negociación) |
+| 1 | Tienda en línea (envío al PO Box o recoger en tienda) | **Amazon FBM**: comisión, envío y restricciones estimados con tabla manual |
+| 2 | Tienda física | **Venta local** (OfferUp, Facebook Marketplace y venta personal): precio de RN-016 (estimado de Jesús o 85% del mercado hoy, con techo de comparables y 10% de negociación) |
 | 3 | Particulares, por captura manual (DEC-150) | — |
 
 - **Estado de cada canal:** cerrado, por revisar o disponible (REQ-2026-0001 §3.2.1). Un canal cerrado no cierra la oferta.
 - **Elección:** mayor ganancia total del lote (margen ajustado × unidades); si la diferencia contra la mayor es < 10%, desempata el rendimiento mensual.
 - El tablero muestra **los dos canales** con sus números; el aviso usa el del canal elegido.
-- **Compra por oportunidad** (DEC-141): se puede comprar por precio excepcional y conservar el producto hasta encontrar comprador; el riesgo de inventario se mide con los días para vender y el rendimiento mensual.
+- **Compra por oportunidad** (DEC-141): se puede comprar por precio excepcional y conservar el producto hasta encontrar comprador; el riesgo se mide con los días para vender y el rendimiento mensual.
 
 ---
 
@@ -230,164 +247,141 @@ Cada oportunidad se evalúa **por canal** y se elige uno (RN-018, DEC-140, DEC-1
 
 | Dimensión | Alcance |
 |---|---|
-| Operación | Todo el año; perfiles de temporada (frecuencia mayor en Buen Fin, Black Friday, Navidad, liquidaciones). |
-| Comercios | Arranque: **Home Depot, Walmart, Target**. Después: otros comercios reconocidos por categoría. Cada comercio = conector configurable. |
-| Categorías | Herramientas (prioridad), hogar/iluminación, tecnología, juguetes, relojes, joyería, perfumes. Abierto: cualquier categoría "que se mueva". |
-| Canales de compra | **Online** y **tienda física** en radio configurable (inicial: zona San Diego). Más allá, solo si el margen absoluto lo justifica. |
-| Canales de venta | **Amazon FBM** (referencia principal) y **Facebook Marketplace** (precio estimado, fase posterior). |
-| Notificación | Telegram + dashboard. |
-| *(v1.3)* Funcionalidades | **A.** Búsqueda automatizada de ofertas (reventa). **B.** Búsqueda particular por artículo, servicio a clientes: en el Inc. 1 el cliente pide a Jesús y Jesús captura en OIP; la solicitud directa del cliente (p. ej. WhatsApp) es futura. |
-| *(v1.3)* Comercios para la búsqueda por artículo | Home Depot, Walmart y Amazon (precio de nuevo vía Keepa); ampliable. |
-| *(v1.4)* Comercios del Inc. 1 | **Home Depot, Walmart, Target, Best Buy, GameStop, Nintendo Store** y la ficha de Amazon, para las dos funcionalidades; solo tiendas de EE. UU. y USD (DEC-132). Target se adelanta del Inc. 2 |
-| *(v1.4)* Orígenes y canales | 3 orígenes (en línea, tienda física, particulares por captura manual) × 2 canales (Amazon FBM y venta local) (DEC-151, §2.7) |
-| *(v1.4)* Estado del producto | Nuevo, caja abierta, reacondicionado, usado, para piezas; los no nuevos solo se evalúan en venta local en el Inc. 1 (DEC-149, RN-014) |
-| *(v1.4)* Categorías | Las que más consume la gente, priorizadas por temporada (DEC-138, DEC-153), con operación todo el año |
-| Seguimiento | Precio, disponibilidad (online y por tienda), historial. |
-| Administración | Comercios, tiendas, categorías, frecuencias, umbrales, tabla de comisiones/restricciones. |
+| Operación | Todo el año, con perfiles de temporada (frecuencia mayor en temporadas altas) |
+| Funcionalidades | **A.** Búsqueda automatizada de ofertas. **B.** Búsqueda particular por artículo: en el Inc. 1 el cliente pide a Jesús y Jesús captura en OIP; la solicitud directa del cliente (p. ej. WhatsApp) es futura |
+| Comercios (Inc. 1) | **Home Depot, Walmart, Target, Best Buy, GameStop, Nintendo Store** y la ficha de Amazon, para las dos funcionalidades; solo tiendas de EE. UU. y USD (DEC-132). Cada comercio es un conector configurable |
+| Categorías | Las que más consume la gente, priorizadas por temporada (DEC-138, DEC-153): herramientas (prioridad), hogar y cocina, tecnología, juguetes y videojuegos, relojes, joyería, perfumes |
+| Orígenes de compra | En línea, tienda física (radio por zonas desde la garita, §6.3) y particulares por captura manual |
+| Canales de venta | Amazon FBM y venta local (§2.7) |
+| Estado del producto | Nuevo, caja abierta, reacondicionado, usado, para piezas; los no nuevos solo se evalúan en venta local (DEC-149, RN-014) |
+| Notificación | Telegram + tablero (Metabase en el Inc. 1) |
+| Seguimiento | Precio, disponibilidad (en línea y por tienda) e historial propio |
+| Administración | Comercios, tiendas, categorías, frecuencias, umbrales y tablas de comisiones, envíos y restricciones, todo configurable y versionado |
 
 ### 3.2 Fuera del alcance (por ahora)
 
-- Compra automática / carrito / checkout.
-- Publicación automática en Amazon o Facebook (fase futura; el adaptador de Amazon queda preparado).
-- Resolver CAPTCHA mediante servicios de terceros (se registra el bloqueo y se reintenta más tarde).
+- Compra automática, carrito o checkout.
+- Publicación automática en Amazon o Facebook (el adaptador de Amazon queda preparado).
+- Resolver CAPTCHA con servicios de terceros (se registra el bloqueo y se reintenta más tarde).
 - Sesiones con cuentas personales de las tiendas.
+- Keepa en el Inc. 1 (§4.3) y la cuenta de vendedor de Amazon / SP-API.
+- Búsqueda automática en sitios de particulares y Facebook Marketplace con datos observados (DEC-140, DEC-150).
+- Logística y costos transfronterizos de la venta (§6.4).
 
 ### 3.3 Acceso a comercios: decisión por fuente
 
-La capacidad stealth existe en la capa de navegador, pero **está apagada por defecto en todas las fuentes**. Cada fuente tiene un `access_mode` y sube la escalera solo con datos:
+Cada fuente tiene un `access_mode` y sube la escalera solo con datos. La capacidad stealth existe en la capa de navegador, pero **está apagada por defecto** en todas las fuentes.
 
 | Escalón | `access_mode` | Cuándo |
 |---|---|---|
-| 0 | `api_feed` | Existe API/feed/sitemap utilizable (p. ej. API de afiliados de Walmart — confirmar acceso y datos) |
-| 1 | `http` | Página entrega los datos sin JavaScript |
+| 0 | `api_feed` | Existe API oficial, feed o sitemap utilizable (Amazon, Walmart u otros, cuando se autoricen, DEC-133) |
+| 1 | `http` | La página entrega los datos sin JavaScript |
 | 2 | `browser` | Requiere renderizado; navegador normal |
-| 3 | `browser_stealth` | Solo si la tasa de bloqueo medida inutiliza la fuente **y** no hay alternativa en escalones 0–2 |
+| 3 | `browser_stealth` | Solo si la tasa de bloqueo medida inutiliza la fuente **y** no hay alternativa en los escalones 0–2 |
 
-Reglas:
-
-- Subir a `browser_stealth` es un **cambio manual de configuración** del dueño del producto, registrado con fecha y motivo; el sistema mide la tasa de bloqueo antes/después.
+- Subir a `browser_stealth` es un **cambio manual de configuración** de Jesús (gate **G5**), registrado con fecha y motivo; el sistema mide la tasa de bloqueo antes y después.
 - Si el bloqueo supera el umbral incluso en el escalón 3, la fuente **se pausa sola** y avisa por Telegram.
-- Frecuencias conservadoras por dominio y jitter; backoff automático.
-- Métrica de **tasa de bloqueo por fuente y escalón** desde el día uno.
-- Riesgo aceptado para fuentes en escalón 3: posible incumplimiento de términos de uso (ver R-09).
+- Métrica de **tasa de bloqueo por fuente y escalón** desde el primer día.
+- Riesgo aceptado para fuentes en escalón 3: posible incumplimiento de términos de uso (R-09).
 
-> *(v1.4, DEC-133 y DEC-154)* Las **APIs oficiales** de los comercios (Amazon, Walmart u otros) entran por el escalón **`api_feed`** cuando se autoricen. Un **comparador de precios** o un sitio de seguimiento puede **señalar** una oferta, pero nunca es dato de historial ni de precio: cada precio se confirma en la ficha del comercio. Activar stealth sigue siendo el gate **G5** de Jesús.
+#### 3.3.1 Motor de navegador por fuente
 
-### 3.3.1 Motor de navegador por fuente
+Los spiders no invocan un navegador concreto: piden el renderizado a una interfaz `BrowserRenderer`, y el motor se elige por fuente con `browser_engine`:
 
-Los spiders no invocan un navegador concreto: piden el renderizado a una interfaz `BrowserRenderer`. El motor se elige por fuente con `browser_engine`:
-
-- **`playwright`** (por defecto): integrado en los workers Scrapy vía scrapy-playwright.
-- **`puppeteer`** (alternativa): servicio Node.js aparte (`oip-renderer-puppeteer`) que recibe la URL por HTTP y devuelve el HTML. Su tráfico también sale solo por `oip-egress`.
-
-El servicio Puppeteer **no se construye en el arranque**; se construye solo si la PoC-A encuentra una fuente que pasa con Puppeteer y no con Playwright. La escalera de acceso (§3.3) aplica igual con cualquier motor.
+- **`playwright`** (por defecto), integrado en los workers Scrapy con scrapy-playwright.
+- **`puppeteer`** (alternativa): servicio Node.js aparte (`oip-renderer-puppeteer`) que recibe la URL y devuelve el HTML. Se construye **solo** si la PoC-A encuentra una fuente que pasa con Puppeteer y no con Playwright. Su tráfico sale por el mismo camino que el del Worker.
 
 ### 3.4 Protección de la IP doméstica (requisito duro)
 
-**La IP de la casa nunca debe usarse para scraping.** Esto se garantiza por topología de red, no por configuración:
+**La IP de la casa nunca consulta comercios** (DEC-041). Se garantiza por topología, no solo por configuración:
 
-- Los contenedores de crawling viven en una red Podman **interna sin salida a Internet**. Su única ruta es el contenedor `oip-egress`.
-- `oip-egress` envía el tráfico por **WireGuard a un VPS** (MVP) o a un **proveedor de proxies** (volumen). Cambiar de uno a otro es configuración del egress, sin tocar spiders.
-- **Fail-closed:** si el túnel/proxy cae, los spiders quedan sin conectividad. Nunca hay fallback a la conexión directa.
-- **Verificación al arrancar cada job:** el spider consulta su IP pública; si coincide con la IP doméstica registrada (o falla la verificación), aborta el job y alerta.
-- Tráfico a APIs legítimas (Keepa, Telegram, SP-API) sí sale directo desde `oip-api`.
-- Navegador bloquea imágenes, fuentes y media para reducir consumo (relevante con proxies de pago por GB).
-- **Etapas:** MVP con VPS barato (IPs de datacenter, más propensas a bloqueo — se mide); volumen con proxies residenciales de pago por GB por fuente según necesidad.
-- El experimento de bloqueo (spike) corre por el egress desde su primera ejecución.
+- Toda consulta a comercios **nace en el VPS** (§3.4.1); la casa no tiene ruta de scraping.
+- **Fail-closed:** si el Worker no está o su verificación falla, no hay consultas. Nunca hay respaldo desde la casa.
+- **Verificación al arrancar cada trabajo:** el Worker consulta su IP pública y aborta si no es la IP autorizada del VPS.
+- El navegador bloquea imágenes, fuentes y media para reducir consumo.
+- El tráfico a APIs legítimas (Telegram; Keepa y SP-API cuando existan) sale directo desde `oip-api`.
+- **Etapas:** primero el VPS (IPs de datacenter, más propensas a bloqueo; se mide); con volumen, proxies residenciales de pago por GB por fuente (DEC-117).
+- **Modo túnel** (Worker en casa detrás de `oip-egress` por WireGuard o proxy): queda **documentado y sin construir**. La interfaz del Core lo permite (§3.4.1), pero solo se construye y opera el Worker remoto.
 
-#### 3.4.1 *(v1.3)* Topología Core local + Scraper Worker remoto (DEC-120)
+#### 3.4.1 Topología Core + Scraper Worker, en dos repositorios
 
-Precisa lo anterior: en lugar de correr el scraping en casa y redirigir su tráfico por un túnel, **el scraping corre en el VPS**. La casa nunca habla con los comercios.
-
-| Pieza | Dónde | Contiene |
-|---|---|---|
-| **OIP Core** | Servidor de Jesús (Rocky + Podman) | `oip-api` (FastAPI, scheduler, motor de oportunidad, búsqueda por artículo, notificador), `oip-db`, `oip-dashboard`, `oip-backup` |
-| **OIP Scraper Worker** | VPS (Rocky + Podman) | `oip-scrapyd` (Scrapy + scrapy-playwright + Chromium), verificador de IP, firewall de salida |
-| **Canal** | WireGuard Core ↔ Worker | Core → Worker: `schedule.json` de Scrapyd (trabajos). Worker → Core: `POST /ingest` (resultados). Solo por el túnel; ningún puerto expuesto a Internet salvo WireGuard en el VPS |
+| Pieza | Dónde | Repositorio | Contiene |
+|---|---|---|---|
+| **OIP Core** | Servidor de Jesús (Rocky + Podman) | `oip-core` (este repo) | `oip-api` (FastAPI: scheduler, ingesta, catálogo, identificación, referencias de precio, motor de oportunidad, búsqueda por artículo, notificador), `oip-db`, `oip-dashboard`, `oip-backup`; documentación de negocio y proceso, REQ, inspecciones y agentes |
+| **OIP Scraper Worker** | VPS (Rocky + Podman) | `oip-worker` | `oip-scrapyd` (Scrapy + scrapy-playwright + Chromium, `BrowserRenderer`), verificador de IP, firewall de salida, **bandeja de salida**; su propio `CLAUDE.md`, `openspec/` y runbooks del VPS |
+| **Canal** | WireGuard Core ↔ Worker | Contratos en los dos repos | Core → Worker: `schedule` (trabajos). Worker → Core: `ingest` (resultados). Ningún puerto expuesto a Internet salvo WireGuard en el VPS |
 
 Reglas:
-- **El Worker verifica su IP pública antes de cada job** y aborta si no es la IP autorizada del VPS (fail-closed).
-- El firewall del VPS permite salida HTTPS a los comercios y entrada **solo** por WireGuard. Scrapyd no escucha en la interfaz pública.
-- Autenticación del canal: claves WireGuard + token por servicio en `schedule.json` e `/ingest` (secreto en `podman secret`).
-- **Configurable:** el Core usa una sola interfaz (`ACQUISITION_WORKER_URL` + endpoint de ingesta), así que el Worker puede vivir en el VPS o en casa detrás de `oip-egress`. **Solo se construye y opera el modo worker remoto**; el modo túnel (lo descrito arriba en esta sección) queda **documentado y sin construir**.
-- Escalamiento futuro: más Workers o un Worker detrás de proxies residenciales (DEC-117) sin tocar el Core.
 
-> *(v1.4, DEC-173 y DEC-174)* **Dos repositorios:** `oip-core` (este repo: API, BD, tablero, respaldos, documentación de negocio y proceso, REQ, inspecciones y agentes) y `oip-worker` (spiders, scrapy-playwright, Chromium, `BrowserRenderer`, verificador de IP, firewall de salida, bandeja de salida, runbooks del VPS, con su propio `CLAUDE.md` y `openspec/`). Se separan en la Etapa 3, antes de la primera línea del Worker. **El repo del Core no contiene spiders ni clientes HTTP hacia comercios**, y un gate lo verifica. Los contratos `schedule` e `ingest` se escriben como spec en los dos repos (§8); en el Worker, los commits citan el REQ como `jjrm2004mx/<core>#N`.
+- **El repo del Core no contiene spiders ni clientes HTTP hacia comercios**, y un gate lo verifica (DEC-173). Los repos se separan en la Etapa 3, antes de la primera línea del Worker.
+- El firewall del VPS permite salida HTTPS a los comercios y entrada **solo** por WireGuard; Scrapyd solo escucha en la interfaz WireGuard.
+- Autenticación del canal: claves WireGuard + **token por servicio** en `schedule` e `ingest` (`podman secret`).
+- Contratos versionados en los dos repos (§8). En el Worker, los commits citan el REQ como `jjrm2004mx/<core>#N` (DEC-174).
+- **Configurable:** el Core usa una sola interfaz (`ACQUISITION_WORKER_URL` + endpoint de ingesta), así que el Worker puede crecer a varios hosts o ir detrás de proxies sin tocar el Core.
 
-### 3.5 *(v1.3)* Consulta responsable (DEC-115, RN-010)
+### 3.5 Consulta responsable (RN-010)
 
-| Control | Implementación (Scrapy / Core) | Valor inicial |
+| Control | Implementación | Valor inicial |
 |---|---|---|
 | Límite de consultas | `CONCURRENT_REQUESTS_PER_DOMAIN=1` + `DOWNLOAD_DELAY` y limitador por dominio en el Worker | ≤ 6 por minuto por comercio |
-| Pausa (throttling) | `DOWNLOAD_DELAY=10` con `RANDOMIZE_DOWNLOAD_DELAY` ajustado al rango 10–15 s; AutoThrottle activado como techo adicional | 10–15 s |
-| Concurrencia | 1 por comercio; comercios distintos en paralelo (`CONCURRENT_REQUESTS` global moderado) | 1 / comercio |
-| Caché | En el Core, por publicación: 6 h (búsqueda automatizada), **1 h** (búsqueda por artículo); Keepa 6 h | 6 h / 1 h / 6 h |
-| Reintentos | Cola de reintentos del Core con espera creciente; no se usa el reintento inmediato de Scrapy para errores de bloqueo | 3 intentos: 1, 5, 15 min |
+| Pausa entre consultas | `DOWNLOAD_DELAY=10` con aleatorización al rango 10–15 s; AutoThrottle como techo | 10–15 s |
+| Concurrencia | 1 por comercio; comercios distintos en paralelo | 1 / comercio |
+| Caché | En el Core, por publicación: 6 h (búsqueda automatizada), **1 h** (búsqueda por artículo) | 6 h / 1 h |
+| Reintentos | Cola de reintentos del Core; no se usa el reintento inmediato de Scrapy para bloqueos | 1, 5 y 15 min |
 | Timeout | `DOWNLOAD_TIMEOUT` (HTTP) y timeout de navegación (Playwright) | 30 s / 60 s |
-| Pausa por bloqueo | Métrica por dominio en ventana de 1 h; si > 20% bloqueadas → `retailer_policy.estado = pausado` por 24 h y aviso | 20% / 24 h |
-| robots.txt | `ROBOTSTXT_OBEY` configurable por comercio | **Pendiente** (pregunta RN-010 · P2) |
+| Pausa por bloqueo | Con ≥ 10 consultas en la hora y > 20% bloqueadas, **escalonada**: 24 h → 48 h (dentro de 7 días desde la reanudación) → hasta que Jesús autorice; cada pausa avisa (🛑) | 20% / 24 h / 48 h |
+| robots.txt | `ROBOTSTXT_OBEY` **activado por defecto**; excepción solo por comercio y registrada (DEC-165) | Se respeta |
+| Términos de uso | Revisados comercio por comercio antes de activarlo | — |
+| Prioridad | La **solicitud de un cliente** pasa antes que la búsqueda automatizada, con los mismos límites | — |
+| Antes de salir | Siempre se re-consulta la disponibilidad, sin caché | — |
 
-Postura (DEC-116): OIP no pretende ocultarse ni evadir restricciones; stealth deshabilitado por defecto (§3.3).
+Postura (DEC-116): OIP no pretende ocultarse ni evadir restricciones.
 
-> *(v1.4, alineado con RN-010 v2 y DEC-165)* **robots.txt se respeta por defecto** (resuelve el pendiente de la tabla); términos de uso revisados comercio por comercio antes de activarlo. **Pausa por bloqueo** solo con ≥ 10 consultas en la hora y > 20% bloqueadas, **escalonada**: 24 h, luego 48 h (dentro de 7 días desde la reanudación) y la tercera hasta que Jesús lo autorice; cada pausa avisa (🛑). La **solicitud de un cliente** pasa antes que la búsqueda automatizada, con los mismos límites, y antes de salir a una tienda **siempre** se re-consulta sin caché.
-
-### 3.6 *(v1.3)* Modo de red para la prueba de concepto (DEC-121)
+### 3.6 Modo de red para la prueba de concepto (DEC-121, DEC-122)
 
 - `modo_red: estricto | desarrollo`, **estricto por defecto**.
-- **Estricto:** toda consulta a comercios va al Worker en el VPS. El Core no tiene ruta de scraping propia.
-- **Desarrollo:** permite ejecutar spiders en casa **solo** contra una lista permitida (fixtures guardados, simulaciones, APIs que permiten automatización).
-- **Límite duro, independiente de la aplicación:** el firewall del servidor de Jesús (nftables / firewalld) **rechaza la salida hacia los dominios de Home Depot, Walmart y Target** desde los contenedores. Ninguna opción de OIP lo desbloquea.
-  - *(v1.3, precisión 2026-11-11 — DEC-122)* El límite duro se implementa como **lista de permitidos (salida denegada por defecto)**, no como lista de prohibidos: los firewalls filtran por IP, y los comercios usan CDN con IPs numerosas y cambiantes, por lo que una lista de prohibidos es frágil y no cubre comercios futuros.
-    - Los contenedores del servidor de Jesús tienen **la salida a Internet denegada por defecto** (firewalld/nftables, zona propia para la red de Podman).
-    - Solo se permite salida hacia **destinos aprobados**: Keepa, Telegram, el endpoint WireGuard del VPS, el registro de imágenes y los servicios de prueba del modo desarrollo. Se mantienen como conjunto (`set`) de nftables, con resolución DNS controlada para los que cambian de IP.
-    - Cualquier otro destino, **incluidos Home Depot, Walmart, Target y cualquier comercio futuro**, queda bloqueado sin necesidad de conocer sus IPs.
-    - Cada conexión rechazada se registra; un intento de salida hacia un comercio genera un aviso.
-    - Ninguna opción de OIP modifica estas reglas; solo el administrador del servidor.
-- Activar el modo desarrollo deja un registro (quién y cuándo) y muestra un aviso visible en el tablero y en Telegram.
+- **Estricto:** toda consulta a comercios va al Worker en el VPS; el Core no tiene ruta de scraping.
+- **Desarrollo:** permite ejecutar en casa **solo** contra una lista permitida (datos guardados, simulaciones, APIs que permiten automatización). Activarlo deja registro (quién y cuándo) y un aviso visible (🧪).
+- **Límite duro, independiente de la aplicación:** el firewall del servidor de Jesús (firewalld / nftables) **deniega por defecto** la salida de los contenedores y solo permite destinos aprobados (Telegram, el endpoint WireGuard del VPS, el registro de imágenes, los servicios de prueba del modo desarrollo; Keepa cuando exista), en un `set` de nftables con resolución DNS controlada. Cualquier otro destino —**incluidos todos los comercios, presentes y futuros**— queda bloqueado sin conocer sus IPs. Cada conexión rechazada se registra y un intento hacia un comercio genera un aviso. Ninguna opción de OIP modifica estas reglas.
 
 ---
 
-## 4. Auditoría Open Source revisada
+## 4. Auditoría Open Source
 
 ### 4.1 Tabla de decisión
 
 | Proyecto | Licencia | Rol en OIP | Decisión |
 |---|---|---|---|
-| **Scrapy** | BSD-3-Clause | Descubrimiento y seguimiento | **Adoptar** (núcleo) |
-| **scrapy-playwright** | BSD-3-Clause | Renderizado + stealth en páginas dinámicas | **Adoptar** selectivo |
-| **Scrapyd** | BSD-3-Clause (verificar) | Ejecutar spiders por API HTTP | **Adoptar** en arranque |
-| **extruct** | BSD (verificar) | Leer JSON-LD/microdata schema.org (GTIN, precio, disponibilidad) | **Adoptar** |
+| **Scrapy** | BSD-3-Clause | Descubrimiento y seguimiento | **Adoptar** (núcleo del Worker) |
+| **scrapy-playwright** | BSD-3-Clause | Renderizado de páginas dinámicas | **Adoptar** selectivo |
+| **Scrapyd** | BSD-3-Clause (verificar) | Ejecutar spiders por API HTTP | **Adoptar** |
+| **extruct** | BSD (verificar) | Leer JSON-LD / microdata (GTIN, precio, disponibilidad) | **Adoptar** |
 | **price-parser** | BSD (verificar) | Parsear precios en texto | **Adoptar** |
 | **Spidermon** | BSD (verificar) | Monitoreo de calidad de extracción | Incremento 2 |
-| **PriceStalker** | MIT | Seguimiento alternativo | **Opcional**, PoC comparativa |
+| **PriceStalker** | MIT | Seguimiento alternativo | **Opcional**, PoC-D |
 | **PriceGhost** | Sin LICENSE (solo README) | — | **Descartado** |
-| **changedetection.io** | Apache-2.0 | Disparador de discovery por cambio | Incremento 3 |
-| **TimescaleDB** | Apache-2.0 (core) / TSL (algunas funciones) | Series de tiempo de precios | **Adoptar** (uso interno sin problema) |
-| **Keepa API** | Comercial | Referencia de mercado y demanda Amazon | **Adoptar** |
-| *(v1.4)* **Keepa API** | Comercial | Historial y Sales Rank de Amazon, **complementario** | **Diferido** (DEC-124): no entra en el Inc. 1; se contrata por meses ante una necesidad concreta; la integración puede desarrollarse con respuestas simuladas |
-| **Amazon SP-API** | Comercial (requiere cuenta vendedor) | Comisiones exactas, restricciones | Adaptador preparado, desactivado |
+| **changedetection.io** | Apache-2.0 | Disparador de descubrimiento por cambio | Incremento 3 |
+| **TimescaleDB** | Apache-2.0 (core) / TSL (algunas funciones) | Series de tiempo de precios | **Adoptar** |
+| **Keepa API** | Comercial | Historial y Sales Rank de Amazon, complementario | **Diferido** (§4.3) |
+| **Amazon SP-API** | Comercial (requiere cuenta de vendedor) | Comisiones exactas, restricciones | Adaptador preparado, desactivado |
 
 ### 4.2 PriceStalker — hallazgos verificados en código (8-nov-2026)
 
-- Repo creado en enero 2026; 477 commits; **176 commits en últimos 90 días**.
-- Mantenedores efectivos: ~3 (mikeknight85, stevene1919, clucraft como autor original).
-- Única estable: **v2.0.0 (31-ago-2026)**; main en **v2.2.0-beta.2**. `version.json` dice `2.0.0-beta.1` (inconsistente con tags).
-- Usa `puppeteer-extra-plugin-stealth` (`scraper/src/core/SessionManager.ts`).
-- **Sí tiene webhooks**: proveedor de notificaciones con 6 eventos (baja de precio, precio objetivo, regreso a stock, no disponible, restaurado, anunciado). Son alertas, no cada observación; el historial completo requiere polling.
-- Despliegue con Docker Compose; para Podman: `podman-compose` o `podman kube play` — PoC.
-- La tabla de símbolos de moneda no incluye MXN (menor).
+- Repo creado en enero de 2026; 477 commits, **176 en los últimos 90 días**; ~3 mantenedores efectivos.
+- Única estable: **v2.0.0 (31-ago-2026)**; `main` en v2.2.0-beta.2, y `version.json` inconsistente con los tags.
+- Usa `puppeteer-extra-plugin-stealth`. Tiene webhooks de alertas (6 eventos), no de cada observación: el historial completo requiere polling.
+- Despliegue con Docker Compose; en Podman, con `podman-compose` o `podman kube play` (PoC).
 
-**Por qué sale del núcleo:** OIP ya necesita seguir precios con Scrapy (para el historial propio y la regla anti-inflado). Con PriceStalker el precio se extraería dos veces con dos motores, el historial quedaría duplicado en dos bases y se agrega Node + Puppeteer. Se conserva como **benchmark**: si en la PoC extrae precios notablemente mejor en algún comercio, se integra para ese comercio vía adaptador `TrackingProvider`.
+**Por qué no está en el núcleo:** OIP ya sigue precios con Scrapy para su historial propio. Con PriceStalker el precio se extraería dos veces, el historial quedaría en dos bases y se agrega Node + Puppeteer. Queda como **benchmark** (PoC-D): si extrae notablemente mejor en algún comercio, entra para ese comercio detrás de un adaptador `TrackingProvider`.
 
-### 4.3 Keepa
+### 4.3 Keepa: diferido
 
-Servicio que registra desde hace años el historial de precio y ranking de ventas del catálogo de Amazon. Permite consulta por ASIN y por código (UPC/EAN).
+**No entra en la PoC ni en el Inc. 1** (DEC-124). Las referencias salen del historial propio y de la comparación entre comercios (§2.2).
 
-- Plan de entrada reportado: **~49 €/mes, 20 tokens/min** (fuente de terceros; confirmar en keepa.com).
-- 1 token por producto estándar, hasta 100 por llamada → ~28,000 consultas/día con el plan de entrada.
-- Estrategia: **caché agresiva** en OIP (la referencia de mercado cambia lento); refrescar solo candidatos con descuento declarado relevante.
-
-> *(v1.4, DEC-123, DEC-124 y DEC-125)* **Keepa queda diferido.** No se contrata en la PoC ni en el Inc. 1: las referencias salen del historial propio y de la comparación entre comercios (§2.2). Cuando entre, será solo para productos de Amazon, como fuente complementaria de historial y Sales Rank, contratada por meses y con resultados guardados y reutilizados. Su historial es de Amazon, no del mercado completo. Filosofía de contratación: gratis o local primero, pago por consumo después, suscripción solo con valor comprobado.
+- **Cuando entre:** solo para productos de Amazon, como fuente **complementaria** de historial de precio y Sales Rank; contratada **por meses** ante una necesidad concreta (por ejemplo, un producto que pide un cliente y que OIP nunca siguió). Sus resultados se guardan y se reutilizan. Su historial es de Amazon, no del mercado completo.
+- La integración puede desarrollarse antes con **respuestas simuladas**, detrás de `PriceReferenceSource`.
+- Referencia (terceros, por confirmar): plan de entrada ~49 €/mes, 20 tokens/min; los tokens expiran a los 60 min.
+- **Filosofía de contratación** (DEC-125): gratis o local primero; pago por consumo cuando sea posible; suscripción solo con valor comprobado.
 
 ---
 
@@ -395,113 +389,112 @@ Servicio que registra desde hace años el historial de precio y ranking de venta
 
 ```mermaid
 flowchart TB
-    subgraph BUY["Lado compra"]
-        HD["Home Depot"]
-        WM["Walmart"]
-        TG["Target"]
-        OTH["Otros comercios"]
+    subgraph BUY["Comercios (EE. UU.)"]
+        HD["Home Depot"] & WM["Walmart"] & TG["Target"] & BB["Best Buy"] & GS["GameStop"] & NS["Nintendo Store"] & AMZ["Ficha de Amazon"]
     end
 
-    subgraph CRAWL["Crawling (Python)"]
+    subgraph WORKER["oip-worker (VPS)"]
         SCRAPYD["Scrapyd"]
-        DISC["Spiders de descubrimiento<br/>(ofertas, liquidaciones, categorías)"]
-        TRACK["Spider de seguimiento<br/>(URLs + tiendas físicas)"]
-        PW["Playwright + stealth<br/>(selectivo)"]
+        DISC["Spiders de descubrimiento"]
+        TRACK["Spiders de seguimiento<br/>(publicaciones y tiendas)"]
+        ITEM["Spider de búsqueda por artículo"]
+        REND["BrowserRenderer<br/>(Playwright)"]
         EXT["extruct / price-parser"]
+        OUT["Bandeja de salida"]
     end
 
-    subgraph CORE["OIP Core (FastAPI)"]
+    subgraph CORE["oip-core (servidor de Jesús)"]
+        SCHED["Scheduler + tareas<br/>(estados, barrido, HELD)"]
         INGEST["Ingesta idempotente"]
-        CAT["Catálogo: producto ↔ publicaciones"]
-        MATCH["Match UPC/GTIN → ASIN"]
-        MKT["Referencia de mercado"]
-        OPP["Motor de oportunidad<br/>(anti-inflado, margen, restricciones, demanda)"]
-        SCHED["Scheduler + perfiles de temporada"]
+        CAP["Capturas de Jesús<br/>(particulares, comparables, estimados)"]
+        CAT["Catálogo + identificación"]
+        REF["Referencias de precio<br/>(PriceReferenceSource)"]
+        OPP["Motor de oportunidad<br/>(por canal)"]
+        BXA["Búsqueda por artículo"]
         NOTIF["Notificador"]
-        API["API + dashboard"]
-    end
-
-    subgraph SELL["Lado venta"]
-        KEEPA["Keepa API"]
-        SPAPI["Amazon SP-API<br/>(preparado, off)"]
-        FB["FB Marketplace<br/>(estimado)"]
     end
 
     DB[("PostgreSQL + TimescaleDB")]
+    DASH["Metabase (solo lectura)"]
     TELEGRAM["Telegram"]
 
-    SCHED -->|schedule.json| SCRAPYD
-    SCRAPYD --> DISC & TRACK
-    DISC & TRACK -.-> PW
-    DISC & TRACK --> EXT
-    HD & WM & TG & OTH --> DISC & TRACK
-    EXT -->|POST /ingest| INGEST
-    INGEST --> CAT --> MATCH
-    MATCH --> KEEPA
-    KEEPA --> MKT
-    SPAPI -.-> MKT
-    FB -.-> MKT
-    MKT --> OPP
-    CAT --> OPP
+    SCHED -->|"schedule (WireGuard)"| SCRAPYD
+    SCRAPYD --> DISC & TRACK & ITEM
+    DISC & TRACK & ITEM -.-> REND
+    HD & WM & TG & BB & GS & NS & AMZ --> DISC & TRACK & ITEM
+    DISC & TRACK & ITEM --> EXT --> OUT
+    OUT -->|"ingest (WireGuard)"| INGEST
+    INGEST --> CAT
+    CAP --> CAT
+    CAT --> REF --> OPP
+    CAT --> BXA
     OPP --> NOTIF --> TELEGRAM
     CORE --> DB
-    API --> DB
+    DASH --> DB
 ```
 
 ### 5.1 Responsabilidades
 
 | Componente | Hace | No hace |
 |---|---|---|
-| Spiders de descubrimiento | Recorrer ofertas/liquidaciones/categorías; emitir candidatos con evidencia | Decidir identidad ni oportunidad |
-| Spider de seguimiento | Re-extraer precio/stock de publicaciones seleccionadas; por tienda cuando aplica | Descubrir |
-| Scrapyd | Ejecutar jobs de spiders por API | Planificar (lo hace OIP) |
-| Ingesta | Validar esquema, dominio, canonicalizar URL, deduplicar | Llamar a Keepa en línea |
-| Match | Ligar producto a ASIN por UPC/GTIN; similitud solo como auxiliar | Fusionar sin evidencia |
-| Referencia de mercado | Consultar/cachear Keepa, consolidar precios de otros comercios | — |
-| Motor de oportunidad | Aplicar §2 completo y asignar nivel | Comprar o publicar |
-| Notificador | Telegram con deduplicación (no repetir la misma oferta) | — |
+| Spiders de descubrimiento | Recorrer ofertas, liquidaciones y categorías acordadas; aplicar el filtro previo; emitir candidatos con evidencia | Decidir identidad ni oportunidad |
+| Spiders de seguimiento | Re-consultar precio y disponibilidad de publicaciones seleccionadas, por tienda cuando aplica, para formar el historial propio | Descubrir |
+| Spider de búsqueda por artículo | Buscar los modelos de una solicitud de cliente en los comercios del Inc. 1, con prioridad | Ordenar ni recomendar |
+| Bandeja de salida | Guardar cada resultado y entregarlo al Core con reintentos | Evaluar |
+| Scrapyd | Ejecutar trabajos de spiders por API | Planificar (lo hace el Core) |
+| Ingesta | Validar esquema y dominio autorizado, canonicalizar URL, deduplicar | Consultar comercios |
+| Catálogo e identificación | Ligar publicaciones a un producto por código de barras o modelo + marca (RN-013) | Fusionar sin evidencia |
+| Referencias de precio | Calcular precio habitual, mercado hoy, MSRP y mínimo de 60 días, guardando la fuente | — |
+| Motor de oportunidad | Aplicar §2 completo por canal, elegir canal y asignar resultado y nivel | Comprar o publicar |
+| Búsqueda por artículo | Ordenar las alternativas según RN-011 | Comprar |
+| Notificador | Telegram con deduplicación, agrupación y reintentos | — |
 
 ### 5.2 Ejecución asíncrona
 
-Arranque: **Scrapyd** para spiders + **cola de tareas sobre PostgreSQL** (p. ej. Procrastinate) para enriquecimiento Keepa y cálculo de oportunidad. Sin broker adicional.
-Migrar a RabbitMQ solo si hay más de un nodo de crawling o la cola en Postgres se vuelve cuello de botella.
+- **Scrapyd** para los spiders (Worker) y **cola de tareas sobre PostgreSQL** (p. ej. Procrastinate) en el Core. Sin broker adicional; RabbitMQ solo si hay más de un nodo o la cola en Postgres se vuelve cuello de botella (ADR-010).
+- **Estados de tareas** con transiciones condicionales (`UPDATE … WHERE estado = <anterior>`): dos procesos nunca toman el mismo paso (DEC-176).
+- **Barrido de recuperación** periódico: re-encola lo atascado o lo que ya debe reintentarse (`next_attempt_at`).
+- Estado **`HELD`** para lo que necesita a Jesús (por ejemplo, una fuente en pausa que pide autorización).
+- La base es la fuente de verdad; la cola solo avisa. Nada depende de que un proceso siga vivo.
 
-> *(v1.4, DEC-176)* **Estados de tareas en el Core** con transiciones condicionales (`UPDATE … WHERE estado = <anterior>`), de modo que dos procesos nunca toman el mismo paso; **barrido de recuperación** periódico que re-encola lo atascado o lo que ya debe reintentarse; estado **`HELD`** para lo que necesita a Jesús (por ejemplo, una evaluación en revisión manual o una fuente en pausa que pide autorización). La base es la fuente de verdad; la cola solo avisa. Nada depende de que un proceso siga vivo.
-
-### 5.3 *(v1.3)* Despliegue físico: Core local + Scraper Worker remoto
+### 5.3 Despliegue físico
 
 ```mermaid
 flowchart LR
-    subgraph HOME["Servidor de Jesús (Rocky + Podman) — OIP Core"]
+    subgraph HOME["Servidor de Jesús (Rocky + Podman) — oip-core"]
         API["oip-api<br/>scheduler · motor de oportunidad<br/>búsqueda por artículo · notificador"]
         DB[("oip-db<br/>PostgreSQL + TimescaleDB")]
-        DASH["oip-dashboard (Metabase)"]
-        FW1["Firewall: comercios bloqueados<br/>(modo_red, §3.6)"]
+        DASH["oip-dashboard (Metabase, solo lectura)"]
+        FW1["Firewall: salida denegada por defecto<br/>(lista permitida, §3.6)"]
     end
-    subgraph VPS["VPS (Rocky + Podman) — Scraper Worker"]
+    subgraph VPS["VPS (Rocky + Podman) — oip-worker"]
         SCR["oip-scrapyd<br/>Scrapy + scrapy-playwright"]
         IPV["Verificador de IP<br/>(fail-closed)"]
+        OUT["Bandeja de salida"]
         FW2["Firewall: entrada solo WireGuard"]
     end
     COM["Comercios<br/>(ven la IP del VPS)"]
-    KEEPA["Keepa / Telegram<br/>(salida directa)"]
+    TGM["Telegram<br/>(salida directa)"]
 
-    API <-->|"WireGuard: schedule.json →<br/>← POST /ingest"| SCR
+    API <-->|"WireGuard: schedule →<br/>← ingest"| SCR
     SCR --> IPV --> COM
+    SCR --> OUT
     API --> DB
     DASH --> DB
-    API --> KEEPA
+    API --> TGM
 ```
 
-### 5.4 *(v1.3)* Flujos de las dos funcionalidades
+### 5.4 Flujos de las dos funcionalidades
 
-**A. Búsqueda automatizada:** scheduler del Core → `schedule.json` (spider de descubrimiento/seguimiento) → Worker consulta comercios con los controles de §3.5 → `POST /ingest` → catálogo → match → Keepa → motor de oportunidad (RN-001 a RN-009) → alertas.
+**A. Búsqueda automatizada:** scheduler del Core → `schedule` (descubrimiento o seguimiento) → el Worker consulta los comercios con los controles de §3.5 → bandeja de salida → `ingest` → catálogo e identificación → referencias de precio → motor de oportunidad **por canal** (RN-001 a RN-009, RN-012 a RN-018) → elección de canal → resultado y nivel → avisos y tablero.
 
-**B. Búsqueda por artículo:** Jesús captura la solicitud (`client_request`) en el Core → el Core busca primero en caché (≤ 1 h) → para lo que falte, `schedule.json` (spider de búsqueda por artículo, con prioridad sobre los trabajos periódicos pero con los mismos límites por comercio) + consulta a Keepa para Amazon → `POST /ingest` → ordenamiento de RN-011 (disponibles por precio total; el resto aparte) → resultado consultable y exportable para que Jesús responda al cliente.
+**B. Búsqueda por artículo:** Jesús captura la solicitud (`client_request`: alias del cliente, 1 a 3 modelos, cantidad, estados aceptados, modalidad) → el Core usa la caché de **1 hora o menos** → para lo que falte, `schedule` con prioridad sobre los trabajos periódicos y los mismos límites → `ingest` → ordenamiento de RN-011 (disponibles por precio total; el resto aparte, con su motivo) → resultado consultable y exportable. Tiendas físicas: Zonas 1 y 2, máximo 5 por comercio. En la modalidad "Jesús compra y entrega", el viaje y la entrega se muestran aparte y **no cambian el orden** (DEC-166, DEC-168). Las opciones de **vendedor externo** se marcan y no se recomiendan por defecto; los canales especiales (Walmart Business) se marcan "puede requerir cuenta especial" (DEC-135). Las **sugerencias** de ofertas relacionadas (DEC-139) se agregan cuando RN-011 defina su criterio.
 
-> *(v1.4)* **Sin Keepa** (DEC-124): en los dos flujos, Amazon se consulta como un comercio más (**ficha de Amazon** por el Worker: botón de compra, vendedores, ranking, reseñas y "comprados el mes pasado"), y la evaluación usa el **historial propio** y la comparación entre comercios. El flujo A evalúa **por canal** y elige canal (§2.7) antes de asignar nivel. El flujo B usa datos de **1 hora o menos**, Zonas 1 y 2 y máximo 5 tiendas por comercio, y el viaje y la entrega se muestran aparte sin cambiar el orden (DEC-166, DEC-168). Las opciones de **vendedor externo** se marcan y no se recomiendan por defecto, y los canales especiales (Walmart Business) se marcan "puede requerir cuenta especial" (DEC-135). Las **sugerencias** de ofertas relacionadas (DEC-139) se agregan cuando RN-011 defina su criterio. Las **capturas manuales** de Jesús (particulares, comparables locales, precio local estimado, demanda local, MSRP) entran por el Core con el mismo contrato de observación.
+**Amazon** se consulta como un comercio más: la **ficha de Amazon** (botón de compra, vendedores de nuevo, ranking, reseñas y "comprados el mes pasado") la lee el Worker.
 
-### 5.5 *(v1.4)* IA opcional (DEC-177)
+**Capturas manuales** de Jesús (publicaciones de particulares, comparables locales, precio local estimado, demanda local, MSRP) entran por el Core con el mismo contrato de observación (§8).
+
+### 5.5 IA opcional (DEC-177)
 
 OIP no usa IA en el Inc. 1. Cuando entre, **el código decide y la IA complementa**:
 
@@ -509,12 +502,12 @@ OIP no usa IA en el Inc. 1. Cuando entre, **el código decide y la IA complement
 |---|---|
 | Camino sin IA | Toda función con IA tiene un camino sin IA que se sostiene solo |
 | Interruptor por función | `apagada \| solo registra \| aplica` |
-| Banco etiquetado | Casos reales (`docs/negocio/casos/`) con umbrales escritos **antes** de encenderla |
+| Banco etiquetado | Casos reales (`docs/negocio/casos/`, DEC-136) con umbrales escritos **antes** de encenderla |
 | Fuente registrada | Cada decisión guarda si salió de `regla` o de `ia` |
 | Pruebas | La suite corre sin llamadas al modelo |
 | Adaptador | Un adaptador de modelo con timeout y caché, dentro del Core |
 
-Candidatos (insumo del stack de tickets §9): identificación sin código (nunca confirma sola), extracción de precio sin JSON-LD como respaldo, búsqueda por necesidad (futura, DEC-152) y redacción del resumen de avisos.
+Candidatos: identificación sin código (nunca confirma sola), extracción de precio sin JSON-LD como respaldo, búsqueda por necesidad (futura, DEC-152) y redacción del resumen de avisos.
 
 ---
 
@@ -522,48 +515,49 @@ Candidatos (insumo del stack de tickets §9): identificación sin código (nunca
 
 ### 6.1 Qué cambia
 
-- Precio e inventario **por sucursal**, frecuentemente distintos del precio online.
-- Los comercios exponen disponibilidad por tienda/código postal en su sitio; el spider de seguimiento debe consultar con la tienda seleccionada.
-- Las liquidaciones más profundas a veces **no aparecen en línea** → cobertura parcial aceptada; se registra la fuente del dato.
+- Precio e inventario **por sucursal**, frecuentemente distintos del precio en línea.
+- Los comercios exponen la disponibilidad por tienda o código postal; el spider de seguimiento consulta con la tienda seleccionada.
+- Las liquidaciones más profundas a veces **no aparecen en línea**: cobertura parcial aceptada; se registra la fuente del dato.
 
 ### 6.2 Configuración de tiendas
 
-Tabla `store` con: comercio, número de tienda, dirección, coordenadas, código postal, distancia y tiempo estimado desde el origen (Tijuana), activa/inactiva. Inicial: sucursales de HD, Walmart y Target en el área de San Diego (Chula Vista, National City, San Ysidro, San Diego, etc.).
+Tabla `store`: comercio, número de tienda, dirección, coordenadas, código postal, **km y tiempo desde la garita**, zona, límite de unidades por cliente, activa / inactiva. Una tienda nueva sin distancia registrada no se recomienda hasta que Jesús la registre.
 
-### 6.3 Costo de traslado
+### 6.3 Costo y ganancia del viaje (RN-008, DEC-163)
+
+**Zonas por km desde la garita** (San Ysidro u Otay Mesa):
+
+| Zona | Distancia | Ganancia mínima por viaje |
+|---|---|---|
+| Zona 1 | ≤ 20 km | $50 |
+| Zona 2 | > 20 y ≤ 40 km | $75 |
+| Lejos | > 40 km | $150, y solo entonces se avisa |
 
 ```
-costo_traslado = (km_ida_vuelta × costo_por_km)
-               + (horas_totales × valor_hora)
-               + costo_fijo_cruce
-horas_totales  = tiempo_manejo + tiempo_cruce_frontera_estimado + tiempo_en_tienda
+horas del viaje    = manejo (ida y vuelta) + espera en la garita + 0.5 h por tienda
+costo del viaje    = km totales × $0.20 + horas del viaje × $15 + costos fijos
+ganancia del viaje = Σ (margen ajustado × unidades, del canal elegido) − costo del viaje
 ```
 
-- Parámetros configurables: rendimiento, precio de gasolina, valor de tu hora, tiempo de cruce promedio.
-- **Agrupación de viaje:** si hay varias oportunidades en la misma zona, el costo se prorratea → el dashboard muestra "ruta de compra" con margen total.
-- Regla: tiendas fuera del radio solo alertan si `margen_neto_absoluto` ≥ umbral alto configurable.
+- En una ruta con varias zonas manda la **más lejana**; con igual ganancia se prefiere la tienda más cercana.
+- Solo cuentan oportunidades con nivel y confianza Alta o Media.
+- Una oportunidad que sola no paga el viaje queda **en espera** 2 días (1 en liquidación).
+- La misma tarifa da el **costo de entrega** de la venta local y la **recogida** en compras a particulares (DEC-142, DEC-148).
 
-> *(v1.4, alineado con RN-008 v2 y DEC-163)* **Zonas por km desde la garita** (San Ysidro u Otay Mesa): Zona 1 ≤ 20 km (mínimo $50 por viaje), Zona 2 ≤ 40 km ($75), Lejos ($150, y solo entonces se avisa); en una ruta manda la zona más lejana. `costo del viaje = km × $0.20 + horas × $15 + fijos`, con `horas = manejo + espera en garita + 0.5 h por tienda`; la ganancia del viaje usa el **canal elegido** (RN-018). Una oportunidad que sola no paga el viaje queda **en espera** 2 días (1 en liquidación). La misma tarifa da el **costo de entrega** de la venta local (DEC-142, DEC-148). Tienda nueva sin distancia registrada: no se recomienda hasta registrarla.
+### 6.3.1 Confianza del dato de disponibilidad (RN-007, DEC-162)
 
-### 6.3.1 Confianza del dato de disponibilidad en tienda
+La disponibilidad en tienda **no es inventario garantizado**. La confianza (Alta, Media, Baja) sale de la tabla de RN-007 según lo que dice la tienda y la antigüedad del dato, con tiempos a la mitad en liquidación; "pocas unidades" es Media hasta 2 h.
 
-La disponibilidad en tienda **no es inventario garantizado**. Cada observación registra:
-
-- `consultado_en` y antigüedad visible en toda alerta ("consultado hace 3 h").
-- `confianza`:
-  - **Alta:** cantidad numérica, consulta < N horas.
-  - **Media:** solo "en stock" / "pocas unidades", o cantidad de antigüedad media.
-  - **Baja:** dato antiguo o el comercio reporta "limited stock".
-- **Decaimiento:** la confianza baja con las horas según la velocidad de agotamiento de la categoría.
-- **Re-consulta previa al viaje:** botón en la alerta de Telegram que vuelve a consultar la tienda justo antes de salir.
-- **Registro de visita** (encontrado / no encontrado / precio distinto) en `opportunity_outcome`, para calibrar confianza por tienda y comercio.
-- Oportunidades de tienda física con confianza **baja** no generan alerta inmediata.
-
-> *(v1.4, alineado con RN-007 v2 y DEC-162)* La confianza sale de la **tabla de RN-007** (cantidad exacta, "en existencia", "pocas unidades", con tiempos a la mitad en liquidación); "pocas unidades" es Media hasta 2 h. Castigo por historial con ≥ 3 visitas y recuperación con 3 aciertos. **Llamar antes de salir** si la ganancia del viaje es ≥ $100 (≥ $50 con confianza Media); si la tienda confirma, Alta por 2 h. En línea: disponible confirmada · existencia limitada · no confirmada · agotado (DEC-134); recoger en tienda cuenta como en línea y suma el viaje.
+- **Historial de la tienda:** con ≥ 3 visitas, 2 "no encontrado" entre las últimas 5 bajan un nivel; 3 "encontrado" seguidos lo recuperan. Si 2 de las últimas 5 visitas tienen precio distinto, se avisa.
+- **Llamar antes de salir** si la ganancia del viaje es ≥ $100, o ≥ $50 con confianza Media; si la tienda confirma, Alta por 2 h.
+- **Re-consulta previa al viaje**, siempre sin caché, con botón en el aviso de Telegram.
+- **Registro de visita** (encontrado / no encontrado / precio distinto / confirmado por llamada) en `store_visit`.
+- **En línea:** disponible confirmada · existencia limitada · no confirmada · agotado (DEC-134). Recoger en tienda se trata como en línea y suma el viaje.
+- Toda alerta muestra la antigüedad del dato ("consultado hace 3 h").
 
 ### 6.4 Logística de venta
 
-Fuera del alcance del modelo de margen por decisión del dueño del producto: no se modelan costos de importación ni de cruce para la venta. El parámetro `otros_costos_venta` queda disponible por canal (default 0) por si se requiere un ajuste manual.
+Fuera del modelo de margen por decisión del dueño del producto: no se modelan costos de importación, de cruce ni la franquicia aduanal para la venta. El parámetro `otros_costos_venta` queda disponible por canal (por defecto 0) para un ajuste manual.
 
 ---
 
@@ -571,40 +565,35 @@ Fuera del alcance del modelo de margen por decisión del dueño del producto: no
 
 ### 7.1 Entidades
 
+Los nombres son **propuesta**; los fija el `design.md` de cada parte del REQ.
+
 | Entidad | Propósito |
 |---|---|
 | `retailer`, `retailer_domain` | Comercio y dominios autorizados |
-| `store` | Sucursal física con ubicación y costo de traslado calculado |
+| `store` | Sucursal física con ubicación, km y tiempo desde la garita, zona y límite por cliente |
 | `category`, `retailer_source` | Taxonomía y URLs de entrada (ofertas, liquidaciones, categorías) |
-| `product` | Identidad canónica |
-| `product_identifier` | UPC/GTIN/EAN, MPN, SKU comercio, **ASIN** |
-| `listing` | Publicación de un producto en un comercio (online) |
-| `price_observation` *(hypertable)* | Precio con fecha, moneda, tipo (oferta/regular/liquidación), `store_id` opcional |
-| `availability_observation` *(hypertable)* | Stock online o por tienda, con `consultado_en`, `confianza` y fuente |
-| `store_visit` | Resultado de cada visita a tienda (encontrado/no encontrado/precio distinto) |
-| `market_reference` *(hypertable)* | Snapshot de referencia: fuente (keepa/otro comercio/historial), precio, BSR, vendedores, ventana |
-| `fee_schedule` | Comisión por canal y categoría (manual; SP-API cuando exista) |
-| `sale_restriction` | Categoría/marca restringida o hazmat por canal |
-| `opportunity` | Resultado del motor: métricas (incl. `margen_neto_ajustado`, `roi_anualizado`, `dias_estimados_venta`, `unidades_recomendadas`), flags, nivel, estado (nueva/alertada/descartada/comprada/vendida) |
-| `opportunity_outcome` | Resultado real: precio de compra, precio de venta, días para vender → **calibra el motor** |
-| *(v1.3)* `client_request` | Solicitud de búsqueda por artículo: alias del cliente (sin datos personales), descripción, modelo/UPC, cantidad, notas, fecha, estado |
-| *(v1.3)* `client_request_result` | Opciones encontradas por solicitud: comercio/sucursal, precio, envío, total, disponibilidad, confianza, consultado_en, enlace, grupo (disponible / otras), posición, recomendada |
-| *(v1.3)* `fetch_log` | Registro por consulta a comercio: dominio, hora, resultado (ok / error / bloqueada), duración; alimenta los límites y la pausa por bloqueo (§3.5) |
-| *(v1.3)* `network_mode_change` | Cambios de `modo_red` (quién, cuándo, motivo) (§3.6) |
-| `crawl_job`, `extraction_evidence` | Trazabilidad |
-| `retailer_policy` | Frecuencia, límites, perfil de temporada, `access_mode`, `browser_engine` (`playwright` \| `puppeteer`), egress asignado, estado de bloqueo |
-| `access_mode_change` | Historial de cambios de escalón por fuente (fecha, motivo, tasa de bloqueo antes/después) |
-| *(v1.4)* `price_observation` / `availability_observation` (ampliadas) | Agregan vendedor (`comercio · externo · particular · desconocido`), estado del producto, estado de disponibilidad en línea, modo de compra, envío, liquidación, MSRP con fuente y fecha, contenido (DEC-134, DEC-169) |
-| *(v1.4)* `amazon_listing_observation` *(hypertable)* | Ficha de Amazon: botón de compra (o sin oferta hoy), vendedores de nuevo, ranking en categoría y subcategoría, reseñas, comprados el mes pasado |
-| *(v1.4)* `price_reference` | Referencias calculadas (habitual, mercado hoy, MSRP, mínimo de 60 días) con la **fuente usada** (historial propio, comparación, API oficial, Keepa) (DEC-123) |
-| *(v1.4)* `evaluation`, `evaluation_channel` | Registro de cada evaluación: valores por canal, estado del canal, calidad del precio, marcas, todos los motivos, motivo principal, `nivel_calculado`, canal elegido, resultado y versiones de RN y configuración (REQ-2026-0001 §7). Complementa a `opportunity`; la relación exacta la fija el `design.md` de la parte B (Propuesta) |
-| *(v1.4)* `private_listing` | Publicación de particular capturada por Jesús, **sin datos personales del vendedor** (DEC-150) |
-| *(v1.4)* `local_comparable`, `local_estimate`, `local_demand` | Comparables y estimados de venta local, y demanda local por categoría (RN-014, RN-016, RN-017) |
-| *(v1.4)* `config_version` | Configuración versionada (umbrales de las RN, tablas de comisión, envío, viajes, avisos) (DEC-155) |
-| *(v1.4)* `task` | Estados de tareas del Core con `next_attempt_at` y `HELD` (§5.2, DEC-176) |
-| *(v1.4)* `ingest_receipt` | Claves de idempotencia recibidas del Worker, para deduplicar la bandeja de salida (DEC-175) |
-
-`opportunity_outcome` es clave: con lo que realmente compres y vendas se ajustan umbrales y estimados.
+| `product` | Identidad canónica (mismo modelo, versión, edición, contenido y estado) |
+| `product_identifier` | Código de barras (GTIN/UPC/EAN), modelo del fabricante + marca, SKU del comercio, ASIN |
+| `listing` | Publicación de un producto en un comercio |
+| `price_observation` *(hypertable)* | Precio y tachado, con vendedor (`comercio · externo · particular · desconocido`), estado del producto, modo de compra, envío, liquidación, MSRP con fuente y fecha, `store_id` opcional |
+| `availability_observation` *(hypertable)* | Estado en línea o texto, cantidad y alcance por tienda, con `consultado_en`, confianza y fuente |
+| `amazon_listing_observation` *(hypertable)* | Ficha de Amazon: botón de compra (o sin oferta hoy), vendedores de nuevo, ranking en categoría y subcategoría, reseñas, comprados el mes pasado |
+| `price_reference` | Referencias calculadas (habitual, mercado hoy, MSRP, mínimo de 60 días) con la **fuente usada** |
+| `fee_schedule`, `sale_restriction` | Comisión, tasa de devolución, envío y restricciones por canal y categoría (manual; SP-API cuando exista) |
+| `evaluation`, `evaluation_channel` | Registro de cada evaluación: valores por canal, estado del canal, calidad del precio, marcas, motivos, motivo principal, `nivel_calculado`, canal elegido, resultado y versiones de RN y configuración (REQ-2026-0001 §7) |
+| `opportunity` | Oportunidad vigente de un producto, con su estado (nueva / alertada / descartada / comprada / vendida) |
+| `opportunity_outcome` | Resultado real (precio de compra y de venta, canal, días para vender): **calibra el motor** |
+| `store_visit` | Resultado de cada visita o llamada a tienda |
+| `private_listing` | Publicación de particular capturada por Jesús, **sin datos personales del vendedor** |
+| `local_comparable`, `local_estimate`, `local_demand` | Comparables y estimados de venta local, y demanda local por categoría |
+| `client_request`, `client_request_result` | Solicitud de búsqueda por artículo (alias del cliente, sin datos personales) y sus opciones ordenadas |
+| `config_version` | Configuración versionada: umbrales de las RN y tablas de comisión, envío, viajes y avisos (DEC-155) |
+| `task` | Estados de tareas del Core, con `next_attempt_at` y `HELD` (§5.2) |
+| `ingest_receipt` | Claves de idempotencia recibidas del Worker (§8) |
+| `fetch_log` | Cada consulta a un comercio: dominio, hora, resultado (ok / error / bloqueada), duración |
+| `crawl_job`, `extraction_evidence` | Trazabilidad de la extracción |
+| `retailer_policy`, `access_mode_change` | Frecuencia, límites, perfil de temporada, `access_mode`, `browser_engine`, estado de bloqueo y pausas; historial de cambios de escalón |
+| `network_mode_change` | Cambios de `modo_red` (quién, cuándo, motivo) |
 
 ### 7.2 Diagrama ER conceptual
 
@@ -614,62 +603,45 @@ erDiagram
     RETAILER ||--o{ LISTING : publishes
     PRODUCT ||--o{ LISTING : appears_as
     PRODUCT ||--o{ PRODUCT_IDENTIFIER : has
-    PRODUCT ||--o{ MARKET_REFERENCE : priced_by
+    PRODUCT ||--o{ PRICE_REFERENCE : priced_by
     LISTING ||--o{ PRICE_OBSERVATION : records
     LISTING ||--o{ AVAILABILITY_OBSERVATION : records
-    STORE ||--o{ PRICE_OBSERVATION : at
     STORE ||--o{ AVAILABILITY_OBSERVATION : at
-    LISTING ||--o{ OPPORTUNITY : generates
+    PRICE_OBSERVATION ||--o{ EVALUATION : evaluated_in
+    EVALUATION ||--|{ EVALUATION_CHANNEL : per_channel
+    EVALUATION ||--o| OPPORTUNITY : updates
     OPPORTUNITY ||--o| OPPORTUNITY_OUTCOME : results_in
     CATEGORY ||--o{ FEE_SCHEDULE : priced_with
-    CATEGORY ||--o{ SALE_RESTRICTION : restricted_by
+    CLIENT_REQUEST ||--o{ CLIENT_REQUEST_RESULT : has
 ```
 
-### 7.3 Identidad y match
+### 7.3 Identidad del producto (RN-013, DEC-169)
 
-1. UPC/GTIN/EAN válido (dígito verificador) — preferente; extraído de JSON-LD con extruct.
-2. MPN + marca.
-3. Búsqueda Keepa por código.
-4. Título + marca + atributos (solo auxiliar; marca `LOW_MATCH_CONFIDENCE`).
+1. Código de barras válido (dígito verificador) y mismo contenido → **confirmada**. Se extrae del JSON-LD con extruct.
+2. Modelo del fabricante + marca, mismo contenido → **confirmada** (si un modelo se usa para kits distintos, Jesús lo marca y deja de confirmar).
+3. Solo nombre, marca y características → `COINCIDENCIA NO CONFIRMADA` (revisión manual o "otras opciones").
 
-Corrección manual desde el dashboard con trazabilidad.
+Kit contra herramienta sola, paquete de 2 contra 1, color o capacidad distintos: productos distintos. La corrección manual queda registrada.
 
-### 7.4 Volumen y retención
+### 7.4 Volumen, retención y migraciones
 
-`price_observation` y `market_reference` como hypertables TimescaleDB con compresión a partir de 30 días y agregados continuos diarios. Retención de detalle: 1 año; agregados: indefinido.
-
-> *(v1.4, DEC-179)* **Migraciones versionadas**: todo cambio de esquema va en una migración nueva; nunca un `ALTER` manual ni editar una migración aplicada. Respaldo antes de cada migración y etiqueta `:rollback-<fecha>` de la imagen antes de cada despliegue. Lista escrita de **volúmenes que nunca se borran** (el historial de precios es un activo de OIP, DEC-123). Las migraciones con hypertables o compresión de TimescaleDB pasan por una **PoC** antes de producción.
+- `price_observation`, `availability_observation` y `amazon_listing_observation` como hypertables de TimescaleDB, con compresión a partir de 30 días y agregados continuos diarios. Retención del detalle: 1 año; agregados: indefinido.
+- **Migraciones versionadas** (DEC-179): todo cambio de esquema en una migración nueva, como contenedor de una sola ejecución antes del servicio; nunca un `ALTER` manual ni editar una migración aplicada.
+- Respaldo antes de cada migración y etiqueta `:rollback-<fecha>` de la imagen antes de cada despliegue.
+- Lista escrita de **volúmenes que nunca se borran**: el historial de precios es un activo de OIP (DEC-123).
+- Las migraciones con hypertables o compresión de TimescaleDB pasan por una **PoC** antes de producción.
 
 ---
 
-## 8. Contrato de ingesta (Scrapy → OIP)
+## 8. Contratos Core ↔ Worker
 
-```json
-{
-  "schemaVersion": "1.1",
-  "crawlJobId": "uuid",
-  "retailerCode": "homedepot",
-  "storeCode": "hd-0123",
-  "sourceType": "clearance",
-  "sourceUrl": "https://...",
-  "productUrl": "https://...",
-  "title": "...",
-  "brand": "...",
-  "model": "...",
-  "retailerSku": "...",
-  "gtin": "0123456789012",
-  "price": { "current": 19.97, "was": 199.00, "currency": "USD", "type": "clearance" },
-  "availability": { "status": "in_stock", "quantity": 4, "scope": "store" },
-  "extractedAt": "2026-11-08T18:00:00Z",
-  "extractionMethod": "playwright_jsonld",
-  "blocked": false,
-  "evidence": { "jsonld": true, "priceSelector": "..." }
-}
-```
+Dos contratos, `schedule` (Core → Worker) e `ingest` (Worker → Core), escritos como **spec en los dos repos** (DEC-174):
 
-Idempotencia: `retailer + canonical_url + store_code + extractedAt (truncado a ventana)`. `blocked: true` alimenta la métrica de bloqueo sin generar observación.
+- **Versión mayor** ante un cambio incompatible; durante la transición el Core acepta **N y N-1**.
+- Un cambio de contrato se crea en los dos repos con el mismo `Change: <id>`.
+- **Autenticación:** token por servicio (`podman secret`), solo por WireGuard.
 
-> *(v1.4, DEC-134, DEC-169, DEC-174 y DEC-175)* **Contrato de ingesta 2.0** (cambio incompatible: sube la versión mayor). El esquema 1.1 de arriba se conserva como referencia histórica. Durante la transición el Core acepta **N y N-1**.
+**Contrato de ingesta 2.0** (también para las capturas manuales de Jesús):
 
 ```json
 {
@@ -704,80 +676,71 @@ Idempotencia: `retailer + canonical_url + store_code + extractedAt (truncado a v
 }
 ```
 
-- **Montos como texto decimal** (`"29.00"`), para leerlos con `Decimal` sin pasar por `float` (DEC-060).
+- **Montos como texto decimal** (`"29.00"`), para leerlos con `Decimal` sin pasar por `float`.
 - `seller`: `comercio · externo · particular · desconocido`. `availability.state` en línea: disponible confirmada · existencia limitada · no confirmada · agotado (RN-007). `purchaseMode`: `envio · recoleccion · tienda · particular`.
 - `amazonListing` (solo en la ficha de Amazon): `buyBoxPrice` o `null` (sin oferta hoy), `sellersNew`, `rankMain`, `rankSub`, `reviews`, `boughtLastMonth`.
-- Las **capturas manuales** de Jesús usan el mismo esquema con `retailerCode: "particular"` o `"manual"`, sin datos personales.
-- **Bandeja de salida en el Worker:** cada resultado se guarda `PENDIENTE → ENTREGADO`, se reintenta con espera creciente si el Core o el túnel no responden, y tiene retención corta. El Core deduplica con `idempotencyKey` (`ingest_receipt`).
-- **Autenticación:** token por servicio en `schedule` e `ingest` (`podman secret`), solo por WireGuard. Los contratos `schedule` e `ingest` son spec en **los dos** repos, con el mismo `Change: <id>` cuando cambian.
+- Las capturas manuales usan `retailerCode: "particular"` o `"manual"`, sin datos personales.
+- `blocked: true` alimenta la pausa por bloqueo y no genera observación.
+- **Idempotencia:** `retailer + canonical_url + store_code + extractedAt` (truncado a ventana). El Core la guarda en `ingest_receipt` y descarta los duplicados.
+- **Bandeja de salida** en el Worker (DEC-175): cada resultado se guarda `PENDIENTE → ENTREGADO`, se reintenta con espera creciente si el Core o el túnel no responden y tiene retención corta.
 
 ---
 
 ## 9. Despliegue (Rocky Linux + Podman rootless)
 
-### 9.1 Contenedores del incremento 1
+### 9.1 Contenedores del Incremento 1
 
-| Contenedor | Imagen base |
-|---|---|
-| `oip-api` | Python 3.12 + FastAPI + workers de tareas |
-| `oip-scrapyd` | Python 3.12 + Scrapy + scrapy-playwright + Chromium |
-| `oip-db` | PostgreSQL + TimescaleDB |
-| `oip-dashboard` | Metabase (lectura sobre la BD) en incremento 1; UI propia en incremento 2 |
-| `oip-backup` | Job de respaldo (`pg_dump` programado) |
-| `oip-egress` | Cliente WireGuard hacia VPS (MVP) o proxy (volumen); única salida de `oip-scrapyd` (y de `oip-renderer-puppeteer` si existe) |
-| `oip-renderer-puppeteer` | *Condicional.* Servicio Node.js que recibe "renderiza esta URL" por HTTP y devuelve HTML; solo se despliega si la PoC-A lo justifica. Vive en `oip-internal` |
+| Host | Repositorio | Contenedor | Imagen base |
+|---|---|---|---|
+| Servidor de Jesús | `oip-core` | `oip-api` | Python 3.12 + FastAPI + workers de tareas |
+| | | `oip-db` | PostgreSQL + TimescaleDB |
+| | | `oip-dashboard` | Metabase en el Inc. 1 (UI propia en el Inc. 2), con un **rol de solo lectura** sobre vistas de reporte, nunca con el dueño de la base (DEC-180) |
+| | | `oip-backup` | Respaldo programado (`pg_dump`) |
+| | | migraciones | Contenedor de una sola ejecución (§7.4) |
+| VPS | `oip-worker` | `oip-scrapyd` | Python 3.12 + Scrapy + scrapy-playwright + Chromium |
+| | | verificador de IP y bandeja de salida | Parte del Worker |
+| | | `oip-renderer-puppeteer` | *Condicional* (§3.3.1) |
 
-Redes Podman: `oip-internal` (sin salida; `oip-scrapyd`, `oip-egress`, `oip-api`, `oip-db`) y `oip-public` (`oip-api`, `oip-egress`, dashboard). `oip-scrapyd` **no** está en `oip-public`. Detalle en §3.4.
+Los dos hosts tienen endpoint WireGuard y firewall propio (§3.4.1, §3.6).
 
-> *(v1.3, DEC-120)* **Topología vigente: worker remoto.** Los contenedores se reparten en dos hosts:
->
-> | Host | Contenedores |
-> |---|---|
-> | **Servidor de Jesús (Core)** | `oip-api`, `oip-db`, `oip-dashboard`, `oip-backup`, endpoint WireGuard |
-> | **VPS (Worker)** | `oip-scrapyd` (Scrapy + scrapy-playwright + Chromium), verificador de IP, endpoint WireGuard; firewall de salida |
->
-> `oip-egress` y la red `oip-internal` descritas arriba corresponden al **modo túnel** (worker en casa), que queda **documentado y sin construir**. En el modo worker remoto, la salida a los comercios es la IP pública del VPS, y la casa no tiene ninguna ruta de scraping.
->
-> **Infraestructura de referencia del VPS (DEC-119, precios por verificar antes de contratar):** proveedor tipo Hetzner, DigitalOcean o Vultr; referencia del experto: ~USD 6.49/mes (2 vCPU / 4 GB) + ~USD 0.60/mes de IPv4. **Recomendado para navegadores: 4 vCPU / 8 GB.** Sistema: **Rocky Linux + Podman** (DEC-118), no Ubuntu + Docker. Monitoreo de disponibilidad del Worker desde el Core (heartbeat por WireGuard).
+**VPS** (DEC-118, DEC-119, DEC-126, DEC-127; precios por verificar antes de contratar):
+- Proveedor tipo Hetzner, DigitalOcean o Vultr, en EE. UU., con **Rocky Linux + Podman** (no Ubuntu + Docker).
+- Arranca con **2 vCPU / 4 GB**, 40–50 GB de disco e IPv4 pública: alcanza con 1 consulta a la vez por comercio, porque un navegador ocupa del orden de 1–1.5 GB.
+- Sube a **4 vCPU / 8 GB** al medir memoria > 75% sostenida o al correr varios navegadores en paralelo.
+- El Core monitorea la disponibilidad del Worker con un heartbeat por WireGuard.
 
-> *(v1.4, DEC-126, DEC-127, DEC-173 y DEC-180)*
-> - **VPS creciente:** arrancar con **2 vCPU / 4 GB** (40–50 GB de disco, IPv4 pública, WireGuard), suficiente con 1 consulta a la vez por comercio; **subir a 4 vCPU / 8 GB** al medir memoria > 75% sostenida o al correr varios navegadores en paralelo (precisa la recomendación anterior).
-> - **Costos por etapa:** PoC con datos guardados USD 0; PoC con consultas reales ~USD 5–15/mes de VPS (por verificar), sin proxies; proxies por GB solo con volumen; Keepa según DEC-124.
-> - **Repositorios:** los contenedores del Core salen de `oip-core` y los del Worker de `oip-worker` (§3.4.1), cada uno con sus Quadlets.
-> - **Metabase** lee con un **rol de solo lectura** sobre vistas de reporte, nunca con el dueño de la base.
+**Costos por etapa** (DEC-126): PoC con datos guardados USD 0; PoC con consultas reales ~USD 5–15/mes de VPS, sin proxies; proxies por GB solo con volumen; Keepa según §4.3.
 
 ### 9.2 Operación
 
-- **Quadlets** (`.container`, `.network`, `.volume`) gestionados por `systemd --user`, con `loginctl enable-linger`.
-- Red Podman privada; solo el dashboard/API expuestos detrás de reverse proxy con TLS (o solo VPN/Tailscale, por ser herramienta interna).
-- Secretos con `podman secret` (Keepa key, token Telegram, credenciales BD).
-- Desarrollo local: `podman-compose`.
-- PriceStalker (si se prueba): `podman kube play` sobre su compose convertido, en red separada — PoC.
-
-> *(v1.4, DEC-178, DEC-179 y DEC-183)*
-> - **Todos los puertos en `127.0.0.1`**; la única puerta a la red (o ninguna) se decide en la Etapa 3; lo demás, por túnel SSH o WireGuard. En el VPS, Scrapyd solo escucha en la interfaz WireGuard. El firewall solo no basta: hacen falta las dos capas.
-> - La **API de solo lectura y el tablero** solo se alcanzan por la VPN, con autenticación (REQ-2026-0001 §10).
-> - **Migraciones** como contenedor de una sola ejecución antes del servicio (§7.4).
-> - **Runbook de operación** con la tabla maestra de los dos hosts (contenedores, puertos, redes, quién habla con quién) y las trampas conocidas T-01 a T-15 del insumo del stack de tickets.
+- **Quadlets** (`.container`, `.network`, `.volume`) gestionados por `systemd --user`, con `loginctl enable-linger`, en cada host y desde su propio repo.
+- **Todos los puertos en `127.0.0.1`** (DEC-178); la única puerta a la red (o ninguna) se decide en la Etapa 3. Lo demás, por túnel SSH o WireGuard. El firewall solo no basta: hacen falta las dos capas.
+- La **API de solo lectura y el tablero** solo se alcanzan por la VPN del servidor de Jesús, con autenticación; los accesos denegados se registran (REQ-2026-0001 §10).
+- **Secretos** con `podman secret` (token de Telegram, credenciales de la base, claves WireGuard, tokens por servicio; Keepa cuando exista).
+- **Runbook de operación** (DEC-183): tabla maestra de los dos hosts (contenedores, puertos, redes, quién habla con quién) y trampas conocidas T-01 a T-15 del insumo del stack de tickets.
+- Desarrollo local: `podman-compose`, en `modo_red: desarrollo` (§3.6).
 
 ---
 
-## 10. Seguridad y operación
+## 10. Seguridad y observabilidad
 
-Se conservan de v1.0: validación de URL y protección SSRF (solo http/https, dominio del comercio, bloqueo de rangos privados y metadata, revalidar redirecciones), secretos fuera de código, logs sin tokens, BD sin exposición.
-
-> *(v1.4, DEC-150, DEC-177 y DEC-181)* **Logs y métricas sin contenido:** sin tokens (Telegram, credenciales, Keepa cuando exista), sin datos de clientes ni de particulares y sin HTML de los comercios; solo identificadores, conteos y tiempos. De los particulares solo se guarda la publicación (plataforma, enlace, ciudad, precio, estado), nunca nombre ni teléfono. Los accesos denegados a la API y al tablero se registran. Las funciones con IA registran la fuente de cada decisión (§5.5).
+- **Validación de URL y protección SSRF:** solo http/https, dominio autorizado del comercio, bloqueo de rangos privados y metadata, revalidación de redirecciones.
+- **Secretos** fuera del código, de los logs y de los registros.
+- **Logs y métricas sin contenido** (DEC-181): sin tokens, sin datos de clientes ni de particulares y sin HTML de los comercios; solo identificadores, conteos y tiempos.
+- **Datos personales:** clientes solo por alias (R-20); de los particulares solo la publicación (plataforma, enlace, ciudad, precio, estado), nunca nombre ni teléfono (DEC-150).
+- **Base sin exposición**; Metabase con rol de solo lectura.
+- Las funciones con IA registran la fuente de cada decisión (§5.5).
 
 ### 10.1 Observabilidad mínima
 
-- Tasa de éxito y **tasa de bloqueo por comercio**.
-- Candidatos/día por comercio y fuente; % con GTIN; % con match a ASIN.
-- Consumo de tokens Keepa vs presupuesto.
-- Oportunidades por nivel; % descartadas por `INFLATED_WAS_PRICE` / `MARKET_ALREADY_CHEAP`.
+- Tasa de éxito y **tasa de bloqueo por comercio**, y pausas activas.
+- Candidatos por día por comercio y fuente; % identificado por código o por modelo + marca; % con historial suficiente.
+- Oportunidades por resultado y nivel; % descartadas por `PRECIO ANTES INFLADO` y `MERCADO YA BARATO`.
 - Antigüedad de la última observación por publicación.
-- **Precisión del motor**: de las oportunidades que compraste, % que se vendieron con el margen estimado (desde `opportunity_outcome`).
+- Avisos entregados y no entregados; estado del Worker (heartbeat).
+- **Precisión del motor:** de lo que se compró, % que se vendió con el margen estimado (`opportunity_outcome`).
 
-Herramienta: logs estructurados + métricas en Postgres visibles en Metabase; Prometheus/Grafana solo si se requiere después.
+Herramienta: logs estructurados y métricas en Postgres visibles en Metabase; Prometheus/Grafana solo si hace falta después.
 
 ---
 
@@ -785,32 +748,31 @@ Herramienta: logs estructurados + métricas en Postgres visibles en Metabase; Pr
 
 | ID | Riesgo | Impacto | Mitigación |
 |---|---|---|---|
-| R-01 | Bloqueos anti-bot (HD/Walmart/Target usan protecciones comerciales agresivas) | Crítico | Stealth, frecuencia conservadora, métrica de bloqueo, pausa automática, proxies si se justifica |
-| R-02 | Descuento inflado tomado como oportunidad | Alto | Reglas §2.3 + historial propio |
-| R-03 | Match incorrecto producto ↔ ASIN | Alto | GTIN preferente; baja confianza no alerta |
-| R-04 | Precio en tienda distinto al online / liquidación no visible | Alto | Seguimiento por tienda; fuente registrada; cobertura parcial aceptada |
-| R-05 | Restricciones de venta no detectadas | Alto | Tabla de restricciones; SP-API cuando haya cuenta |
-| R-07 | Cambios de HTML rompen spiders | Alto | JSON-LD primero, Spidermon, pruebas por comercio |
-| R-08 | Costo Keepa crece | Medio | Caché, refresco solo de candidatos, presupuesto de tokens |
-| R-09 | Términos de uso de los sitios | Medio/alto (aceptado) | Uso interno, frecuencia baja, sin datos personales |
-| R-10 | Fugas de memoria del navegador | Medio | Límites de contextos, reciclaje, métricas |
-| R-17 | Un comercio detecta el motor de navegador en uso | Alto | Interfaz de renderizado con motor por fuente; PoC-A compara Playwright vs Puppeteer |
-| R-18 | *(v1.3)* El VPS (Worker) no está disponible | Alto | Sin respaldo desde casa (fail-closed); heartbeat y aviso; trabajos en cola hasta que vuelva |
-| R-19 | *(v1.3)* Canal Core ↔ Worker expuesto o comprometido | Crítico | Solo WireGuard; Scrapyd sin interfaz pública; token por servicio; firewall de entrada |
-| R-20 | *(v1.3)* Datos de clientes (búsqueda por artículo) | Medio | Solo alias, sin datos personales; respaldo cifrado |
-| R-21 | *(v1.3)* Pocas o ninguna opción disponible para un cliente | Medio | Mostrar "otras opciones" y aviso de repetir la búsqueda (RN-011) |
-| R-22 | *(v1.4)* Contratos Core ↔ Worker desalineados entre los dos repos | Alto | Contratos como spec en los dos repos, versión mayor ante cambio incompatible, Core acepta N y N-1, mismo `Change: <id>` (DEC-174) |
-| R-23 | *(v1.4)* Resultados perdidos si el túnel o el Core caen | Medio | Bandeja de salida en el Worker con reintentos y deduplicación en el Core (DEC-175) |
-| R-24 | *(v1.4)* Sin Keepa, poco historial propio al inicio | Medio | `SIN HISTORIAL SUFICIENTE` → revisión manual; comparación entre comercios y MSRP con calidad máxima "Precio competitivo"; Keepa por meses ante una necesidad concreta (DEC-124, DEC-130) |
-| R-25 | *(v1.4)* Una función con IA decide mal o el proveedor cambia | Medio | Camino sin IA, interruptor de tres modos, banco etiquetado y pruebas sin modelo (DEC-177) |
-| R-26 | *(v1.4)* Migración que daña el historial de precios | Alto | Migraciones versionadas, respaldo previo, etiqueta de rollback y PoC para TimescaleDB (DEC-179) |
+| R-01 | Bloqueos anti-bot de los comercios | Crítico | Consulta responsable (§3.5), escalera de acceso, métrica de bloqueo, pausa escalonada; proxies solo si se justifica |
+| R-02 | Descuento inflado tomado como oportunidad | Alto | Descuento real contra el precio habitual, `PRECIO ANTES INFLADO`, historial propio (§2.3) |
+| R-03 | Identificación incorrecta del producto | Alto | Código de barras o modelo + marca; solo nombre → revisión manual (§7.3) |
+| R-04 | Precio en tienda distinto al en línea / liquidación no visible | Alto | Seguimiento por tienda; fuente registrada; aviso por precio distinto; cobertura parcial aceptada |
+| R-05 | Restricciones de venta no detectadas | Alto | Tabla de restricciones en tres niveles; venta local si Amazon está restringido; SP-API cuando haya cuenta |
+| R-07 | Cambios de HTML rompen spiders | Alto | JSON-LD primero, Spidermon, pruebas por comercio; el Worker en su propio repo |
+| R-08 | Costo de Keepa cuando entre | Medio | Diferido; contratación por meses ante una necesidad concreta; resultados guardados (§4.3) |
+| R-09 | Términos de uso de los sitios | Medio/alto (aceptado) | Uso interno, frecuencia baja, robots.txt por defecto, términos revisados por comercio, sin datos personales |
+| R-10 | Fugas de memoria del navegador | Medio | Límites de contextos, reciclaje, métricas; VPS que crece con datos |
 | R-11 | SSRF desde URLs descubiertas | Crítico | §10 |
-| R-12 | Alertas repetidas/ruido | Medio | Deduplicación por oportunidad y ventana |
-| R-13 | **IP doméstica marcada o bloqueada** | Crítico | Egress obligatorio, red interna sin salida, fail-closed, verificación de IP por job (§3.4) |
-| R-14 | IP del VPS (datacenter) bloqueada | Alto | Medir; cambiar egress de esa fuente a proxy residencial |
-| R-15 | Rentabilidad aparente (margen alto, rotación lenta) | Alto | Margen ajustado y ROI anualizado (§2.5.1) |
-| R-15 *(v1.4)* | Rentabilidad aparente | Alto | Margen ajustado y **rendimiento mensual** por canal, con pago a 30 días y tope de primera compra (RN-005 v2) |
-| R-16 | Viaje a tienda sin producto | Medio | Confianza del dato, re-consulta previa, registro de visitas (§6.3.1) |
+| R-12 | Avisos repetidos o ruido | Medio | Un aviso por cadena, ventana de 24 h, agrupación de avisos inmediatos |
+| R-13 | **IP doméstica marcada o bloqueada** | Crítico | La casa nunca consulta comercios: Worker en el VPS, firewall de salida denegada por defecto, verificación de IP por trabajo, repo del Core sin spiders |
+| R-14 | IP del VPS (datacenter) bloqueada | Alto | Medir; pasar esa fuente a proxy residencial |
+| R-15 | Rentabilidad aparente (margen alto, rotación lenta) | Alto | Margen ajustado y rendimiento mensual por canal, con pago a 30 días y tope de primera compra (§2.5.1) |
+| R-16 | Viaje a tienda sin producto | Medio | Confianza del dato, llamada y re-consulta previas, registro de visitas (§6.3.1) |
+| R-17 | Un comercio detecta el motor de navegador | Alto | `BrowserRenderer` con motor por fuente; la PoC-A compara Playwright y Puppeteer |
+| R-18 | El VPS (Worker) no está disponible | Alto | Sin respaldo desde casa (fail-closed); heartbeat y aviso; trabajos en cola hasta que vuelva |
+| R-19 | Canal Core ↔ Worker expuesto o comprometido | Crítico | Solo WireGuard; Scrapyd sin interfaz pública; token por servicio; firewall de entrada |
+| R-20 | Datos de clientes (búsqueda por artículo) | Medio | Solo alias, sin datos personales; respaldo cifrado |
+| R-21 | Pocas o ninguna opción disponible para un cliente | Medio | "Otras opciones" y aviso de repetir la búsqueda (RN-011) |
+| R-22 | Contratos Core ↔ Worker desalineados entre repos | Alto | Spec en los dos repos, versión mayor, N y N-1, mismo `Change: <id>` (§8) |
+| R-23 | Resultados perdidos si el túnel o el Core caen | Medio | Bandeja de salida con reintentos y deduplicación en el Core (§8) |
+| R-24 | Sin Keepa, poco historial propio al inicio | Medio | `SIN HISTORIAL SUFICIENTE` → revisión manual; comparación entre comercios y MSRP, con calidad máxima "Precio competitivo"; Keepa por meses si hace falta |
+| R-25 | Una función con IA decide mal o el proveedor cambia | Medio | Camino sin IA, interruptor de tres modos, banco etiquetado y pruebas sin modelo (§5.5) |
+| R-26 | Migración que daña el historial de precios | Alto | Migraciones versionadas, respaldo previo, etiqueta de rollback y PoC para TimescaleDB (§7.4) |
 
 ---
 
@@ -818,48 +780,43 @@ Herramienta: logs estructurados + métricas en Postgres visibles en Metabase; Pr
 
 ### Incremento 1 — "Primera oportunidad real"
 
-- Conectores: **Home Depot** (ofertas + liquidaciones, online + tiendas San Diego) y **Walmart** (ofertas online).
-- Extracción JSON-LD + Playwright stealth selectivo.
-- Match GTIN → ASIN vía Keepa; referencia de mercado y BSR.
-- Motor de oportunidad completo (§2) con tabla de comisiones manual.
-- Alertas Telegram + Metabase.
-- *(v1.3)* **Búsqueda por artículo** (funcionalidad B, RN-011): captura por Jesús, búsqueda en Home Depot, Walmart y Amazon, resultado ordenado.
-- *(v1.3)* **Consulta responsable** (RN-010) y **topología Core local + Worker en VPS**.
-- Despliegue con Quadlets en Rocky.
+- Comercios: **Home Depot, Walmart, Target, Best Buy, GameStop, Nintendo Store** y la ficha de Amazon (en línea y tiendas de la zona de San Diego).
+- Extracción con JSON-LD primero y Playwright selectivo, desde el Worker en el VPS.
+- Identificación por código de barras o modelo + marca; referencias de precio del **historial propio** y de la comparación entre comercios (sin Keepa).
+- Motor de oportunidad completo (§2) **por canal**, con tablas manuales de comisiones, envíos y restricciones; capturas manuales de particulares y de venta local.
+- Viajes, avisos por Telegram con el formato de la guía de estilo §10, y tablero en Metabase.
+- **Búsqueda por artículo** (RN-011): captura por Jesús y resultado ordenado.
+- **Consulta responsable** (RN-010), **dos repos** Core y Worker y despliegue con Quadlets en Rocky.
 
-> *(v1.4)* **Ajustes al Inc. 1:** sin Keepa (DEC-124): match por código o modelo + marca y referencias del historial propio y de la comparación entre comercios; comercios **Home Depot, Walmart, Target, Best Buy, GameStop, Nintendo Store** y la ficha de Amazon (DEC-132); evaluación **por canal** con venta local y capturas manuales de particulares (DEC-151); avisos con el formato de la guía de estilo §10 (DEC-189); **dos repos** Core y Worker (DEC-173). Orden de construcción del REQ-2026-0001 (DEC-082): **B** evaluación → **C** viajes y avisos → **A** adquisición (después de la PoC-A) → **D** búsqueda por artículo.
+**Orden de construcción del REQ-2026-0001** (DEC-082): **B** evaluación → **C** viajes, avisos y tablero → **A** adquisición (después de la PoC-A) → **D** búsqueda por artículo.
 
-
-**Criterio de salida:** al menos una oportunidad real validada a mano por semana con margen ≥ umbral; tasa de bloqueo medida por comercio.
+**Criterio de salida:** al menos una oportunidad real validada a mano por semana con margen ≥ el mínimo; tasa de bloqueo medida por comercio.
 
 ### Incremento 2 — "Cobertura"
 
-- **Target** y comercios adicionales por categoría (perfumes, relojes, joyería, juguetes).
-- Costo de traslado y rutas de compra agrupadas.
-- Restricciones de venta; `opportunity_outcome` y calibración de umbrales.
-- Spidermon; UI propia del dashboard (FastAPI + HTMX o React).
-- *(v1.4)* La UI propia sigue la **guía de estilo** (`docs/diseno/guia-de-estilo.md`, DEC-184 a DEC-190): monocromo con color solo para estado, dos ejes visibles, Inter servida localmente, tablas que se vuelven tarjetas en el teléfono y **modo oscuro** (DEC-188). Target ya no se agrega aquí: pasó al Inc. 1 (DEC-132).
-- Perfiles de temporada.
+- Comercios adicionales por categoría (perfumes, relojes, joyería, juguetes).
+- Rutas de compra agrupadas; calibración de umbrales con `opportunity_outcome`.
+- Spidermon; perfiles de temporada.
+- **UI propia** del tablero (FastAPI + HTMX o React) con la **guía de estilo** (`docs/diseno/guia-de-estilo.md`, DEC-184 a DEC-190): monocromo con color solo para estado, dos ejes visibles, Inter servida localmente, tablas que se vuelven tarjetas en el teléfono y **modo oscuro** (DEC-188).
 
 ### Incremento 3 — "Venta"
 
-- Facebook Marketplace (precio estimado y luego observado).
-- Activar SP-API (cuando exista cuenta de vendedor): comisiones exactas, restricciones, y base para publicación.
-- changedetection.io como disparador sobre páginas de liquidación.
-- RabbitMQ si hay multi-nodo; proxies si la tasa de bloqueo lo exige.
+- Facebook Marketplace con datos observados.
+- SP-API cuando exista la cuenta de vendedor: comisiones exactas, restricciones y base para publicar.
+- changedetection.io sobre páginas de liquidación.
+- RabbitMQ si hay varios nodos; proxies si la tasa de bloqueo lo exige.
+- Keepa, si una necesidad concreta lo justifica (§4.3).
 
-### PoCs (antes/durante incremento 1)
+### PoCs (antes o durante el Incremento 1)
 
 | PoC | Pregunta | Criterio |
 |---|---|---|
-| PoC-A | ¿Qué escalón de acceso y qué motor (Playwright vs Puppeteer, script Node desechable) necesitan HD y Walmart, siempre vía `oip-egress`? | Tasa de bloqueo por escalón y motor medida 7 días; IP doméstica nunca aparece |
-| PoC-B | ¿Qué % de candidatos trae GTIN y hace match con ASIN en Keepa? | ≥ 60% en herramientas |
-| PoC-C | ¿El inventario por tienda de HD es consultable de forma confiable? | Datos por tienda coinciden con visita/llamada |
-| PoC-D | Spider de seguimiento vs PriceStalker v2.0.0 sobre las mismas 50 URLs | Decide si PriceStalker entra (por comercio) |
+| PoC-A | ¿Qué escalón de acceso y qué motor (Playwright o Puppeteer) necesita cada comercio, desde el Worker en el VPS? | Tasa de bloqueo por escalón y motor medida 7 días; la IP de casa nunca aparece. Puede vivir como script desechable antes de crear `oip-worker` |
+| PoC-B | ¿Qué % de candidatos se identifica por código o por modelo + marca, y qué % tiene historial suficiente a los 7 días, sin Keepa? | ≥ 60% en herramientas |
+| PoC-C | ¿El inventario por tienda de Home Depot es consultable de forma confiable? | Los datos por tienda coinciden con visitas y llamadas |
+| PoC-D | Spider de seguimiento contra PriceStalker v2.0.0 sobre las mismas 50 URLs | Decide si PriceStalker entra, por comercio |
 
-> *(v1.3)* La PoC-A se ejecuta desde el **Worker en el VPS** (DEC-120/121). En casa solo se prueba en `modo_red: desarrollo` contra la lista permitida.
-
-> *(v1.4)* La **PoC-B** pasa a medir el % de candidatos identificados por código o por modelo + marca y el % con historial suficiente a los 7 días, sin Keepa. La PoC-A puede vivir como script desechable antes de crear `oip-worker` (insumo §8.4).
+En casa solo se prueba en `modo_red: desarrollo` contra la lista permitida.
 
 ---
 
@@ -867,62 +824,50 @@ Herramienta: logs estructurados + métricas en Postgres visibles en Metabase; Pr
 
 | ID | Decisión | Estado |
 |---|---|---|
-| ADR-001 | Núcleo en Python/FastAPI | Aprobada (reemplaza Spring Boot) |
+| ADR-001 | Núcleo en Python/FastAPI (no Java/Spring Boot) | Aprobada |
 | ADR-002 | Scrapy para descubrimiento **y** seguimiento | Aprobada |
 | ADR-003 | Playwright como motor por defecto; stealth disponible, apagado por defecto | Aprobada |
-| ADR-020 | Interfaz de renderizado (`BrowserRenderer`) con motor por fuente; Puppeteer como servicio Node aparte, construido solo si la PoC-A muestra una fuente que pasa con Puppeteer y no con Playwright | Aprobada (implementación condicional) |
-| ADR-021 | *(v1.3)* Dos funcionalidades (búsqueda automatizada y búsqueda por artículo) sobre un mismo motor de adquisición | Aprobada |
-| ADR-022 | *(v1.3)* Topología Core local + Scraper Worker remoto en VPS, con interfaz configurable; solo el worker remoto se construye | Aprobada |
-| ADR-023 | *(v1.3)* Consulta responsable: límites por dominio, pausas, concurrencia 1, caché, reintentos 1/5/15 min, timeouts y pausa por bloqueo | Aprobada (valores provisionales) |
-| ADR-024 | *(v1.3)* `modo_red` estricto/desarrollo con bloqueo de comercios desde casa por firewall | Aprobada |
-| ADR-025 | *(v1.3)* Rocky + Podman también en el VPS; no se adoptan Java/Spring Boot ni Ubuntu + Docker | Aprobada |
-| ADR-026 | *(v1.4)* **IA opcional:** el código decide y la IA complementa; camino sin IA, interruptor `apagada \| solo registra \| aplica`, banco etiquetado, fuente registrada y pruebas sin modelo (§5.5) | Aprobada (DEC-177); se aplica cuando entre la primera función con IA |
-| ADR-027 | *(v1.4)* **Contratos Core ↔ Worker versionados** (versión mayor ante cambio incompatible, N y N-1) y **bandeja de salida** en el Worker con deduplicación por clave de idempotencia en el Core (§8) | Aprobada (DEC-174, DEC-175) |
-| ADR-028 | *(v1.4)* **Migraciones versionadas** y nunca manuales, con respaldo previo, etiqueta de rollback y PoC para TimescaleDB (§7.4) | Aprobada (DEC-179) |
-| ADR-004 | PriceStalker opcional detrás de `TrackingProvider`, fijado v2.0.0 | PoC-D |
-| ADR-005 | OIP mantiene catálogo maestro; producto ≠ publicación | Aprobada |
-| ADR-006 | Oportunidad = margen neto sobre referencia de mercado; descuento declarado solo descubre | Aprobada |
-| ADR-007 | Keepa como fuente de referencia y demanda de Amazon | Aprobada (confirmar plan) |
-| ADR-007 *(v1.4)* | Referencia de precio **por etapas** detrás de una interfaz intercambiable: historial propio + comparación → APIs oficiales → **Keepa al final**, complementario y solo para Amazon | **Modificada** por DEC-123 y DEC-124 (Keepa diferido) |
+| ADR-004 | PriceStalker opcional detrás de `TrackingProvider`, fijado en v2.0.0 | PoC-D |
+| ADR-005 | OIP mantiene el catálogo maestro; producto ≠ publicación | Aprobada |
+| ADR-006 | Oportunidad = margen sobre referencias de mercado; el descuento anunciado solo descubre | Aprobada |
+| ADR-007 | Referencia de precio **por etapas** detrás de una interfaz intercambiable: historial propio + comparación → APIs oficiales → Keepa al final, complementario y solo para Amazon | Aprobada (modificada por DEC-123 y DEC-124; Keepa diferido) |
 | ADR-008 | SP-API: adaptador preparado, desactivado | Aprobada |
-| ADR-009 | Tienda física con inventario por sucursal y costo de traslado | Aprobada |
+| ADR-009 | Tienda física con inventario por sucursal y costo de viaje por zonas | Aprobada |
 | ADR-010 | Scrapyd + cola en Postgres; RabbitMQ diferido | Aprobada |
-| ADR-011 | changedetection.io diferido a incremento 3 | Aprobada |
-| ADR-012 | Telegram + dashboard como canales | Aprobada |
-| ADR-012 *(v1.4)* | Telegram + dashboard, con el formato de avisos de la guía de estilo §10 | Aprobada · precisada por DEC-189 |
+| ADR-011 | changedetection.io diferido al Incremento 3 | Aprobada |
+| ADR-012 | Telegram + tablero como canales, con el formato de avisos de la guía de estilo §10 | Aprobada (precisada por DEC-189) |
 | ADR-013 | PostgreSQL + TimescaleDB para series de precio | Aprobada |
 | ADR-014 | Podman rootless + Quadlets en Rocky Linux | Aprobada |
 | ADR-015 | PriceGhost descartado | Aprobada |
-| ADR-016 | Acceso por fuente con escalera `api_feed → http → browser → browser_stealth`; stealth solo por decisión manual con datos | Aprobada (reemplaza "stealth como requisito") |
-| ADR-017 | Todo el scraping sale por `oip-egress` (VPS → proxy), fail-closed; IP doméstica nunca expuesta | Aprobada · *(v1.3) precisada por ADR-022: el scraping corre en el VPS* |
-| ADR-022 *(v1.4)* | Topología Core + Worker en **dos repositorios** (`oip-core` sin spiders, verificado por un gate; `oip-worker` con su `CLAUDE.md` y `openspec/`) | Aprobada · precisada por DEC-173 |
-| ADR-016 *(v1.4)* | Escalera de acceso: las APIs oficiales entran como `api_feed`; comparadores y sitios de seguimiento solo como señal | Aprobada · precisada por DEC-133 y DEC-154 |
-| ADR-018 | Oportunidades se evalúan con margen ajustado y se ordenan por ROI anualizado | Aprobada · *(v1.3) modificada: se ordenan por rendimiento mensual (RN-005)* |
-| ADR-018 *(v1.4)* | Oportunidades se evalúan **por canal** (Amazon FBM y venta local) con margen ajustado, se elige canal por ganancia total del lote (RN-018) y se ordenan por rendimiento mensual | Aprobada · precisada por DEC-140, DEC-151 y DEC-170 |
-| ADR-019 | Disponibilidad en tienda con confianza, antigüedad y re-consulta previa al viaje | Aprobada |
+| ADR-016 | Acceso por fuente con escalera `api_feed → http → browser → browser_stealth`; las APIs oficiales entran como `api_feed`; comparadores solo como señal; stealth solo por decisión manual con datos (G5) | Aprobada (precisada por DEC-133 y DEC-154) |
+| ADR-017 | La IP doméstica nunca consulta comercios: fail-closed, verificación de IP por trabajo | Aprobada (precisada por ADR-022: el scraping corre en el VPS) |
+| ADR-018 | Oportunidades evaluadas **por canal** con margen ajustado, canal elegido por ganancia total del lote y orden por rendimiento mensual | Aprobada (precisada por DEC-140, DEC-151 y DEC-170) |
+| ADR-019 | Disponibilidad en tienda con confianza, antigüedad, llamada y re-consulta previas al viaje | Aprobada |
+| ADR-020 | Interfaz de renderizado (`BrowserRenderer`) con motor por fuente; Puppeteer como servicio Node aparte, solo si la PoC-A lo justifica | Aprobada (implementación condicional) |
+| ADR-021 | Dos funcionalidades (búsqueda automatizada y búsqueda por artículo) sobre un mismo motor de adquisición | Aprobada |
+| ADR-022 | Topología Core + Worker remoto en VPS, con interfaz configurable, en **dos repositorios** (`oip-core` sin spiders, verificado por un gate; `oip-worker`) | Aprobada (precisada por DEC-173) |
+| ADR-023 | Consulta responsable: límites por dominio, pausas, concurrencia 1, caché, reintentos, timeouts, robots.txt y pausa escalonada | Aprobada (valores iniciales) |
+| ADR-024 | `modo_red` estricto / desarrollo y firewall de salida denegada por defecto en casa | Aprobada |
+| ADR-025 | Rocky + Podman también en el VPS; no se adoptan Java/Spring Boot ni Ubuntu + Docker | Aprobada |
+| ADR-026 | **IA opcional:** el código decide y la IA complementa (§5.5) | Aprobada (DEC-177); se aplica con la primera función con IA |
+| ADR-027 | **Contratos Core ↔ Worker versionados** (N y N-1) y **bandeja de salida** con deduplicación en el Core (§8) | Aprobada (DEC-174, DEC-175) |
+| ADR-028 | **Migraciones versionadas** y nunca manuales, con respaldo, rollback y PoC para TimescaleDB (§7.4) | Aprobada (DEC-179) |
 
 ---
 
 ## 14. Pendientes y preguntas abiertas
 
-1. **Presupuesto mensual** para Keepa y, en su caso, proxies.
-2. **Margen absoluto mínimo** ($X) por nivel.
-3. **Parámetros de traslado:** valor de tu hora, rendimiento del vehículo, tiempo de cruce promedio.
-4. Lista inicial de **sucursales** en San Diego por comercio.
-5. Tabla inicial de **comisiones y restricciones** por categoría (validar en Seller Central).
-6. Confirmar licencias de Scrapyd, extruct, price-parser y Spidermon en el commit fijado.
-7. **Proveedor de VPS** para el egress del MVP (región EE. UU. recomendada) y, a futuro, proveedor de proxies residenciales.
-8. Acceso a la **API de afiliados de Walmart** (requisitos y datos disponibles).
-9. Tasas de devolución y valores iniciales de decaimiento de confianza por categoría.
-10. Estado de mantenimiento actual de `puppeteer-extra-plugin-stealth` y alternativas stealth para Playwright.
-11. *(v1.3)* Verificar precios y tamaño del VPS (DEC-119) y contratarlo.
-12. *(v1.3)* Decidir si se respeta robots.txt por comercio (RN-010 · P2).
-13. *(v1.3)* Preguntas de la búsqueda por artículo: impuesto en el total, ¿Jesús compra y entrega o solo comparte el enlace?, reacondicionados, cobro del servicio, comercios adicionales (RN-011 · P1–P6).
-14. *(v1.4)* **Resueltos o cambiados desde la v1.3:** Keepa diferido (1, DEC-124); robots.txt se respeta por defecto (12, DEC-165); búsqueda por artículo resuelta en RN-011 v2 (13, DEC-166, DEC-168); tamaño del VPS para arrancar (7 y 11, DEC-127, falta contratar).
-15. *(v1.4)* Dirección del **PO Box** y **empaques** (RN-001 · P3, P4, P6), pendientes del experto (sesión 3).
-16. *(v1.4)* Validar en la sesión 3 las propuestas aceptadas por Jesús (DEC-159 a DEC-167) y los umbrales de RN-012 a RN-017.
-17. *(v1.4)* Decidir en la Etapa 3 la única puerta a la red del Core, o ninguna (DEC-178).
-18. *(v1.4)* Nombre definitivo de los repos (`oip-core` puede ser este repo renombrado o tal cual) y fecha de la separación (DEC-173).
+1. **Contratar el VPS** en EE. UU. (precios por verificar, DEC-119 y DEC-127) y, a futuro, el proveedor de proxies residenciales.
+2. Dirección del **PO Box** y **empaques** (RN-001 · P3, P4, P6), pendientes del experto.
+3. Validar en la **sesión 3** con el experto las propuestas aceptadas por Jesús (DEC-159 a DEC-167) y los umbrales de RN-012 a RN-017.
+4. Lista inicial de **sucursales** por comercio con su distancia a la garita.
+5. Tabla inicial de **comisiones, envíos y restricciones** por categoría (validar con Seller Central cuando exista la cuenta).
+6. Confirmar las licencias de Scrapyd, extruct, price-parser y Spidermon en el commit fijado.
+7. Acceso a las **APIs oficiales** de los comercios (por ejemplo, afiliados de Walmart): requisitos y datos disponibles.
+8. Valores iniciales de las tasas de devolución por categoría que faltan.
+9. Estado de mantenimiento de `puppeteer-extra-plugin-stealth` y alternativas stealth para Playwright.
+10. Decidir en la Etapa 3 la única puerta a la red del Core, o ninguna (DEC-178).
+11. Nombre definitivo de los repos (`oip-core` puede ser este repo renombrado o tal cual) y fecha de la separación (DEC-173).
 
 ---
 
@@ -938,13 +883,12 @@ Herramienta: logs estructurados + métricas en Postgres visibles en Metabase; Pr
 - PriceGhost — <https://github.com/clucraft/PriceGhost> (clonado y revisado 8-nov-2026)
 - changedetection.io — <https://github.com/dgtlmoon/changedetection.io>
 - Keepa API — <https://keepa.com/api-docs/> · <https://keepa.com/api-docs/plans-tokens.html>
-- Precios Keepa (terceros) — <https://revenuegeeks.com/software/keepa/api>
 - TimescaleDB — <https://github.com/timescale/timescaledb>
 - Podman Quadlet — <https://docs.podman.io/en/latest/markdown/podman-systemd.unit.5.html>
-- *(v1.4)* Registro de decisiones — `docs/proceso/registro-de-decisiones.md` (DEC-123 a DEC-190)
-- *(v1.4)* Reglas de negocio v2 — `docs/negocio/reglas/` (RN-001 a RN-011 v2, RN-012 a RN-018 v1)
-- *(v1.4)* Insumo del stack de tickets — `docs/arquitectura/insumos/referencia-stack-tickets.md`
-- *(v1.4)* Guía de estilo — `docs/diseno/guia-de-estilo.md`
+- Registro de decisiones — `docs/proceso/registro-de-decisiones.md`
+- Reglas de negocio — `docs/negocio/reglas/` (RN-001 a RN-011 v2, RN-012 a RN-018 v1)
+- Insumo del stack de tickets — `docs/arquitectura/insumos/referencia-stack-tickets.md`
+- Guía de estilo — `docs/diseno/guia-de-estilo.md`
 
 ---
 

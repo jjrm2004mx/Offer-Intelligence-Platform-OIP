@@ -237,6 +237,12 @@ Fuentes: `docs/arquitectura/insumos/referencia-stack-tickets.md` (PR #14), con l
 | DEC-189 | **Formato de los avisos de Telegram** de la guía §10 (HTML de Telegram, orden fijo, cifras en `<code>`, botones de re-consulta y registro de visita). Los emoji ⚡ Comprar ya · ✅ Muy recomendable · 👍 Recomendable · 🛑 problema operativo · 🧪 modo desarrollo **reemplazan** los 🔴🟠🟡⚪ de la arquitectura §2.4 | VIGENTE (Jesús, 2026-11-16) | El rojo se reserva para problemas; los nombres de los niveles cambiaron (DEC-164) | Guía §10; RN-009; Arq. §2.4 (por anotar) |
 | DEC-190 | **Inter servida localmente**, tablero denso (escala `.data`, filas de 44 px) y tablas que se vuelven tarjetas por debajo de `md` | VIGENTE (Jesús, 2026-11-16) | Herramienta interna sin dependencias de terceros; uso en el teléfono | Guía §3, §4, §8 |
 
+## 9.4 Arquitectura consolidada (2026-11-16)
+
+| ID | Decisión | Estado | Motivo | Dónde aplica |
+|---|---|---|---|---|
+| DEC-191 | **La arquitectura vigente se lee limpia.** Desde la **v2.0**, `arquitectura-tecnica.md` contiene **solo el texto vigente** en cada sección. **Nada se borra del historial**: cada versión anterior queda con su enlace permanente a un commit fijo ("Archivo vigente") y §0 conserva el registro de cambios (C-01 en adelante). Las versiones siguientes editan el texto vigente y agregan su fila en §0 y en "Archivo vigente"; ya no se usan marcas *(vX.Y)* dentro de las secciones. Reemplaza la regla "lo modificado se marca y conserva la redacción anterior" | VIGENTE (Jesús, 2026-11-16) | Con tres capas (v1.2, v1.3, v1.4) era difícil saber qué valía hoy, y un agente podía tomar un dato viejo como vigente | `docs/arquitectura/arquitectura-tecnica.md`; `oip-analista` |
+
 ## 10. Pendientes abiertos
 
 | Pendiente | Dueño | Bloquea |

@@ -1,7 +1,7 @@
 # Insumo de arquitectura — Referencia del stack de tickets
 
 **Tipo:** insumo externo (entrada "Arquitectura GemIA" de `flujo-general.md` §12.1). **No reemplaza** la arquitectura v1.3: se compara punto por punto y solo lo que apruebe el dueño del producto pasa a DEC/ADR.
-**Versión:** 1.0 — 2026-11-16 · **Estado:** BORRADOR para revisión
+**Versión:** 1.0 — 2026-11-16 · **Estado:** PROCESADO. Lo aprobado está en DEC-173 a DEC-183 y en la arquitectura v2.0 (§3.4.1, §5.2, §5.5, §7.4, §8, §9, §10). Este documento queda como antecedente; las menciones a la "v1.3" se refieren a la arquitectura de entonces
 **Origen:** un ecosistema propio en operación (gestión de tickets por correo), con 9 repositorios, Podman rootless en Rocky Linux, IA opcional y unos 20 contenedores. Todo lo de este documento se tomó de sus specs, compose, runbooks y lecciones de operación.
 **Convención de certeza** (la de OIP): **Verificado** = funciona así en el stack de referencia · **Propuesta** = recomendación para OIP · **PoC** = hay que probarlo en OIP antes de adoptarlo.
 
