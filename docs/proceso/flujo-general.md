@@ -40,7 +40,7 @@
 
 | Documento | Qué define | Quién lo cambia | Cuándo |
 |---|---|---|---|
-| **Arquitectura** (`docs/arquitectura/`) | Stack (Python/FastAPI, Scrapy, Playwright, PostgreSQL/Timescale, Keepa —diferido, DEC-124—, Telegram), despliegue (Rocky + Podman Quadlets), protección de la IP de casa (`oip-egress`), los 4 repos base, los ADR | Jesús + Claude; lo revisa `oip-arquitecto` | Cuando una RN o un diseño contradice un ADR. **Vigente: v2.0** (2026-11-16), texto consolidado y alineado con las RN v2 y con DEC-123 a DEC-190; el historial, por enlaces permanentes (DEC-191) |
+| **Arquitectura** (`docs/arquitectura/`) | Stack (Python/FastAPI, Scrapy, Playwright, PostgreSQL/Timescale, Keepa —diferido, DEC-124—, Telegram), despliegue (Rocky + Podman Quadlets), protección de la IP de casa (`oip-egress`), los 4 repos base, los ADR | Jesús + Claude; lo revisa `oip-arquitecto` | Cuando una RN o un diseño contradice un ADR. **Vigente: v2.2** (2026-11-17; la v2.0 del 2026-11-16 consolidó el texto y lo alineó con las RN v2 y con DEC-123 a DEC-190; el historial, por enlaces permanentes, DEC-191) |
 | **Reglas de negocio** (`docs/negocio/reglas/`) | Cómo se calcula el margen, qué es un descuento falso, niveles, etc. | Jesús + experto | Después de cada sesión con el experto |
 
 **Prioridad:** en reglas de negocio mandan las RN. En decisiones técnicas manda la arquitectura.
@@ -228,10 +228,10 @@ RN-003 (v2) ──► REQ-2026-0001 (#2) ──► [INSPECCIÓN] (#3) ──► 
 | Etapa | Estado |
 |---|---|
 | 1. Negocio | RN-001 a RN-011 v2 y RN-012 a RN-018 v1 publicadas; revisión de consistencia v2.1 sin defectos ALTA. Sesiones 1 y 2 con el experto hechas; **pendiente la sesión 3** (validar DEC-159 a DEC-167, empaques y PO Box) |
-| 2. Requerimiento | REQ-2026-0001 (#2) **v2.9**; reinspección v10 (#3, sobre la v2.8) **APROBADO_CON_OBSERVACIONES → CONTINUAR**: D-047 a D-053 corregidos (DEC-225 a DEC-227, PR #27); D-054 y D-055 (BAJA) atendidos en la v2.9, **pendiente la reinspección v11**. #2 y #3 en la columna "Análisis" del Project |
+| 2. Requerimiento | REQ-2026-0001 (#2) **v2.9**; reinspección v11 (#3) **APROBADO → CONTINUAR**, sin defectos abiertos (D-001 a D-055 corregidos). #2 y #3 en la columna "Análisis" del Project |
 | — | Arquitectura **v2.2** (2026-11-17, PR #25): v2.0 consolidada (DEC-191), contrato de ingesta 3.0 (v2.1, PR #24) y 3.1, redondeo, nivel del aviso y capturas de Jesús (DEC-221 a DEC-223) |
 | 3. Arranque técnico | **Etapa 3 mínima hecha (2026-11-17, EXT-001):** los 5 agentes (PR #18), OpenSpec 2.1.0, `CLAUDE.md`, `src/` y `tests/`, `pyproject.toml` (pytest y ruff), hook de commits, gates de GitHub Actions y reglas `deny` (DEC-192 a DEC-196). Pendiente para la Etapa 3 completa: gitleaks y umbral de cobertura, comandos `/oip:*`, `deploy/` y separación Core / Worker (DEC-173, antes de la primera línea del Worker) |
-| 4–6 | No iniciado. Siguiente: **reinspección v11** de REQ-2026-0001 v2.9 (solo D-054 y D-055) y, después, análisis de la parte B con `oip-analista` (G3) |
+| 4–6 | No iniciado. Siguiente: **análisis de la parte B** con `oip-analista` (G3), con el criterio de DEC-228: un cambio de OpenSpec con cinco capacidades y tareas de 4 a 8 h |
 | Tablero | GitHub Project "OIP" creado (Requerimiento → Inspección → Análisis → Desarrollo → Hecho) |
 | Infraestructura | Vercel ✅ · VPS por contratar (2 vCPU / 4 GB para arrancar, DEC-127) · Keepa diferido (DEC-124) |
 
