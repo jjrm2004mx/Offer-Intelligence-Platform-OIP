@@ -39,7 +39,7 @@ No inventes lo que falte ni lo corrijas en silencio.
 2. Haz el **menor cambio** que cumpla la tarea y respeta el `design.md`.
 3. **Reglas de OIP que no se negocian:**
    - **La IP de casa nunca consulta comercios** (DEC-041, DEC-122, DEC-194). Tampoco tú desde este equipo: ni `curl`, ni WebFetch, ni navegador, ni un script de prueba; los fixtures son sintéticos o vienen del VPS. El Core no contiene spiders ni clientes HTTP hacia dominios de comercios (DEC-173). Todo acceso a comercios vive en el Worker y sale por `oip-egress`.
-   - **Dinero con `Decimal`** y `ROUND_HALF_UP` a centavos en cada paso. Porcentajes sin redondear para calcular y comparar, mostrados con 1 decimal (DEC-060). Nunca `float` para montos.
+   - **Dinero con `Decimal`** y `ROUND_HALF_UP` a centavos, **solo en los montos de la lista cerrada del REQ y una sola vez al final de cada fórmula** (DEC-060, precisada por DEC-207 y DEC-222). Porcentajes sin redondear para calcular y comparar, mostrados con 1 decimal. Nunca `float` para montos.
    - Los **parámetros de §6 del REQ** se leen de la configuración versionada, no se fijan en el código.
    - **Secretos** solo como `podman secret`, nunca en el código, los logs ni las pruebas.
    - **Datos personales:** clientes solo por alias; de particulares solo la publicación (§10 del REQ, R-20).

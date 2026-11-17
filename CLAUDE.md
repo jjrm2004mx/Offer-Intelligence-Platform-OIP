@@ -18,7 +18,7 @@ En reglas de negocio mandan las RN; en decisiones técnicas, la arquitectura. Si
 
 1. **La IP de casa nunca consulta comercios** (DEC-041, DEC-122, DEC-194). Desde este equipo **no consultes** Home Depot, Walmart, Target, Best Buy, GameStop, Nintendo ni Amazon: ni con `curl`, `wget`, `Invoke-WebRequest`, WebFetch, un navegador o un script. Los fixtures son **sintéticos** o vienen de datos guardados en el VPS. `.claude/settings.json` lo refuerza con reglas `deny`, pero esas reglas son una barrera parcial: la regla vale aunque un comando no esté bloqueado.
 2. **El Core no tiene spiders** ni clientes HTTP hacia comercios (DEC-173). Todo acceso a comercios vive en el Worker y sale por `oip-egress`. Lo verifica el gate `scripts/check-egress.sh`.
-3. **Dinero con `Decimal`** y `ROUND_HALF_UP` a centavos; porcentajes sin redondear para calcular y comparar, mostrados con 1 decimal (DEC-060). Nunca `float` para montos.
+3. **Dinero con `Decimal`** y `ROUND_HALF_UP` a centavos, solo en los montos de la lista cerrada del REQ y una sola vez al final de cada fórmula; porcentajes sin redondear para calcular y comparar, mostrados con 1 decimal (DEC-060, precisada por DEC-207 y DEC-222). Nunca `float` para montos.
 4. **Parámetros** del REQ (§6) en la configuración versionada, no fijos en el código.
 5. **Secretos** solo como `podman secret`; nunca en el código, los logs, las pruebas ni los commits.
 6. **Datos personales:** clientes solo por alias; de particulares solo la publicación (R-20).

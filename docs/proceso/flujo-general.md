@@ -228,10 +228,10 @@ RN-003 (v2) ──► REQ-2026-0001 (#2) ──► [INSPECCIÓN] (#3) ──► 
 | Etapa | Estado |
 |---|---|
 | 1. Negocio | RN-001 a RN-011 v2 y RN-012 a RN-018 v1 publicadas; revisión de consistencia v2.1 sin defectos ALTA. Sesiones 1 y 2 con el experto hechas; **pendiente la sesión 3** (validar DEC-159 a DEC-167, empaques y PO Box) |
-| 2. Requerimiento | REQ-2026-0001 (#2) v2.5; inspección v7 (#3) **APROBADO → CONTINUAR**. #2 y #3 en la columna "Análisis" del Project |
-| — | Arquitectura **v2.0** (2026-11-16): consolidación de la v1.4 (DEC-123 a DEC-190 y RN v2) con solo el texto vigente (DEC-191) |
+| 2. Requerimiento | REQ-2026-0001 (#2) v2.7; reinspección v9 (#3) **APROBADO_CON_OBSERVACIONES → CONTINUAR** (D-047 a D-053 abiertos). #2 y #3 en la columna "Análisis" del Project |
+| — | Arquitectura **v2.2** (2026-11-17, PR #25): v2.0 consolidada (DEC-191), contrato de ingesta 3.0 (v2.1, PR #24) y 3.1, redondeo, nivel del aviso y capturas de Jesús (DEC-221 a DEC-223) |
 | 3. Arranque técnico | **Etapa 3 mínima hecha (2026-11-17, EXT-001):** los 5 agentes (PR #18), OpenSpec 2.1.0, `CLAUDE.md`, `src/` y `tests/`, `pyproject.toml` (pytest y ruff), hook de commits, gates de GitHub Actions y reglas `deny` (DEC-192 a DEC-196). Pendiente para la Etapa 3 completa: gitleaks y umbral de cobertura, comandos `/oip:*`, `deploy/` y separación Core / Worker (DEC-173, antes de la primera línea del Worker) |
-| 4–6 | No iniciado. Siguiente: **REQ-2026-0001 v2.6** con las decisiones sobre la revisión externa, reinspección v8 de lo que cambie y, después, análisis de la parte B con `oip-analista` (G3) |
+| 4–6 | No iniciado. Siguiente: **REQ-2026-0001 v2.8** (D-047 a D-053, DEC-225 a DEC-227), reinspección v10 de lo que cambie y, después, análisis de la parte B con `oip-analista` (G3) |
 | Tablero | GitHub Project "OIP" creado (Requerimiento → Inspección → Análisis → Desarrollo → Hecho) |
 | Infraestructura | Vercel ✅ · VPS por contratar (2 vCPU / 4 GB para arrancar, DEC-127) · Keepa diferido (DEC-124) |
 
