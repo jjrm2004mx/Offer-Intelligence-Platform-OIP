@@ -78,7 +78,7 @@ Redactar REQ (issue) → visto bueno de Jesús → oip-inspector → ¿dictamen?
 | Estructura del repo (`src/`, `tests/`, `deploy/`) | Ordenar el código |
 | `openspec init` con la arquitectura como contexto | Que cada propuesta y diseño respete las decisiones técnicas |
 | `CLAUDE.md` | Reglas obligatorias para Claude: la cadena de trazabilidad, el stack y la seguridad |
-| Agentes restantes en `.claude/agents/` | Cada paso de la Etapa 4 con su responsable |
+| Agentes restantes en `.claude/agents/`: `oip-analista`, `oip-developer`, `oip-tester` (DEC-172) | Cada paso de la Etapa 4 con su responsable |
 | Comandos `/oip:req`, `/oip:start`, `/oip:pr` | Mover el trabajo entre eslabones |
 | Hook de commits | Bloquear commits sin `Refs: #N` y `Change: <id>` |
 | Gates (GitHub Actions) | Pruebas y cobertura, calidad (ruff), seguridad (gitleaks, pip-audit, bandit, regla de egress), trazabilidad |
@@ -87,13 +87,14 @@ Redactar REQ (issue) → visto bueno de Jesús → oip-inspector → ¿dictamen?
 ### Etapa 4 — Construcción, por cada REQ aprobado (con OpenSpec)
 
 ```
-oip-analista     /opsx:propose   proposal.md + specs (escenarios = criterios del REQ)   ◄── GATE: Jesús aprueba propuesta
-oip-arquitecto                   design.md (verifica ADR; si cambia uno → arquitectura v+1)
-oip-techlead                     tasks.md (1 tarea = 1 PR, Definition of Done, dependencias)
+oip-analista     /opsx:propose   proposal.md + specs + design.md + tasks.md             ◄── GATE: Jesús aprueba propuesta
+                                 (escenarios = criterios del REQ; 1 tarea = 1 PR)
+[oip-arquitecto]                 solo si el REQ toca un ADR: revisa design.md contra los ADR (DEC-172)
 oip-developer    /opsx:apply     rama feat/<N>-<id> + código + PR
-oip-tester                       pruebas por escenario; reporta defectos sin tocar el código
-oip-seguridad                    revisa egress/IP, URLs, secretos, cambios de access_mode
-Gates (Actions)                  pruebas, cobertura, calidad, seguridad, trazabilidad   ◄── GATE: Jesús revisa PR
+oip-tester                       pruebas por escenario y revisión de seguridad (egress/IP, URLs,
+                                 secretos, access_mode); reporta defectos sin tocar el código
+Gates (Actions)                  pruebas, cobertura, calidad, seguridad (incl. regla de egress),
+                                 trazabilidad                                            ◄── GATE: Jesús revisa PR
 ```
 
 - **Modo completo:** para un REQ nuevo.
@@ -103,7 +104,7 @@ Gates (Actions)                  pruebas, cobertura, calidad, seguridad, trazabi
 ### Etapa 5 — Cierre
 
 ```
-merge → oip-documentador → /opsx:archive → openspec/specs/ actualizadas (CÓMO)
+merge → /opsx:archive (plantilla de resumen; sin agente documentador, DEC-172) → openspec/specs/ actualizadas (CÓMO)
                                          → resumen para negocio en docs/negocio/ (QUÉ) → Vercel
 ```
 
@@ -151,14 +152,11 @@ RN-003 (v2) ──► REQ-2026-0001 (#2) ──► [INSPECCIÓN] (#3) ──► 
 |---|---|---|---|
 | `oip-revisor-rn` | 1 | Revisa la consistencia de las RN y redacta preguntas para el experto | ✅ Listo |
 | `oip-inspector` | 2 | Inspección formal del REQ (14 criterios) | ✅ Listo |
-| `oip-negocio` | 1 | Convierte notas en una RN con la plantilla | Pendiente (Etapa 3) |
-| `oip-analista` | 4 | `proposal.md` + specs | Pendiente (Etapa 3) |
-| `oip-arquitecto` | 4 | `design.md` y revisión de ADR | Pendiente (Etapa 3) |
-| `oip-techlead` | 4 | `tasks.md` | Pendiente (Etapa 3) |
+| `oip-analista` | 4 | `proposal.md`, specs, `design.md` y `tasks.md` (absorbe analista, arquitecto y techlead) | Pendiente (Etapa 3) |
 | `oip-developer` | 4 | Implementación con `/opsx:apply` | Pendiente (Etapa 3) |
-| `oip-tester` | 4 | Pruebas por escenario | Pendiente (Etapa 3) |
-| `oip-seguridad` | 4 | Revisión de egress/IP, URLs y secretos | Pendiente (Etapa 3) |
-| `oip-documentador` | 5 | Archivo y resumen para negocio | Pendiente (Etapa 3) |
+| `oip-tester` | 4 | Pruebas por escenario y revisión de seguridad (absorbe seguridad) | Pendiente (Etapa 3) |
+| `oip-arquitecto` | 4 | Revisión independiente de `design.md` contra los ADR | **Se crea la primera vez que un REQ toque un ADR** (previsto: REQ-2026-0003, conectores) |
+| ~~`oip-negocio`~~, ~~`oip-techlead`~~, ~~`oip-seguridad`~~, ~~`oip-documentador`~~ | — | Absorbidos: la RN se redacta en el chat; `tasks.md` lo hace el analista; seguridad, el tester y los gates; el cierre, `/opsx:archive` | No se crean (DEC-172) |
 | **OpenSpec** | 4–5 | Especificación técnica por cambio (el plano) | Se instala en la Etapa 3 |
 | **GitHub Issues** | 2–5 | REQ, inspecciones, trazas | ✅ En uso |
 | **GitHub Project** | Todas | Tablero de etapas (el semáforo) | Lo crea Jesús |
@@ -252,3 +250,31 @@ RN-003 (v2) ──► REQ-2026-0001 (#2) ──► [INSPECCIÓN] (#3) ──► 
 | **OIP_TRACE** | Comentario oculto en un issue que registra qué agente hizo qué, sobre qué y con qué resultado |
 | **`oip-egress`** | Contenedor por el que sale todo el scraping; protege la IP de casa |
 | **GitHub Project** | Tablero de seguimiento por etapas, separado del repositorio |
+
+---
+
+## 12. Guía personal de trabajo con Claude (2026-11-16)
+
+### 12.1 Entradas externas
+
+| Entrada | Cómo se usa | Dónde vive |
+|---|---|---|
+| **Diseño de estilo** (cómo debe verse el sistema) | Se convierte en una **guía de estilo** (colores, tipografía, componentes, ejemplos de pantallas). La citan el analista en cada propuesta con interfaz, el developer al construir y el tester al verificar. En el Inc. 1 aplica al **formato de los avisos de Telegram** (la interfaz es Metabase); completa desde el Inc. 2 (interfaz propia) | `docs/diseno/` |
+| **Arquitectura propuesta por Gemini** | Es un **insumo, no un reemplazo**. Se compara punto por punto contra la v1.3, los ADR, el registro de decisiones y las RN v2: qué conviene adoptar, qué choca con un ADR y por qué. Con lo que apruebe Jesús sale la **v1.4**, sin borrar contenido | `docs/arquitectura/` |
+
+### 12.2 Modelo y esfuerzo por actividad fuerte
+
+Antes de cada actividad, Claude avisa cuál toca para ajustar el selector. Fable 5.2 estuvo incluido en el plan solo hasta el 16-nov-2026 (consume el uso más rápido que Opus); desde entonces, la opción para lo más pesado es Opus con esfuerzo alto.
+
+| Actividad | Modelo | Esfuerzo | Por qué |
+|---|---|---|---|
+| Análisis de la arquitectura de Gemini y redacción de la v1.4 | Opus | **Alto** | Cruzar contra ADR, decisiones y RN v2; un error ahí se arrastra a todo el código |
+| Reescritura de reglas de negocio y revisión de consistencia | Opus | **Alto** | Fórmulas encadenadas entre reglas; hay que rehacer todas las cuentas |
+| Guía de estilo a partir del diseño | Opus o Sonnet | Medio | Extraer y ordenar; el criterio lo pone Jesús |
+| Redacción del REQ (v2 en adelante) | Opus | **Alto** | Escenarios con números que deben cuadrar con todas las reglas |
+| Inspección del REQ (`oip-inspector`) | Opus | **Alto** | Contexto aislado; es el gate formal |
+| Arranque técnico (Etapa 3) | Opus | Medio | Mucha configuración; las instrucciones de los agentes nuevos piden cuidado |
+| Propuesta OpenSpec (`oip-analista`) | Opus | Alto | Traduce criterios del REQ a escenarios y diseño |
+| Codificación (`oip-developer`) | Sonnet u Opus | Medio | Tareas acotadas (1 tarea = 1 PR) con pruebas por escenario |
+| Pruebas (`oip-tester`) | Sonnet | Medio | Mecánico una vez que los escenarios están bien escritos |
+| Capturas, preguntas y ajustes pequeños | Cualquiera | Bajo | Transcribir y ordenar |

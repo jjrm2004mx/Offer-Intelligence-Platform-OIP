@@ -159,3 +159,103 @@ Primera revisión de las dos reglas que salieron de la sesión 1 — 9 de noviem
 - **Ejemplo A de RN-011** con un dato de tienda de 4 horas, cuando el límite es 1 hora (RN-011 D-001).
 - **Documento técnico v1.2 por actualizar (v1.3)**: consultas que nacen en el servidor en la nube, modo desarrollo con lista permitida, verificación de la dirección autorizada, pausa por bloqueo con umbral, límites y caché (RN-010 D-009); búsqueda por artículo (RN-011 D-010).
 - **Ajustes de forma**: medición de la pausa y casos en el límite (RN-010 D-007), desempates y orden (RN-011 D-008), redacción de DEC-113 después de RN-011 · P6 (RN-011 D-006).
+
+---
+
+## Versión 2 — reinspección de RN-001 a RN-011 y primera revisión de RN-012 a RN-018
+
+Revisión del 16 de noviembre de 2026, después de la sesión 2. Se rehicieron **todas las cuentas** de los ejemplos, siguiendo la cadena del taladro y de la sierra por RN-001 → RN-003 → RN-005 → RN-009 → RN-008 → RN-018, con la venta local de RN-016 y RN-017. Casi todo cuadra; hay **un error de cálculo** (RN-005, la sierra rinde 116.1 %, no 116.0 %) y **cinco contradicciones graves** entre reglas o con la sesión 2. Las preguntas de la sesión 2 que ya tienen respuesta **no se repiten** aquí.
+
+| Regla | Dictamen | ALTA | MEDIA | BAJA |
+|---|---|---|---|---|
+| [RN-001 Margen neto](/revisiones/RN-001.md) | APROBADO CON OBSERVACIONES | 0 | 1 | 4 |
+| [RN-002 Referencias de precio](/revisiones/RN-002.md) | APROBADO CON OBSERVACIONES | 0 | 1 | 5 |
+| [RN-003 Descuento real](/revisiones/RN-003.md) | APROBADO CON OBSERVACIONES | 0 | 3 | 5 |
+| [RN-004 Demanda en Amazon](/revisiones/RN-004.md) | APROBADO CON OBSERVACIONES | 0 | 0 | 4 |
+| [RN-005 Rentabilidad ajustada](/revisiones/RN-005.md) | **RECHAZADO** | 1 | 4 | 4 |
+| [RN-006 Comisiones y restricciones](/revisiones/RN-006.md) | APROBADO CON OBSERVACIONES | 0 | 3 | 4 |
+| [RN-007 Disponibilidad](/revisiones/RN-007.md) | APROBADO CON OBSERVACIONES | 0 | 1 | 6 |
+| [RN-008 Traslados](/revisiones/RN-008.md) | APROBADO CON OBSERVACIONES | 0 | 2 | 4 |
+| [RN-009 Niveles y avisos](/revisiones/RN-009.md) | APROBADO CON OBSERVACIONES | 0 | 4 | 4 |
+| [RN-010 Consulta responsable](/revisiones/RN-010.md) | APROBADO CON OBSERVACIONES | 0 | 2 | 5 |
+| [RN-011 Búsqueda por artículo](/revisiones/RN-011.md) | **RECHAZADO** | 1 | 1 | 5 |
+| [RN-012 Calidad del precio](/revisiones/RN-012.md) | APROBADO CON OBSERVACIONES | 0 | 5 | 2 |
+| [RN-013 Identificación del producto](/revisiones/RN-013.md) | **RECHAZADO** | 1 | 1 | 2 |
+| [RN-014 Condición y usados](/revisiones/RN-014.md) | APROBADO CON OBSERVACIONES | 0 | 2 | 3 |
+| [RN-015 Riesgo de compra y venta](/revisiones/RN-015.md) | APROBADO CON OBSERVACIONES | 0 | 2 | 2 |
+| [RN-016 Precio de venta local](/revisiones/RN-016.md) | **RECHAZADO** | 1 | 2 | 2 |
+| [RN-017 Demanda local](/revisiones/RN-017.md) | APROBADO CON OBSERVACIONES | 0 | 2 | 2 |
+| [RN-018 Selección del canal](/revisiones/RN-018.md) | **RECHAZADO** | 2 | 2 | 3 |
+| **Total** | 13 aprobadas con observaciones · 5 rechazadas | **6** | **38** | **66** |
+
+Las cinco rechazadas se corrigen sobre todo en sus ejemplos y en una o dos frases. No hace falta cambiar la idea de ninguna regla.
+
+### Lo que le preguntamos a usted
+
+Las preguntas marcadas **(nueva)** salieron de esta revisión. Las demás ya están en la sección 12 de cada regla y son las propuestas que Jesús aceptó en la sesión 2 y que usted debe validar.
+
+**1. Costos y precio**
+- **RN-001 · P1, P2** — Empaque y dirección del PO Box (pendientes de la sesión 2).
+- **RN-002 · P1** — ¿"Mucho más barato que Amazon" = 15 % o más por debajo?
+- **RN-002 · P2** — ¿60 días es buena ventana para el precio habitual?
+- **RN-002 · P3** (nueva) — Para el riesgo de que baje el precio después de comprar, ¿se compara contra el precio más bajo de Amazon en los últimos **60** o en los últimos **90** días?
+- **RN-003 · P1** — ¿Investigar solo ofertas con 40 % o más de descuento anunciado?
+- **RN-003 · P2** (nueva) — "Marca reconocida": ¿(a) una lista por categoría que arman usted y Jesús, o (b) cualquier marca con buen ranking en Amazon?
+
+**2. Calidad del precio e identificación**
+- **RN-012 · P1 a P3** — 15 % para "Buena oferta"; precio menor (no igual) al mínimo para "Oferta excepcional"; 2 comercios de comparación.
+- **RN-012 · P4** (nueva) — El "precio más bajo visto" para "Oferta excepcional": ¿(a) el último año, (b) todo el historial, o (c) los últimos 90 días?
+- **RN-013 · P1** — Otros casos de mismo modelo con contenido distinto.
+- ✅ **Respondida por Jesús (DEC-169, 2026-11-16).** **RN-013 · P2** (nueva) — Sin código de barras, pero con modelo y marca: ¿(a) se confía si la caja trae lo mismo en las dos tiendas, o (b) siempre lo revisa Jesús?
+
+**3. Demanda, rentabilidad y restricciones en Amazon**
+- **RN-004 · P1 a P3** — 0.5 % de la categoría (y primeros 100 en relojes y joyería); 20 vendedores; promedios de 7 días.
+- **RN-005 · P1 a P4** — Tasas de devolución; 30 / 21 días de pago; tope de 3 unidades (5); 0 % de devoluciones en venta local.
+- **RN-005 · P5** (nueva) — En venta local, el riesgo de que baje el precio: ¿(a) no se considera, (b) siempre 10 % del precio local, o (c) contra el precio más bajo visto en publicaciones locales?
+- **RN-005 · P6** (nueva) — Si a Jesús le toca menos de una venta al mes de un producto, ¿(a) no se compra para ese canal, o (b) se compra 1 unidad de prueba?
+- **RN-006 · P1, P2** — Comisiones tomadas de la tabla de Amazon; ticket de tienda y permisos.
+- **RN-006 · P3** (nueva) — Herramientas con batería de litio incluida: ¿(a) se venden normal en Amazon, (b) con revisión antes de la primera venta, o (c) solo en venta local?
+
+**4. Tiendas, viajes y entregas**
+- **RN-007 · P1 a P3** — "Pocas unidades" como "probablemente ya no hay"; tiempos a la mitad en liquidación; llamar desde $100.
+- **RN-007 · P4** (nueva) — Tiempos normales: cantidad exacta "Alta" hasta 6 h, "en existencia" "Media" hasta 12 h, nada más allá de 24 h. ¿Le parecen bien?
+- **RN-008 · P1, P2** — Zonas y mínimos de $50 / $75 / $150; 2 días en espera (1 en liquidación).
+- **RN-008 · P3** (nueva) — ¿Dónde estarán los compradores de venta local? (a) Tijuana; (b) San Diego, cerca de la garita; (c) los dos. Cruzar para entregar cuesta tiempo.
+
+**5. Niveles y elección de canal**
+- **RN-009 · P1, P2** — Nombres nuevos y "Vigilar" desde 25 % / 25 %; mínimo por unidad.
+- **RN-009 · P3** (nueva) — Como cualquier nivel ya pide ganar 25 % del costo, el "10 % del costo" nunca se aplica. ¿Qué quería proteger? (a) basta con $10; (b) 10 % del **precio de venta**; (c) un monto mayor para productos caros.
+- **RN-018 · P1** — Preferir Amazon con menos de 10 puntos de diferencia.
+- ✅ **Respondida por Jesús (DEC-170, 2026-11-16).** **RN-018 · P2** (nueva) — Si una oferta es "Recomendable" en Amazon y "Muy recomendable" en venta local, con ganancias parecidas: ¿(a) gana el mejor nivel, (b) gana Amazon, o (c) gana Amazon pero el aviso llega de inmediato?
+
+**6. Consulta a los comercios y búsqueda para clientes**
+- **RN-010 · P1, P2** — Valores iniciales; robots.txt y términos de uso.
+- **RN-011 · P1, P2** — Solo producto nuevo por defecto; juntar piezas con 10 % de ahorro.
+- ✅ **Respondida por Jesús (DEC-168, 2026-11-16).** **RN-011 · P3** (nueva) — Tienda física que Jesús compra y entrega contra opción en línea: ¿(a) se suman viaje y entrega al precio y gana el menor total, o (b) no se suman porque Jesús aprovecha viajes? Ejemplo: $299 + $55 + $9.50 = $363.50 contra $329 en línea.
+- **RN-011 · P4** (nueva) — Sugerencias al cliente: ¿(a) otra generación o edición, (b) otras ofertas de la misma categoría, o (c) las dos? ¿Cuántas como máximo?
+
+**7. Usados, riesgo y venta local**
+- **RN-014 · P1, P2** — 85 % de los precios pedidos; 3 comparables.
+- ✅ **Respondida por Jesús (DEC-171, 2026-11-16).** **RN-014 · P3** (nueva) — Para el valor de un usado, ¿cuentan publicaciones de otras ciudades con envío nacional, o solo Tijuana y San Diego?
+- **RN-014 · P4** (nueva) — En el primer incremento, ¿un usado se evalúa solo para venta local o también para Amazon?
+- **RN-014 · P5** (nueva) — Un usado queda en unos 76 % de lo que piden otros (85 % y luego 10 % por negociación). ¿Bien o demasiado prudente?
+- **RN-015 · P1, P2** — Más productos para "evitar siempre"; más categorías con riesgo de falsificación.
+- **RN-015 · P3** (nueva) — ¿Qué marcas de perfumes y relojes considera "de lujo"?
+- **RN-016 · P1, P2** — 85 % del precio de mercado; 10 % de negociación.
+- ✅ **Respondida por Jesús (DEC-171, 2026-11-16).** **RN-016 · P3** (nueva) — Publicaciones que cuentan para el precio de la competencia local: ¿(a) Tijuana y San Diego hasta 40 km de la garita, (b) todo el condado de San Diego, o (c) otra?
+- **RN-017 · P1** — Cuánto tarda en venderse en persona una herramienta o un electrónico.
+- **RN-017 · P2** (nueva) — Con ventas reales, ¿a partir de cuántos días ya no conviene comprar para venta local? ¿21, 30 o 45?
+
+### Pendientes del autor (versión 2, no requieren respuesta del experto)
+
+- **Una sola sierra para toda la cadena.** RN-002 B y RN-012 B tienen a Target a $99 (competencia más barata). RN-005 B, RN-009 A y RN-018 B la tratan sin competencia: dicen "Muy recomendable" y tope de 5, cuando con Target es "Recomendable" y tope de 3 (RN-005 D-010, RN-009 D-006, RN-018 D-002).
+- **Sierra en venta local.** RN-018 B dice "sin estimado, no viable", pero RN-016 calcula $75.74 (85 % de $99, menos 10 %): margen $34.99, 112.0 %, Muy recomendable (RN-018 D-001).
+- **Redondeo.** Rendimiento de la sierra en Amazon: 116.1 %, no 116.0 % (RN-005 D-009, RN-018 D-002). Copiar DEC-060 en RN-005 y RN-009.
+- **Vista está fuera de la zona local** (más de 40 km de la garita): el ejemplo C de RN-016 da $99.00, no $89.10 (RN-016 D-001).
+- **Código de barras o modelo + marca.** RN-013 se contradice con DEC-134, con su propio §13, con RN-003 y con RN-011 (RN-013 D-001, RN-003 D-005).
+- **Usados en el descuento real** (RN-003 D-006), **traslado con particulares en la fórmula** (RN-001 D-007), **entrega local por defecto** (RN-008 D-005), **mínimo por viaje en Zona 1 y 2** en RN-009 (RN-009 D-008).
+- **Mínimo de 60 días en Amazon** sin decisión registrada (RN-002 D-008).
+- **Registro de decisiones:** marcar DEC-052 a DEC-059 como reemplazadas por DEC-158 a DEC-164; actualizar DEC-131 (cinco clases).
+- **Documento técnico v1.3** por actualizar con todo lo de la v2 (canal local, referencias de precio, Keepa diferido, zonas, niveles nuevos, pausas escalonadas, siete comercios).
+- **Glosario:** "descuento real" todavía dice "contra el precio de mercado" (RN-002 D-011).
+- **Sitio:** el menú lateral no tiene las revisiones de RN-012 a RN-018.

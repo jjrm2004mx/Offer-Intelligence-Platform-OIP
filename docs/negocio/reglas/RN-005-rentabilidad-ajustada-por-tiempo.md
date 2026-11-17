@@ -1,15 +1,18 @@
-# RN-005 — Rentabilidad ajustada por tiempo y riesgo
+# RN-005 — Rentabilidad ajustada por tiempo y riesgo, por canal
 
 ```yaml
 id: RN-005
-titulo: Rentabilidad ajustada por tiempo y riesgo
-estado: BORRADOR
-version: 1
-fecha: 2026-11-08
+titulo: Rentabilidad ajustada por tiempo y riesgo, por canal
+grupo: resultado
+estado: EN_REVISION
+version: 2
+fecha: 2026-11-16
 responsable: Jesús
 revisor_negocio: Experto en negocios internacionales
-depende_de: [RN-001, RN-002, RN-004]
+depende_de: [RN-001, RN-002, RN-004, RN-007, RN-008, RN-009, RN-017]
 ```
+
+> **Qué cambió en la v2 (2026-11-16):** el canal es un parámetro (DEC-143); tasas de devolución por categoría tomadas de los umbrales que publica Amazon; pérdida por devolución de 75% en perfumes y joyería; **30 días** de pago para vendedor nuevo (Amazon retiene el dinero hasta 7 días después de la entrega desde el 12-mar-2026); tope de **3 unidades** (5 en casos muy buenos) en la primera compra; el tiempo se cuenta **hasta vender la última unidad**. Propuestas de Claude aceptadas por Jesús, [sesión 2](/sesiones/sesion-2-respuestas.md), bloque 5; por validar con el experto. La v1 queda en el historial: [RN-005 v1](https://github.com/jjrm2004mx/Offer-Intelligence-Platform-OIP/blob/1c1d4e04d5e5e2401dbb565782bf11061d8813f7/docs/negocio/reglas/RN-005-rentabilidad-ajustada-por-tiempo.md).
 
 ## 1. ¿Qué queremos lograr?
 Que la ganancia sea **real, no aparente**. Un margen alto que tarda meses en convertirse en dinero, o que se lo comen las devoluciones o una baja de precio, vale menos que un margen moderado que se cobra en semanas.
@@ -17,77 +20,113 @@ Que la ganancia sea **real, no aparente**. Un margen alto que tarda meses en con
 ## 2. ¿Qué incluye y qué no?
 **Incluye:**
 - Ajustar el margen por devoluciones esperadas y por el riesgo de que baje el precio.
-- Estimar en cuántos días se recupera el dinero.
-- Calcular un rendimiento mensual equivalente para **ordenar** oportunidades.
 - Recomendar cuántas unidades comprar.
+- Estimar en cuántos días se recupera el dinero y un rendimiento mensual para **ordenar** oportunidades.
+- Todo, por canal: Amazon FBM y venta local.
 
 **No incluye:**
 - El costo del viaje a tienda (RN-008).
+- Elegir el canal (RN-018).
 
 ## 3. ¿Cómo funciona, en palabras?
-1. Al margen neto (RN-001) se le restan dos riesgos: lo que se espera perder por devoluciones y una parte de lo que podría bajar el precio mientras tenemos el producto.
-2. Se estima cuánto tarda en venderse, según la demanda (RN-004), más lo que tarda Amazon en pagar.
-3. Con eso se calcula cuánto rinde el dinero por mes, para comparar oportunidades que tardan distinto.
+1. Al margen neto del canal (RN-001) se le restan dos riesgos: lo que se espera perder por devoluciones y la mitad de lo que podría bajar el precio.
+2. Con ese margen ajustado se asigna el nivel (RN-009).
+3. Se decide cuántas unidades comprar, con un tope prudente mientras se aprende.
+4. Se estima cuánto tarda en venderse **la última unidad**, más lo que tarda el canal en pagar.
+5. Con eso se calcula cuánto rinde el dinero por mes.
 
 ## 4. La regla
 
 ```
 costo por devoluciones = precio de venta esperado × tasa de devolución × pérdida por devolución
-castigo por baja       = (precio de venta esperado − mínimo de 90 días en Amazon) × 50%
+castigo por baja       = (precio de venta esperado − mínimo de 60 días en Amazon) × 50%   (si sale negativo, 0)
 margen ajustado ($)    = margen neto − costo por devoluciones − castigo por baja
 margen ajustado (%)    = margen ajustado ($) ÷ costo de compra × 100
 
-días para recuperar    = días estimados de venta + días de pago de Amazon
-rendimiento mensual    = margen ajustado (%) × 30 ÷ días para recuperar
+unidades recomendadas  = el MENOR entre:
+                           · ventas al mes que le tocan a Jesús
+                             (Amazon: ventas al mes ÷ (vendedores + 1); local: RN-017), redondeado hacia abajo
+                           · unidades disponibles
+                           · límite de unidades por cliente del comercio (RN-008), si lo hay
+                           · tope de primera compra: 3 (5 si el ranking es menor de 10,000
+                             y el nivel en ese canal es Comprar ya o Muy recomendable)
 
-unidades recomendadas  = ventas al mes ÷ (vendedores + 1), redondeado hacia abajo,
-                         sin pasar de las unidades disponibles
+días de venta          = el MAYOR entre:
+                           · días de la tabla (Amazon) o días por unidad de RN-017 × unidades (local)
+                           · unidades ÷ (ventas al mes que le tocan a Jesús ÷ 30)
+días para recuperar    = días de venta + días de pago del canal
+rendimiento mensual    = margen ajustado (%) × 30 ÷ días para recuperar
 ```
 
-Días estimados de venta según el ranking (RN-004):
+- Los montos se redondean a centavos (el medio centavo sube); los **porcentajes se usan sin redondear** para calcular y comparar, y se muestran con 1 decimal (DEC-060).
 
-| Ranking de ventas | Días estimados de venta |
+**Valores por canal:**
+
+| Valor | Amazon FBM | Venta local |
+|---|---|---|
+| Tasa de devolución | Herramientas 7%, hogar 8%, perfumes y belleza 6%, joyería 11%, relojes 12%, tecnología 11%, juguetes 5% | 0% (se revisa al entregar) |
+| Pérdida por devolución | 50%; perfumes y joyería 75% | — |
+| Castigo por baja | 50% de (venta − mínimo de 60 días en Amazon); sin mínimo, 10% del precio de venta | Igual |
+| Días de pago | **30** con cuenta nueva; **21** con historial | 0 (pago al entregar) |
+| Días de venta | Tabla por ranking (abajo) | RN-017 |
+
+**Días de venta en Amazon según el ranking** (herramientas; otras categorías se calibran con resultados):
+
+| Ranking | Días estimados de venta |
 |---|---|
 | menos de 10,000 | 7 |
 | 10,000 a 50,000 | 21 |
-| 50,001 a 150,000 | 45 |
+| más de 50,000, hasta el umbral de RN-004 | 45 |
+
+- El **tope de primera compra** se levanta para un producto cuando ya se vendió (registro de resultados).
+- Las tasas de devolución de Amazon son los **umbrales por categoría que publica Amazon** (desde jun-2024), redondeados: por encima de ellos Amazon cobra una cuota extra, así que son conservadores.
 
 | Valor | Qué es | Valor inicial | ¿Confirmado? |
 |---|---|---|---|
-| Tasa de devolución | % de ventas que se devuelven, por categoría | Herramientas 5% | Por confirmar |
-| Pérdida por devolución | Qué parte del precio se pierde en una devolución | 50% | Por confirmar |
-| Peso del castigo por baja | Qué parte de la posible baja se descuenta | 50% | Por confirmar |
-| Días de pago de Amazon | Lo que tarda Amazon en depositar | 14 | Por confirmar |
-| Tabla de días por ranking | Ver arriba | Ver arriba | Por confirmar |
+| Tasas de devolución | Ver tabla | Ver tabla | Aceptado por Jesús; tecnología y juguetes: **propuesta nueva** con el mismo criterio |
+| Pérdida por devolución | Ver tabla | 50% / 75% | Aceptado por Jesús |
+| Peso del castigo por baja | Parte de la posible baja | 50% | Aceptado por Jesús |
+| Días de pago Amazon | Cuenta nueva / con historial | 30 / 21 | Aceptado por Jesús |
+| Tope de primera compra | Unidades | 3; 5 en casos muy buenos | Aceptado por Jesús |
+| Hasta qué unidad se cuenta | Primera o última | Última | Aceptado por Jesús |
+| Tasa de devolución local | % | 0% | **Propuesta nueva de Claude (por aceptar)** |
 
-> Nota para el documento técnico: esta regla usa **rendimiento mensual** en lugar del "ROI anualizado" del documento de arquitectura v1.2, porque se entiende mejor. También agrega la "pérdida por devolución" y el castigo por baja con peso de 50%. Hay que actualizar el documento técnico cuando se apruebe.
+Todos los valores son iniciales y configurables.
 
 ## 5. ¿Cómo sabremos que funciona? — Ejemplos con números
 
-**Ejemplo A — Taladro**
-- Margen neto (RN-001): $27.53. Costo de compra: $85.12. Venta esperada: $149. Mínimo 90 días: $139.
-- Devoluciones: 149 × 5% × 50% = **$3.73**. Castigo por baja: (149 − 139) × 50% = **$5.00**.
-- Margen ajustado = 27.53 − 3.73 − 5.00 = **$18.80** → 18.80 ÷ 85.12 = **22.1%**.
-- Ranking 8,500 → 7 días de venta + 14 de pago = **21 días**.
-- Rendimiento mensual = 22.1% × 30 ÷ 21 = **31.6%**.
-- Ventas al mes 300, 9 vendedores → 300 ÷ 10 = 30 unidades; en tienda hay 4 → **comprar 4**.
+**Ejemplo A — Taladro en Amazon**
+- Margen neto (RN-001): $27.53. Costo de compra: $85.12. Venta esperada: $149. Mínimo de 60 días: $139.
+- Devoluciones: 149 × 7% × 50% = **$5.22**. Castigo por baja: (149 − 139) × 50% = **$5.00**.
+- Margen ajustado = 27.53 − 5.22 − 5.00 = **$17.31** → 17.31 ÷ 85.12 = **20.3%** → no alcanza nivel (RN-009).
+- Unidades: 300 al mes ÷ (9 + 1) = 30; en tienda hay 4; tope 3 → **3 unidades**.
+- Días de venta = mayor(7, 3 ÷ (30 ÷ 30) = 3) = **7**. Días para recuperar = 7 + 30 = **37**.
+- Rendimiento mensual = 20.336% × 30 ÷ 37 = **16.5%**.
 
-**Ejemplo B — Sierra circular**
-- Margen neto: 119 − 31.25 − 33.85 = **$53.90** (compra $29 + 7.75% = $31.25; comisión 15% $17.85, envío $14, empaque $2).
-- Devoluciones: 119 × 5% × 50% = **$2.98**. Castigo: (119 − 109) × 50% = **$5.00**.
-- Margen ajustado = 53.90 − 2.98 − 5.00 = **$45.92** → 45.92 ÷ 31.25 = **146.9%**.
-- Ranking 6,000 → 7 + 14 = 21 días → rendimiento mensual = 146.9% × 30 ÷ 21 = **209.9%**.
-- Ventas al mes 200, 5 vendedores → 200 ÷ 6 = 33; en tienda hay 3 → **comprar 3**.
+**Ejemplo B — Sierra circular en Amazon** (situación base: sin un comercio más barato)
+- Margen neto: 119 − 31.25 − 33.85 = **$53.90**.
+- Devoluciones: 119 × 7% × 50% = **$4.17**. Castigo: (119 − 109) × 50% = **$5.00**.
+- Margen ajustado = 53.90 − 4.17 − 5.00 = **$44.73** → 44.73 ÷ 31.25 = **143.1%** → nivel Muy recomendable (RN-009).
+- Unidades: 200 al mes ÷ (5 + 1) = 33; en tienda hay 3; tope 5 (ranking 6,000 y Muy recomendable) → **3 unidades**.
+- Días de venta = mayor(7, 3 ÷ (33 ÷ 30) = 2.7) = **7**. Recuperar = 7 + 30 = **37**.
+- Rendimiento mensual = 143.136% × 30 ÷ 37 = **116.1%**.
 
-**Comparación:** el taladro parecía bueno (32.3% de margen neto), pero ajustado queda en 22.1%. La sierra sigue siendo excelente.
+**Ejemplo C — Taladro en venta local**
+- Margen neto local (RN-001, ejemplo C): **$21.48**. Devoluciones: 0. Castigo: venta local $116.10 es menor que el mínimo de $139 → **0**.
+- Margen ajustado = **$21.48** → **25.2%**.
+- Demanda local media (RN-017): 14 días por unidad → 30 ÷ 14 = 2 ventas al mes; disponibles 4; tope 3 → **2 unidades**.
+- Días de venta = mayor(14 × 2 = 28, 2 ÷ (2 ÷ 30) = 30) = **30**. Días de pago: 0 → recuperar **30**.
+- Rendimiento mensual = 25.2% × 30 ÷ 30 = **25.2%**.
+
+**Comparación:** el taladro parecía bueno en Amazon (32.3% de margen neto), pero ajustado queda en 20.3% y tarda 37 días en volver el dinero. En venta local rinde más (RN-018).
 
 ## 6. ¿Qué información necesitamos?
-- Resultados de RN-001, RN-002 y RN-004.
-- Ventas al mes y número de vendedores (Keepa).
-- Unidades disponibles en la tienda (RN-007).
+- Resultados de RN-001, RN-002, RN-004 y RN-017.
+- Ventas al mes y vendedores en Amazon (los que muestre la ficha, RN-004).
+- Unidades disponibles (RN-007) y límite por cliente del comercio (RN-008).
 
 ## 7. ¿Qué obtenemos?
-- Margen ajustado ($ y %), días para recuperar, rendimiento mensual y unidades recomendadas.
+- Por canal: margen ajustado ($ y %), unidades recomendadas, días para recuperar y rendimiento mensual.
 
 ## 8. ¿Quién participa?
 - El sistema calcula.
@@ -95,31 +134,36 @@ Días estimados de venta según el ranking (RN-004):
 - Jesús decide cuánto comprar en realidad.
 
 ## 9. ¿De qué depende?
-- RN-001, RN-002, RN-004 y RN-007.
+- RN-001, RN-002, RN-004, RN-007, RN-008 (límite por cliente), RN-009 (nivel, para el tope) y RN-017.
 
 ## 10. Limitaciones
-- Los días de venta son una estimación gruesa hasta tener ventas reales. Con cada venta registrada se irá ajustando la tabla.
+- Los días de venta son una estimación gruesa hasta tener ventas reales; se ajustan con cada venta registrada.
 
 ## 11. ¿Qué pasa si…?
 | Situación | Qué hace el sistema |
 |---|---|
-| No hay dato de ventas al mes | Recomienda máximo 2 unidades y lo marca como estimación |
-| No hay mínimo de 90 días | Castigo por baja = 10% del precio de venta esperado |
-| El margen ajustado sale negativo | No genera alerta |
-| Ranking mayor a 150,000 | No aplica: RN-004 ya la descartó |
+| No hay dato de ventas al mes en Amazon | Recomienda máximo **2** unidades y lo marca como estimación |
+| No hay mínimo de 60 días | Castigo por baja = 10% del precio de venta esperado |
+| El margen ajustado sale negativo | No genera aviso |
+| La demanda en Amazon es insuficiente | El canal Amazon no se calcula (RN-004); se evalúa la venta local |
 
 ## 12. Preguntas para el experto
-1. ¿Qué tasa de devolución esperar en herramientas, relojes, perfumes y joyería?
-2. Cuando hay una devolución, ¿qué parte del precio se suele perder (envío de regreso, producto que ya no se puede vender como nuevo)?
-3. ¿Le parece razonable descontar la mitad de la posible baja de precio, o es demasiado (o muy poco)?
-4. ¿Cuánto tarda en realidad Amazon en pagar a un vendedor nuevo?
-5. Para un vendedor que empieza, ¿cuántas unidades del mismo producto recomendaría como máximo en la primera compra?
+1. ¿Le parecen bien las tasas de devolución por categoría y la pérdida de 50% (75% en perfumes y joyería)? (propuesta aceptada por Jesús)
+2. ¿30 días de pago con cuenta nueva y 21 con historial? (propuesta aceptada por Jesús)
+3. ¿Tope de 3 unidades en la primera compra (5 en casos muy buenos)? (propuesta aceptada por Jesús)
+4. ¿Le parece razonable 0% de devoluciones en venta local, porque el comprador revisa al recibir? (propuesta nueva)
 
 ## 13. Decisiones tomadas
 | Fecha | Decisión | Quién |
 |---|---|---|
-| | | |
+| 2026-11-11 | Compra por oportunidad: conservar hasta encontrar comprador; el riesgo se mide con días y rendimiento (DEC-141) | Jesús |
+| 2026-11-16 | Tasas de devolución por categoría según los umbrales de Amazon | Jesús (propuesta de Claude) |
+| 2026-11-16 | Pérdida por devolución 50%; 75% en perfumes y joyería | Jesús (propuesta de Claude) |
+| 2026-11-16 | Castigo por baja 50% | Jesús (propuesta de Claude) |
+| 2026-11-16 | Días de pago Amazon: 30 con cuenta nueva, 21 con historial; venta local 0 | Jesús (propuesta de Claude) |
+| 2026-11-16 | Tope de primera compra 3 unidades (5 en casos muy buenos) | Jesús (propuesta de Claude) |
+| 2026-11-16 | Se cuenta hasta vender la última unidad | Jesús (propuesta de Claude) |
 
 ## 14. Revisión de consistencia
-- Última revisión: 2026-11-08 — APROBADO CON OBSERVACIONES
+- Última revisión: 2026-11-16 (v2.1) — APROBADO CON OBSERVACIONES
 - Detalle: [revisiones/RN-005.md](/revisiones/RN-005.md)
