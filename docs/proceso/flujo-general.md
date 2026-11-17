@@ -152,9 +152,9 @@ RN-003 (v2) ──► REQ-2026-0001 (#2) ──► [INSPECCIÓN] (#3) ──► 
 |---|---|---|---|
 | `oip-revisor-rn` | 1 | Revisa la consistencia de las RN y redacta preguntas para el experto | ✅ Listo |
 | `oip-inspector` | 2 | Inspección formal del REQ (14 criterios) | ✅ Listo |
-| `oip-analista` | 4 | `proposal.md`, specs, `design.md` y `tasks.md` (absorbe analista, arquitecto y techlead) | Pendiente (Etapa 3) |
-| `oip-developer` | 4 | Implementación con `/opsx:apply` | Pendiente (Etapa 3) |
-| `oip-tester` | 4 | Pruebas por escenario y revisión de seguridad (absorbe seguridad) | Pendiente (Etapa 3) |
+| `oip-analista` | 4 | `proposal.md`, specs, `design.md` y `tasks.md` (absorbe analista, arquitecto y techlead) | ✅ Listo (Etapa 3) |
+| `oip-developer` | 4 | Implementación con `/opsx:apply` | ✅ Listo (Etapa 3) |
+| `oip-tester` | 4 | Pruebas por escenario y revisión de seguridad (absorbe seguridad) | ✅ Listo (Etapa 3) |
 | `oip-arquitecto` | 4 | Revisión independiente de `design.md` contra los ADR | **Se crea la primera vez que un REQ toque un ADR** (previsto: REQ-2026-0003, conectores) |
 | ~~`oip-negocio`~~, ~~`oip-techlead`~~, ~~`oip-seguridad`~~, ~~`oip-documentador`~~ | — | Absorbidos: la RN se redacta en el chat; `tasks.md` lo hace el analista; seguridad, el tester y los gates; el cierre, `/opsx:archive` | No se crean (DEC-172) |
 | **OpenSpec** | 4–5 | Especificación técnica por cambio (el plano) | Se instala en la Etapa 3 |
