@@ -149,6 +149,7 @@ repository: owner/repo
 branch: null
 pull_request: null
 inspection_version: vN
+requirement_version: vX.Y
 result: APROBADO | APROBADO_CON_OBSERVACIONES | RECHAZADO
 next_action: CONTINUAR | CORREGIR_Y_REINSPECCIONAR
 started_at: <ISO-8601>
@@ -156,6 +157,8 @@ completed_at: <ISO-8601>
 -->
 **Inspección vN:** <resultado> → <recomendación>. Detalle en #<issue de inspección>.
 ```
+
+`requirement_version` es la "Versión" del cuerpo del requerimiento que inspeccionaste (la primera línea del historial, por ejemplo `v2.6`). `oip-analista` la compara con la versión actual del cuerpo para saber si hay que reinspeccionar (DEC-208, EXT-014).
 
 ## Reglas del historial
 
