@@ -121,5 +121,5 @@ Todos los valores son iniciales y configurables.
 | 2026-11-16 | Tendencia con promedios de 7 días | Jesús (propuesta de Claude) |
 
 ## 14. Revisión de consistencia
-- Última revisión: ver `revisiones/RN-004.md` (columna v2)
+- Última revisión: 2026-11-16 (v2) — APROBADO CON OBSERVACIONES
 - Detalle: [revisiones/RN-004.md](/revisiones/RN-004.md)

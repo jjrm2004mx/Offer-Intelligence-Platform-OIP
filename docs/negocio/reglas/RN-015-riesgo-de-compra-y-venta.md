@@ -99,5 +99,5 @@ Las listas son configurables.
 | 2026-11-16 | Lista de productos que se evitan siempre | Jesús (propuesta de Claude) |
 
 ## 14. Revisión de consistencia
-- Última revisión: ver `revisiones/RN-015.md`
+- Última revisión: 2026-11-16 (v1) — APROBADO CON OBSERVACIONES
 - Detalle: [revisiones/RN-015.md](/revisiones/RN-015.md)

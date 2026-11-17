@@ -58,6 +58,8 @@ días para recuperar    = días de venta + días de pago del canal
 rendimiento mensual    = margen ajustado (%) × 30 ÷ días para recuperar
 ```
 
+- Los montos se redondean a centavos (el medio centavo sube); los **porcentajes se usan sin redondear** para calcular y comparar, y se muestran con 1 decimal (DEC-060).
+
 **Valores por canal:**
 
 | Valor | Amazon FBM | Venta local |
@@ -99,15 +101,15 @@ Todos los valores son iniciales y configurables.
 - Margen ajustado = 27.53 − 5.22 − 5.00 = **$17.31** → 17.31 ÷ 85.12 = **20.3%** → no alcanza nivel (RN-009).
 - Unidades: 300 al mes ÷ (9 + 1) = 30; en tienda hay 4; tope 3 → **3 unidades**.
 - Días de venta = mayor(7, 3 ÷ (30 ÷ 30) = 3) = **7**. Días para recuperar = 7 + 30 = **37**.
-- Rendimiento mensual = 20.3% × 30 ÷ 37 = **16.5%**.
+- Rendimiento mensual = 20.336% × 30 ÷ 37 = **16.5%**.
 
-**Ejemplo B — Sierra circular en Amazon**
+**Ejemplo B — Sierra circular en Amazon** (situación base: sin un comercio más barato)
 - Margen neto: 119 − 31.25 − 33.85 = **$53.90**.
 - Devoluciones: 119 × 7% × 50% = **$4.17**. Castigo: (119 − 109) × 50% = **$5.00**.
 - Margen ajustado = 53.90 − 4.17 − 5.00 = **$44.73** → 44.73 ÷ 31.25 = **143.1%** → nivel Muy recomendable (RN-009).
 - Unidades: 200 al mes ÷ (5 + 1) = 33; en tienda hay 3; tope 5 (ranking 6,000 y Muy recomendable) → **3 unidades**.
 - Días de venta = mayor(7, 3 ÷ (33 ÷ 30) = 2.7) = **7**. Recuperar = 7 + 30 = **37**.
-- Rendimiento mensual = 143.1% × 30 ÷ 37 = **116.0%**.
+- Rendimiento mensual = 143.136% × 30 ÷ 37 = **116.1%**.
 
 **Ejemplo C — Taladro en venta local**
 - Margen neto local (RN-001, ejemplo C): **$21.48**. Devoluciones: 0. Castigo: venta local $116.10 es menor que el mínimo de $139 → **0**.
@@ -163,5 +165,5 @@ Todos los valores son iniciales y configurables.
 | 2026-11-16 | Se cuenta hasta vender la última unidad | Jesús (propuesta de Claude) |
 
 ## 14. Revisión de consistencia
-- Última revisión: ver `revisiones/RN-005.md` (columna v2)
+- Última revisión: 2026-11-16 (v2) — RECHAZADO
 - Detalle: [revisiones/RN-005.md](/revisiones/RN-005.md)

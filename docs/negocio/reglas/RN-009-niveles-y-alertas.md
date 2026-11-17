@@ -39,7 +39,7 @@ Primero se revisa si la oferta se descarta o necesita revisión manual. Si no, s
 |---|---|
 | **DESCARTADA** | MERCADO YA BARATO (RN-003); producto que se evita siempre (RN-015); ningún canal viable o margen ajustado negativo en todos |
 | **SOLO REFERENCIA** | Descuento real de 20% a menos de 25% (RN-003): solo tablero |
-| **REVISIÓN MANUAL** (tablero, sin aviso, con su nivel calculado) | SIN HISTORIAL SUFICIENTE o COINCIDENCIA NO CONFIRMADA (RN-003, RN-013); demanda desconocida (RN-004); **vendedor externo** (DEC-137); riesgo marcado por RN-015 |
+| **REVISIÓN MANUAL** (tablero, sin aviso, con su nivel calculado) | SIN HISTORIAL SUFICIENTE o COINCIDENCIA NO CONFIRMADA (RN-003, RN-013); demanda desconocida en Amazon (RN-004) **cuando ningún otro canal tiene nivel**; **vendedor externo** (DEC-137); riesgo marcado por RN-015 |
 | **Nivel** | Todo lo demás |
 
 **4.2 Requisitos del canal** (para que un canal tenga nivel):
@@ -147,5 +147,5 @@ Todos los valores son iniciales y configurables.
 | 2026-11-16 | Competencia mucho más barata que Amazon baja un nivel | Experto (umbral propuesto en RN-002) |
 
 ## 14. Revisión de consistencia
-- Última revisión: ver `revisiones/RN-009.md` (columna v2)
+- Última revisión: 2026-11-16 (v2) — APROBADO CON OBSERVACIONES
 - Detalle: [revisiones/RN-009.md](/revisiones/RN-009.md)

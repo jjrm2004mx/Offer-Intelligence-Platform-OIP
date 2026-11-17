@@ -132,5 +132,5 @@ Todos los valores son **iniciales y configurables** (criterio general de la sesi
 | 2026-11-16 | Envío al cliente: incluido en el precio en Amazon; según acuerdo en venta local | Experto y Jesús |
 
 ## 14. Revisión de consistencia
-- Última revisión: ver `revisiones/RN-001.md` (columna v2)
+- Última revisión: 2026-11-16 (v2) — APROBADO CON OBSERVACIONES
 - Detalle: [revisiones/RN-001.md](/revisiones/RN-001.md)

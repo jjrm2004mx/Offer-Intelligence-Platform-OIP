@@ -141,5 +141,5 @@ Todos los valores son iniciales y configurables.
 | 2026-11-16 | Recoger en tienda: confianza de compra en línea, más el costo del viaje | Jesús (propuesta de Claude) |
 
 ## 14. Revisión de consistencia
-- Última revisión: ver `revisiones/RN-007.md` (columna v2)
+- Última revisión: 2026-11-16 (v2) — APROBADO CON OBSERVACIONES
 - Detalle: [revisiones/RN-007.md](/revisiones/RN-007.md)

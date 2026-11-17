@@ -180,5 +180,5 @@ Resultado:
 | 2026-11-16 | El cobro lo define Jesús; OIP muestra el ahorro | Jesús (propuesta de Claude) |
 
 ## 14. Revisión de consistencia
-- Última revisión: ver `revisiones/RN-011.md` (columna v2)
+- Última revisión: 2026-11-16 (v2) — RECHAZADO
 - Detalle: [revisiones/RN-011.md](/revisiones/RN-011.md)

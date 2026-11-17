@@ -159,5 +159,5 @@ Todos los valores son iniciales y configurables.
 | 2026-11-16 | Límite por cliente, devoluciones con ticket; franquicia aduanal fuera del modelo | Jesús (propuesta de Claude) |
 
 ## 14. Revisión de consistencia
-- Última revisión: ver `revisiones/RN-008.md` (columna v2)
+- Última revisión: 2026-11-16 (v2) — APROBADO CON OBSERVACIONES
 - Detalle: [revisiones/RN-008.md](/revisiones/RN-008.md)

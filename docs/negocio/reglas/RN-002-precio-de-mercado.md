@@ -88,9 +88,9 @@ Todos los valores son iniciales y configurables.
 - Precio de mercado hoy = mínimo(149, 152) = **$149**. Precio de venta esperado (Amazon) = **$149**. Mínimo de 60 días en Amazon: **$139**.
 - Competencia más barata: 149 < 149 × 0.85 = 126.65 → no.
 
-**Ejemplo B — Sierra circular con un comercio más barato**
-- Precio habitual: **$119** (mediana de 60 días, historial suficiente).
-- Hoy: Amazon, botón de compra $119; Target $99 (hace 10 h).
+**Ejemplo B — Sierra circular**
+- **Situación base** (la que siguen RN-005, RN-008, RN-009 A, RN-012 y RN-018): precio habitual **$119**; hoy Amazon, botón de compra $119, y ningún otro comercio más barato → precio de mercado hoy **$119**; competencia más barata: no.
+- **Variante con un comercio más barato** (RN-009, ejemplo F): Target la vende hoy a $99 (hace 10 h).
 - Precio de mercado hoy = **$99**. Precio de venta esperado (Amazon) = **$119**.
 - Competencia más barata: 99 < 119 × 0.85 = 101.15 → **sí** → en Amazon baja un nivel (RN-009, ejemplo F).
 - El descuento real se sigue midiendo contra el habitual de $119, no contra los $99 (DEC-147).
@@ -150,5 +150,5 @@ Todos los valores son iniciales y configurables.
 | 2026-11-16 | En liquidación de sucursal, el precio en línea de la misma cadena cuenta como precio de mercado | Experto |
 
 ## 14. Revisión de consistencia
-- Última revisión: ver `revisiones/RN-002.md` (columna v2)
+- Última revisión: 2026-11-16 (v2) — APROBADO CON OBSERVACIONES
 - Detalle: [revisiones/RN-002.md](/revisiones/RN-002.md)

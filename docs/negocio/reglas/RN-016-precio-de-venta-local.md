@@ -63,8 +63,8 @@ Todos los valores son iniciales y configurables.
 - Precio de mercado hoy $149 → 85% = $126.65. Techo $135 → precio pedido $126.65 → × 0.90 = **$113.99**.
 
 **Ejemplo C — Baterías Milwaukee (CASO-005)**
-- Jesús estima $110. Comparable en la zona: $99 (Vista); los de Houston no cuentan → techo **$99**.
-- Precio pedido $99 → precio de venta local = **$89.10**.
+- Jesús estima $110. Los comparables están en Vista (más de 40 km de la garita) y Houston: **no cuentan** → **sin comparables locales**, sin techo.
+- Precio pedido $110 → precio de venta local = 110 × 0.90 = **$99.00**, marcado "sin comparables locales".
 
 ## 6. ¿Qué información necesitamos?
 - Estimado de Jesús, si lo hay.
@@ -101,5 +101,5 @@ Todos los valores son iniciales y configurables.
 | 2026-11-11 | Venta local = OfferUp, Marketplace y venta personal juntas (DEC-151) | Jesús |
 
 ## 14. Revisión de consistencia
-- Última revisión: ver `revisiones/RN-016.md`
+- Última revisión: 2026-11-16 (v1) — RECHAZADO
 - Detalle: [revisiones/RN-016.md](/revisiones/RN-016.md)

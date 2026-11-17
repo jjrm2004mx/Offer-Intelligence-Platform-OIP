@@ -130,5 +130,5 @@ Todos los valores son iniciales y configurables.
 | 2026-11-16 | No hay otras señales de descuento engañoso por ahora | Experto |
 
 ## 14. Revisión de consistencia
-- Última revisión: ver `revisiones/RN-003.md` (columna v2)
+- Última revisión: 2026-11-16 (v2) — APROBADO CON OBSERVACIONES
 - Detalle: [revisiones/RN-003.md](/revisiones/RN-003.md)

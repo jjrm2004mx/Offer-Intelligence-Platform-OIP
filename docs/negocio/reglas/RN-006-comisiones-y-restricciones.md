@@ -140,5 +140,5 @@ Todos los valores son iniciales y configurables. La tabla se revisa cada 3 meses
 | 2026-11-16 | Material peligroso, caducidad, usados en categorías sensibles y juguetes en temporada | Jesús (propuesta de Claude) |
 
 ## 14. Revisión de consistencia
-- Última revisión: ver `revisiones/RN-006.md` (columna v2)
+- Última revisión: 2026-11-16 (v2) — APROBADO CON OBSERVACIONES
 - Detalle: [revisiones/RN-006.md](/revisiones/RN-006.md)

@@ -73,7 +73,7 @@ OIP se comporta como un visitante tranquilo: hace pocas consultas, con pausas en
 
 **4.5 Desde dónde salen las consultas**
 - **Operación y prueba de concepto:** toda consulta a un comercio sale desde el **servidor en la nube (VPS)**. Los comercios ven la dirección del servidor, no la de la casa.
-- **Modo desarrollo** (opcional, para probar en casa): desde la casa **solo** se consultan datos guardados, simulaciones o servicios que permiten la automatización (APIs). Home Depot, Walmart y Target **quedan bloqueados desde la casa** y ninguna opción los desbloquea.
+- **Modo desarrollo** (opcional, para probar en casa): desde la casa **solo** se consultan datos guardados, simulaciones o servicios que permiten la automatización (APIs). **Todos los comercios** que sigue OIP (DEC-132) **quedan bloqueados desde la casa** y ninguna opción los desbloquea.
 - El servidor en la nube **verifica su dirección antes de cada trabajo**. Si no es la autorizada, no consulta nada.
 
 ## 5. ¿Cómo sabremos que funciona? — Ejemplos con números
@@ -152,5 +152,5 @@ OIP se comporta como un visitante tranquilo: hace pocas consultas, con pausas en
 | 2026-11-16 | El cliente pasa primero; antes de salir a tienda siempre se re-consulta | Jesús (propuesta de Claude) |
 
 ## 14. Revisión de consistencia
-- Última revisión: ver `revisiones/RN-010.md` (columna v2)
+- Última revisión: 2026-11-16 (v2) — APROBADO CON OBSERVACIONES
 - Detalle: [revisiones/RN-010.md](/revisiones/RN-010.md)

@@ -104,5 +104,5 @@ Lo más seguro es el **código de barras** del producto (UPC/EAN/GTIN). Si no ha
 | 2026-11-11 | Sin código, la comparación queda "no confirmada" (DEC-134) | Jesús |
 
 ## 14. Revisión de consistencia
-- Última revisión: ver `revisiones/RN-013.md`
+- Última revisión: 2026-11-16 (v1) — RECHAZADO
 - Detalle: [revisiones/RN-013.md](/revisiones/RN-013.md)

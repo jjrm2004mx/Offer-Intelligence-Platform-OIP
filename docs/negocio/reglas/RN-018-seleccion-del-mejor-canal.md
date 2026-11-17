@@ -94,5 +94,5 @@ Se calculan los dos canales (Amazon y venta local). Los que no son viables se de
 | 2026-11-11 | Inc. 1: Amazon FBM y venta local (DEC-151) | Jesús |
 
 ## 14. Revisión de consistencia
-- Última revisión: ver `revisiones/RN-018.md`
+- Última revisión: 2026-11-16 (v1) — RECHAZADO
 - Detalle: [revisiones/RN-018.md](/revisiones/RN-018.md)
