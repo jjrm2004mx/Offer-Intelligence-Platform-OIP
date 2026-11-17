@@ -210,6 +210,7 @@ Fuente: `docs/negocio/sesiones/sesion-2-respuestas.md`. Bloques 1 a 3 respondido
 | DEC-169 | **Identificación:** confirman el producto el código de barras **o** el modelo del fabricante + marca con el mismo contenido; solo por nombre queda "no confirmada". Precisa DEC-134 | VIGENTE (Jesús, 2026-11-16) | Resuelve RN-013 D-001 | RN-003, RN-011, RN-013 |
 | DEC-170 | **Mejor canal:** se elige por **ganancia total del lote**; si la diferencia es menor de 10%, desempata el rendimiento mensual | VIGENTE (Jesús, 2026-11-16); 10% PROPUESTA | Resuelve RN-018 D-001 y D-002 | RN-008, RN-018 |
 | DEC-171 | **Zona de comparables de la venta local:** Tijuana y todo el condado de San Diego, igual en RN-014 y RN-016 | VIGENTE (Jesús, 2026-11-16) | Resuelve RN-016 D-001 y RN-014 D-001 | RN-014, RN-016 |
+| DEC-172 | **Agentes de OIP: arrancar con 5** — `oip-revisor-rn` y `oip-inspector` (existentes), `oip-analista` (propuesta, diseño y tareas), `oip-developer` y `oip-tester` (pruebas y seguridad). **`oip-arquitecto` se crea como sexto la primera vez que un REQ toque un ADR** (previsto: REQ-2026-0003). No se crean `oip-negocio`, `oip-techlead`, `oip-seguridad` ni `oip-documentador`. Se conserva el aislamiento de revisor, inspector y tester respecto de quien redacta | VIGENTE (Jesús, 2026-11-16) | Proyecto de una persona: un agente aparte solo si aporta independencia o instrucciones muy distintas; la regla de la IP de casa queda además como gate automático | `docs/proceso/flujo-general.md` §3 y §5; Etapa 3 |
 
 ## 10. Pendientes abiertos
 
