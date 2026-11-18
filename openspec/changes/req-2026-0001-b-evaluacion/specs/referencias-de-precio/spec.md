@@ -7,7 +7,7 @@ Referencias de precio de la parte B (precio habitual, precio de mercado hoy, mí
 ## ADDED Requirements
 
 ### Requirement: Sin historial suficiente no hay descuento real
-Sin historial suficiente (5 observaciones en 3 días distintos, en 60 días, contando una por publicación y día) no hay precio habitual: el sistema SHALL dejar la oferta sin descuento real ni `nivel_calculado`, calcular la calidad del precio con los datos que haya y dar `REVISION_MANUAL` con `SIN HISTORIAL SUFICIENTE`. Sin historial, la calidad no pasa de "Precio competitivo" (RN-002 v2, RN-003 v2, RN-012 v1; S-22).
+Sin historial suficiente (5 observaciones en 3 días distintos, en 60 días, contando una por publicación y día) no hay precio habitual: el sistema SHALL dejar la oferta sin descuento real ni `nivel_calculado`, calcular la calidad del precio con los datos que haya y agregar el motivo `SIN HISTORIAL SUFICIENTE`, que lleva a `REVISION_MANUAL` según la precedencia de §3.2.4. Sin historial, la calidad no pasa de "Precio competitivo" (RN-002 v2, RN-003 v2, RN-012 v1; S-22).
 
 #### Scenario: B6 — Sin historial suficiente
 - **GIVEN** un producto con 3 observaciones en 2 días, MSRP $199, oferta $169, y hoy otros 3 comercios a $179, $185 y $189

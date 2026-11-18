@@ -108,6 +108,7 @@ Los de la parte B (REQ §10 y §12). Los que no tienen escenario los resuelve `o
 | RNF-8 | Secretos como `podman secret`; nunca en el código, los logs ni los registros | §10 | Sin escenario |
 | RNF-9 | Sin cuenta de vendedor: comisión, envío y restricciones de Amazon son **estimados** y así se marcan (`MARGEN ESTIMADO`, `EMPAQUE POR CONFIRMAR`, §3.2.3) | §10; §3.2.3 | Sin escenario propio (el REQ no repite esas marcas en los escenarios) |
 | RNF-10 | Stack sin cambios: Python/FastAPI, PostgreSQL + TimescaleDB, Rocky Linux + Podman (DEC-020, DEC-021, DEC-025, DEC-118) | §10 | Sin escenario |
+| RNF-11 | **Datos de clientes:** solo alias, sin datos personales (arquitectura R-20). En la parte B aplica al modelo y a la validación de la captura `client_request` (alias del cliente) | §10; §3.2.6 punto 3; §6 (capturas, punto 2); §3.4 punto 1 | Sin escenario |
 
 El REQ no fija volúmenes ni reintentos para la parte B (los reintentos de §12 son de los avisos, parte C).
 
@@ -139,4 +140,5 @@ El REQ no fija volúmenes ni reintentos para la parte B (los reintentos de §12 
    - **B28** (sin precio de venta en Amazon) en `canales-y-margen` y no en `referencias-de-precio`, porque lo que verifica es el cierre del canal y la venta local.
    - **B3, B11, B18 y B24** en `resultado-y-reevaluacion`, porque su conclusión es el motivo principal y el resultado, aunque recorren referencias y canales.
 2. **B27 no da el resultado de la evaluación ni la categoría de su segundo caso.** Dice "Una categoría de la tabla sin tasa propia ni asignada → Amazon cerrado, `TASA DE DEVOLUCIÓN DESCONOCIDA`" sin nombrar la categoría (en la tabla de §5 no tienen tasa `watches`, `jewelry` y `toys`), y no dice el resultado final. La spec copia B27 tal cual; la categoría del dato de prueba la elige quien escriba la prueba, de la tabla de §5. ¿Basta así, o el REQ debe fijarla?
-3. **RNF sin escenario** (RNF-1, RNF-2, RNF-3, RNF-6, RNF-8 a RNF-10): quedan en esta propuesta, sin escenarios inventados, para que `oip-disenador` los resuelva en `design.md`.
+3. **RNF sin escenario** (RNF-1, RNF-2, RNF-3, RNF-6, RNF-8 a RNF-11): quedan en esta propuesta, sin escenarios inventados, para que `oip-disenador` los resuelva en `design.md`.
+4. **Notas de la solicitud del cliente.** §3.4 punto 1 incluye **notas** (texto libre) en la solicitud, pero la tabla de `client_request` de §6 no la lista entre los obligatorios y el REQ no dice cómo se evita que traiga datos personales (§10, R-20). Si `design.md` incluye `notas` en el modelo de `client_request`, ¿basta con documentar la regla de RNF-11, o el REQ debe fijar un control?
