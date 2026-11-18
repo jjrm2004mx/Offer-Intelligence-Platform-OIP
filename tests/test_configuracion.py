@@ -169,6 +169,8 @@ def test_produccion_toma_de_las_rn_los_guiones_del_req():
     assert categorias[Categoria.WATCHES].return_rate.rate_pct == Decimal("12")  # RN-005
     assert categorias[Categoria.JEWELRY].return_rate.rate_pct == Decimal("11")  # RN-005
     assert categorias[Categoria.TOYS].return_rate.rate_pct == Decimal("5")  # RN-005
+    # RN-006 §4.1 no da comisión de "Hogar y cocina": sigue ausente (COMISIÓN DESCONOCIDA).
+    assert categorias[Categoria.HOME_KITCHEN].commission is None
 
 
 # --- Objeto inmutable con huella estable (2.1) -----------------------------------------
@@ -264,8 +266,9 @@ def test_faltan_versiones_de_rn():
         ("general.timezone", "Marte/Olimpo"),
         ("categories.tools.initial_local_demand", "regular"),
         ("categories.tools.commission.type", "por_pieza"),  # el error va en commission
-        ("retailers.homedepot.domains", ["https://homedepot.com/"]),  # dominio con esquema
-        ("retailers.homedepot.domains", "homedepot.com"),  # texto en vez de lista
+        # Dominios sintéticos: los de comercios solo van en config/ y tests/fixtures/.
+        ("retailers.homedepot.domains", ["https://example.com/"]),  # dominio con esquema
+        ("retailers.homedepot.domains", "example.com"),  # texto en vez de lista
         ("taxes.locations.chula_vista.effective_date", "2026-01-01"),  # texto, no fecha
         ("lists.toy_season.start", "13-01"),
         ("levels.thresholds.VIGILAR.alert", "telegram"),

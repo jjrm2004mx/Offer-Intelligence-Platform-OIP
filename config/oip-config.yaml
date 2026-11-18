@@ -76,7 +76,7 @@ categories:                           # PAR-04 [REQ §5 tabla por category; RN-0
     initial_local_demand: medium
     provenance_risk: false                                           # [RN-015 §4]
   home_kitchen:
-    commission: {type: flat, rate_pct: 15, min_per_unit: 0.30}       # [RN ← "—"] RN-006 §4.1 "Hogar e iluminación 15%". [REVISAR] ¿"Hogar" cubre home_kitchen?
+    # commission                                                     # [AUSENTE] RN-006 §4.1 no tiene fila "Hogar y cocina" (su "Hogar e iluminación" es home_lighting, arquitectura §8) → COMISIÓN DESCONOCIDA. [REVISAR]
     return_rate: {source: own, rate_pct: 8}                          # [REQ §5]
     return_loss_pct: 50                                              # [REQ §5]
     amazon_restricted: false                                         # [RN-006 §4.3]
@@ -238,7 +238,7 @@ amazon:                               # PAR-11
     boosted_units: 5
     boosted_below_rank: 10000
     boosted_levels: [COMPRAR_YA, MUY_RECOMENDABLE]
-  max_units_without_monthly_sales: 2  # [design.md PAR-11; T14] máximo 2 unidades sin ventas al mes, ESTIMADO (unidades). [REVISAR]
+  max_units_without_monthly_sales: 2  # [REQ §11; B12] sin ventas al mes: máximo 2 unidades, ESTIMADO (unidades)
   other_selling_costs: 0.00           # [RN-001 §4] otros costos de venta
 
 local_sale:                           # PAR-12
