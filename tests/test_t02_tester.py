@@ -679,3 +679,274 @@ def test_el_codigo_no_trae_valores_de_req_5():
     codigo = CODIGO.read_text(encoding="utf-8")
     for valor in ("7.75", "8.75", "0.30", "9.50", "168440", "168,440", "33688021", "1500", "0.5"):
         assert valor not in codigo, valor
+
+
+# --- Segunda pasada: D-1, D-2 y endurecimiento aprobado por Jesús el 2026-11-18 ---------
+# Reglas del endurecimiento (decisión de Jesús del 2026-11-18, en el PR #32):
+# 1. enteros con cero inicial (octal), con ':' (sexagesimal), hexadecimales o binarios se
+#    rechazan; 0, 0.30, 0.5, 1_000 y los decimales normales siguen cargando;
+# 2. zona horaria solo Región/Ciudad IANA que exista;
+# 3. version no vacía, en una línea y sin espacios al inicio ni al final;
+# 4. un dominio no puede ser una IP (último segmento con letras), en comercios y plataformas;
+# 5. exactamente un comercio con amazon_listing: true (error en retailers).
+# Extra: los errores de las validaciones cruzadas salen con su ruta real.
+
+
+def _errores_texto(texto: str) -> tuple[str, ...]:
+    with pytest.raises(ErrorConfiguracion) as info:
+        cargar_configuracion_texto(texto)
+    return info.value.errores
+
+
+def _base_con(*cambios: tuple[str, str]) -> str:
+    texto = BASE.read_text(encoding="utf-8")
+    for original, nuevo in cambios:
+        assert original in texto, original
+        texto = texto.replace(original, nuevo, 1)
+    return texto
+
+
+@pytest.mark.parametrize("categoria", [c.value for c in Categoria])
+def test_d1_categoria_ausente_rechaza_con_su_ruta_y_falta_el_parametro(categoria):
+    errores = _errores(_sin(_base(), f"categories.{categoria}"))
+    assert f"categories.{categoria}: falta el parámetro" in errores, errores
+    assert not any(e.startswith("(archivo)") for e in errores), errores
+
+
+def test_d1_faltan_varias_categorias_se_nombran_todas():
+    datos = _sin(_sin(_base(), "categories.toys"), "categories.jewelry")
+    errores = _errores(datos)
+    assert "categories.toys: falta el parámetro" in errores, errores
+    assert "categories.jewelry: falta el parámetro" in errores, errores
+
+
+def test_d2_error_en_el_minimo_por_unidad_de_un_tramo_conserva_la_ruta():
+    # La ruta de la variante tiers no pierde el campo tiers ni el de la comisión.
+    datos = _base()
+    comision = datos["categories"]["watches"]["commission"]
+    assert comision["type"] == "tiers"
+    datos = _con(datos, "categories.watches.commission.tiers", [{"x": 1}])
+    errores = _errores(datos)
+    assert any(e.startswith("categories.watches.commission.tiers.0") for e in errores), errores
+
+
+# 1. Números de YAML 1.1 que cambian en silencio.
+@pytest.mark.parametrize(
+    "valor",
+    [
+        "060",
+        "-060",
+        "+060",
+        "00",
+        "0_1",
+        "0x3C",
+        "0X3C",
+        "0b11",
+        "0o74",
+        "1:00",
+        "1:30",
+        "-1:30",
+        "190:20:30",
+    ],
+)
+def test_entero_octal_sexagesimal_hex_o_binario_rechaza_con_el_parametro(valor):
+    errores = _errores_texto(_base_con(("usual_window_days: 60", f"usual_window_days: {valor}")))
+    assert any("usual_window_days" in e for e in errores), errores
+
+
+@pytest.mark.parametrize("valor", ["1:30.5", "-1:30.0", "1:00.00"])
+def test_decimal_sexagesimal_rechaza_con_el_parametro(valor):
+    errores = _errores_texto(_base_con(("fallback_rate_pct: 7.75", f"fallback_rate_pct: {valor}")))
+    assert any("fallback_rate_pct" in e for e in errores), errores
+
+
+def test_cero_inicial_dentro_de_una_lista_de_mapas_rechaza():
+    errores = _errores_texto(_base_con(("- {max_kg: 3, shipping:", "- {max_kg: 03, shipping:")))
+    assert any("max_kg" in e for e in errores), errores
+
+
+@pytest.mark.parametrize(
+    ("ruta_yaml", "valor", "atributo", "esperado"),
+    [
+        ("payment_days: 0", "payment_days: -0", ("local_sale", "payment_days"), 0),
+        ("payment_days: 0", "payment_days: 0", ("local_sale", "payment_days"), 0),
+        (
+            "usual_window_days: 60",
+            "usual_window_days: 1_000",
+            ("price_reference", "usual_window_days"),
+            1000,
+        ),
+        (
+            "usual_window_days: 60",
+            "usual_window_days: +60",
+            ("price_reference", "usual_window_days"),
+            60,
+        ),
+        (
+            "fallback_rate_pct: 7.75",
+            "fallback_rate_pct: 0.30",
+            ("taxes", "fallback_rate_pct"),
+            D("0.30"),
+        ),
+        (
+            "fallback_rate_pct: 7.75",
+            "fallback_rate_pct: 0.5",
+            ("taxes", "fallback_rate_pct"),
+            D("0.5"),
+        ),
+        (
+            "fallback_rate_pct: 7.75",
+            "fallback_rate_pct: 7.75",
+            ("taxes", "fallback_rate_pct"),
+            D("7.75"),
+        ),
+        (
+            "fallback_rate_pct: 7.75",
+            "fallback_rate_pct: 1_0.25",
+            ("taxes", "fallback_rate_pct"),
+            D("10.25"),
+        ),
+    ],
+)
+def test_numeros_decimales_normales_siguen_cargando_con_su_valor_exacto(
+    ruta_yaml, valor, atributo, esperado
+):
+    cargada = cargar_configuracion_texto(_base_con((ruta_yaml, valor)))
+    obtenido = getattr(getattr(cargada.contenido, atributo[0]), atributo[1])
+    assert obtenido == esperado
+    assert type(obtenido) is type(esperado)
+    if isinstance(esperado, D):
+        assert str(obtenido) == str(esperado)
+
+
+# 2. Zona horaria.
+@pytest.mark.parametrize(
+    "zona",
+    [
+        "America/Tijuana",
+        "America/Argentina/Salta",
+        "America/Indiana/Indianapolis",
+        "Europe/Madrid",
+        "Pacific/Honolulu",
+    ],
+)
+def test_zona_region_ciudad_existente_carga(zona):
+    cargada = cargar_configuracion_texto(
+        _base_con(("timezone: America/Tijuana", f"timezone: {zona}"))
+    )
+    assert cargada.contenido.general.timezone == zona
+
+
+@pytest.mark.parametrize(
+    "zona",
+    [
+        "localtime",
+        "UTC",
+        "GMT",
+        "Etc/UTC",
+        "Etc/GMT+8",
+        "US/Pacific",
+        "Mexico/BajaNorte",
+        "EST5EDT",
+        "posixrules",
+        "right/America/Tijuana",
+        "America/Nowhere",
+        "america/Tijuana",
+        "America/Tijuana/",
+        "America/../Etc/UTC",
+        "'America/Tijuana '",
+    ],
+)
+def test_zona_fuera_de_region_ciudad_o_inexistente_rechaza(zona):
+    errores = _errores_texto(_base_con(("timezone: America/Tijuana", f"timezone: {zona}")))
+    assert any(e.startswith("general.timezone") for e in errores), errores
+
+
+# 3. version.
+@pytest.mark.parametrize(
+    "version",
+    ['""', '" "', '" a"', '"a "', '"\\ta"', '"a\\t"', '"a\\nb"', '"a\\n"', '"a\\u00a0"'],
+)
+def test_version_vacia_con_espacios_en_extremos_o_salto_de_linea_rechaza(version):
+    errores = _errores_texto(_base_con(('version: "escenarios-base-1"', f"version: {version}")))
+    assert any(e.startswith("version:") for e in errores), errores
+
+
+@pytest.mark.parametrize(
+    "version",
+    ['"a\\rb"', '"a\\vb"', '"a\\fb"', '"a\\Nb"', '"a\\Lb"', '"a\\Pb"'],
+    ids=["CR", "VT", "FF", "NEL", "LS", "PS"],
+)
+def test_version_con_otro_separador_de_linea_rechaza(version):
+    """La versión va en una línea (decisión de Jesús del 2026-11-18): un retorno de carro o
+    un separador de línea Unicode la parte en dos (``str.splitlines``) igual que ``\\n``."""
+    errores = _errores_texto(_base_con(('version: "escenarios-base-1"', f"version: {version}")))
+    assert any(e.startswith("version:") for e in errores), errores
+
+
+@pytest.mark.parametrize("version", ["x", "escenarios-base-1", "2026-11-18.1", "prueba 2"])
+def test_version_en_una_linea_sin_espacios_en_extremos_carga(version):
+    cargada = cargar_configuracion_texto(
+        _base_con(('version: "escenarios-base-1"', f'version: "{version}"'))
+    )
+    assert cargada.version == version
+
+
+# 4. Dominio que no es IP (sin dominios de comercios en las pruebas: se cambia el dato).
+@pytest.mark.parametrize("dominio", ["10.0.0.1", "192.168.1.254", "example.123"])
+@pytest.mark.parametrize(
+    "ruta",
+    [
+        "retailers.walmart.domains",
+        "private_sellers.platforms.offerup.domains",
+        "private_sellers.platforms.facebook_marketplace.domains",
+    ],
+    ids=["comercio", "plataforma", "plataforma-con-prefijo"],
+)
+def test_dominio_ip_rechaza_en_comercios_y_plataformas(dominio, ruta):
+    errores = _errores(_con(_base(), ruta, ["example.com", dominio]))
+    assert any(e.startswith(f"{ruta}.1") for e in errores), errores
+
+
+@pytest.mark.parametrize("dominio", ["example.com", "shop.example.org", "example.c0m"])
+def test_dominio_con_nombre_carga(dominio):
+    datos = _con(_base(), "private_sellers.platforms.offerup.domains", [dominio])
+    cargada = cargar_configuracion_texto(_texto(datos))
+    assert tuple(cargada.contenido.private_sellers.platforms["offerup"].domains) == (dominio,)
+
+
+# 5. Exactamente una ficha de Amazon.
+def test_sin_ficha_de_amazon_rechaza_en_retailers():
+    errores = _errores(_con(_base(), "retailers.amazon.amazon_listing", False))
+    assert any(e.startswith("retailers: ") and "amazon_listing" in e for e in errores), errores
+    assert not any(e.startswith("(archivo)") for e in errores), errores
+
+
+def test_dos_fichas_de_amazon_rechaza_en_retailers_y_las_nombra():
+    errores = _errores(_con(_base(), "retailers.walmart.amazon_listing", True))
+    [error] = [e for e in errores if e.startswith("retailers: ")]
+    assert "walmart" in error and "amazon" in error, error
+
+
+def test_los_dos_archivos_del_repo_tienen_una_sola_ficha_de_amazon():
+    for archivo in (BASE, PRODUCCION):
+        retailers = cargar_configuracion(archivo).contenido.retailers
+        assert [c for c, v in retailers.items() if v.amazon_listing] == ["amazon"], archivo
+
+
+# Extra: validaciones cruzadas con su ruta real.
+def test_validaciones_cruzadas_salen_con_su_ruta_real_y_juntas():
+    errores = _errores_texto(
+        _base_con(
+            ("hd-chula-vista: {retailer: homedepot}", "hd-chula-vista: {retailer: zz}"),
+            (
+                "{source: assigned, from_category: electronics}",
+                "{source: assigned, from_category: video_games}",
+            ),
+        )
+    )
+    assert "stores.hd-chula-vista.retailer: comercio desconocido" in errores, errores
+    assert (
+        "categories.video_game_consoles.return_rate.from_category: video_games no tiene tasa propia"
+    ) in errores, errores
+    assert not any(e.startswith("(archivo)") for e in errores), errores
