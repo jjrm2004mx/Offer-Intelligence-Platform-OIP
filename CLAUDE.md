@@ -67,4 +67,4 @@ En Windows usa **`py -3`**: `python3` abre la Microsoft Store (DEC-196).
 
 ## 7. Agentes
 
-`oip-revisor-rn` (Etapa 1), `oip-inspector` (Etapa 2), `oip-analista`, `oip-developer` y `oip-tester` (Etapa 4), en `.claude/agents/`. Cada uno trae su revisión previa, su estado final y sus límites.
+`oip-revisor-rn` (Etapa 1), `oip-inspector` (Etapa 2), `oip-analista` y `oip-disenador` (propuesta, Etapa 4, DEC-229), `oip-developer` y `oip-tester` (Etapa 4), en `.claude/agents/`. Cada uno trae su revisión previa, su estado final y sus límites.

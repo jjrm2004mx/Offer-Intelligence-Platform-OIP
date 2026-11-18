@@ -32,13 +32,15 @@ rules:
   proposal:
     - "Cita Issue: #N, la versión del REQ y la parte (A, B, C o D)."
     - "Copia el alcance del REQ sin ampliarlo; lo que falte va a Preguntas."
+    - "Lista los requisitos no funcionales de la parte con su sección del REQ (DEC-229)."
   specs:
     - "Cada requisito cita su RN con versión, y su supuesto S-xx si aplica."
     - "Cada escenario conserva el ID, los datos y los resultados del REQ."
     - "Cada variante (a), (b)... del REQ es un escenario propio con su ID y letra."
   design:
-    - "Obligatorio en OIP. Contenido mínimo en .claude/agents/oip-analista.md (DEC-228)."
+    - "Obligatorio en OIP. Lo escribe oip-disenador; contenido mínimo en .claude/agents/oip-disenador.md (DEC-228, DEC-229)."
     - "Incluye la tabla de ADR con respeta / toca."
   tasks:
     - "1 tarea = 1 PR, de 4 a 8 h, con escenarios, dependencias, horas y Definition of Done (DEC-228)."
+    - "Cada tarea con comportamientos esperados y guía de implementación; hitos al inicio (DEC-229)."
     - "Termina con la matriz de cobertura: escenario y variante, capacidad, requisito, tarea, RN."

@@ -14,7 +14,7 @@ Herramienta para buscar productos en distintos comercios, con **dos funcionalida
 | `docs/negocio/` | Reglas de negocio en lenguaje llano (publicadas para revisión del experto): `reglas/` RN-001 a RN-011, `revisiones/` revisión de consistencia de cada RN y preguntas consolidadas, `casos/` casos reales que sirven como escenarios de prueba (CASO-001 a CASO-006), `analisis/` análisis del modelo de negocio (ANL-001, ANL-002), `glosario.md`, `plantilla-rn.md`. Sitio: https://oip-negocio.vercel.app |
 | `docs/arquitectura/` | Documento de arquitectura técnica: `arquitectura-tecnica.md` (vigente, v2.0). Las versiones anteriores están enlazadas al inicio del documento |
 | `docs/proceso/` | Cómo se trabaja: `flujo-general.md`, `flujo-negocio-a-requerimiento.md` y `registro-de-decisiones.md` (todas las decisiones tomadas, DEC-xxx) |
-| `.claude/` | Agentes de desarrollo (Claude Code): `oip-revisor-rn`, `oip-inspector`, `oip-analista`, `oip-developer` y `oip-tester`; skills de OpenSpec y `settings.json` con reglas `deny` |
+| `.claude/` | Agentes de desarrollo (Claude Code): `oip-revisor-rn`, `oip-inspector`, `oip-analista`, `oip-disenador`, `oip-developer` y `oip-tester`; skills de OpenSpec y `settings.json` con reglas `deny` |
 | `CLAUDE.md` | Reglas obligatorias para Claude Code en este repo |
 | `src/`, `tests/` | Código y pruebas del Core (Python; `pyproject.toml` con pytest y ruff) |
 | `scripts/`, `.githooks/` | Hook de commits (`git config core.hooksPath .githooks`) y gate de egress |

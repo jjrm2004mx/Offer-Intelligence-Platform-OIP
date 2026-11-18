@@ -78,7 +78,7 @@ Redactar REQ (issue) → visto bueno de Jesús → oip-inspector → ¿dictamen?
 | Estructura del repo (`src/`, `tests/`, `deploy/`) | Ordenar el código |
 | `openspec init` con la arquitectura como contexto | Que cada propuesta y diseño respete las decisiones técnicas |
 | `CLAUDE.md` | Reglas obligatorias para Claude: la cadena de trazabilidad, el stack y la seguridad |
-| Agentes restantes en `.claude/agents/`: `oip-analista`, `oip-developer`, `oip-tester` (DEC-172) | Cada paso de la Etapa 4 con su responsable |
+| Agentes restantes en `.claude/agents/`: `oip-analista`, `oip-disenador`, `oip-developer`, `oip-tester` (DEC-172, DEC-229) | Cada paso de la Etapa 4 con su responsable |
 | Comandos `/oip:req`, `/oip:start`, `/oip:pr` | Mover el trabajo entre eslabones |
 | Hook de commits | Bloquear commits sin `Refs: #N` y `Change: <id>` |
 | Gates (GitHub Actions) | Pruebas y cobertura, calidad (ruff), seguridad (gitleaks, pip-audit, bandit, regla de egress), trazabilidad |
@@ -87,8 +87,9 @@ Redactar REQ (issue) → visto bueno de Jesús → oip-inspector → ¿dictamen?
 ### Etapa 4 — Construcción, por cada REQ aprobado (con OpenSpec)
 
 ```
-oip-analista     propose         proposal.md + specs + design.md + tasks.md             ◄── GATE: Jesús aprueba propuesta
-                                 (escenarios = criterios del REQ; 1 tarea = 1 PR)
+oip-analista     propose         proposal.md + specs (escenarios = criterios del REQ), rama sin PR
+oip-disenador    propose         revisa las specs → design.md + tasks.md + matriz + PR   ◄── GATE: Jesús aprueba propuesta
+                                 (si las specs fallan: SPECS DEFECT → oip-analista; 1 tarea = 1 PR; DEC-229)
 [oip-arquitecto]                 solo si el REQ toca un ADR: revisa design.md contra los ADR (DEC-172)
 oip-developer    apply-change    rama feat/<N>-<id> + código + PR
 oip-tester                       pruebas por escenario y revisión de seguridad (egress/IP, URLs,
@@ -152,11 +153,12 @@ RN-003 (v2) ──► REQ-2026-0001 (#2) ──► [INSPECCIÓN] (#3) ──► 
 |---|---|---|---|
 | `oip-revisor-rn` | 1 | Revisa la consistencia de las RN y redacta preguntas para el experto | ✅ Listo |
 | `oip-inspector` | 2 | Inspección formal del REQ (14 criterios) | ✅ Listo |
-| `oip-analista` | 4 | `proposal.md`, specs, `design.md` y `tasks.md` (absorbe analista, arquitecto y techlead) | ✅ Listo (Etapa 3) |
+| `oip-analista` | 4 | `proposal.md` y specs; sube la rama sin PR (DEC-229) | ✅ Listo (Etapa 3) |
+| `oip-disenador` | 4 | Revisa las specs; `design.md`, `tasks.md`, matriz y PR para G3 (absorbe arquitecto y techlead, DEC-229) | ✅ Listo |
 | `oip-developer` | 4 | Implementación con la skill `openspec-apply-change` | ✅ Listo (Etapa 3) |
 | `oip-tester` | 4 | Pruebas por escenario y revisión de seguridad (absorbe seguridad) | ✅ Listo (Etapa 3) |
 | `oip-arquitecto` | 4 | Revisión independiente de `design.md` contra los ADR | **Se crea la primera vez que un REQ toque un ADR** (previsto: REQ-2026-0003, conectores) |
-| ~~`oip-negocio`~~, ~~`oip-techlead`~~, ~~`oip-seguridad`~~, ~~`oip-documentador`~~ | — | Absorbidos: la RN se redacta en el chat; `tasks.md` lo hace el analista; seguridad, el tester y los gates; el cierre, la skill `openspec-archive-change` | No se crean (DEC-172) |
+| ~~`oip-negocio`~~, ~~`oip-techlead`~~, ~~`oip-seguridad`~~, ~~`oip-documentador`~~ | — | Absorbidos: la RN se redacta en el chat; `tasks.md` lo hace `oip-disenador`; seguridad, el tester y los gates; el cierre, la skill `openspec-archive-change` | No se crean (DEC-172) |
 | **OpenSpec** | 4–5 | Especificación técnica por cambio (el plano). Versión 2.1.0, con skills en lugar de comandos `/opsx:*` (DEC-192) | ✅ Instalado (Etapa 3 mínima) |
 | **GitHub Issues** | 2–5 | REQ, inspecciones, trazas | ✅ En uso |
 | **GitHub Project** | Todas | Tablero de etapas (el semáforo) | Lo crea Jesús |
@@ -231,7 +233,7 @@ RN-003 (v2) ──► REQ-2026-0001 (#2) ──► [INSPECCIÓN] (#3) ──► 
 | 2. Requerimiento | REQ-2026-0001 (#2) **v2.9**; reinspección v11 (#3) **APROBADO → CONTINUAR**, sin defectos abiertos (D-001 a D-055 corregidos). #2 y #3 en la columna "Análisis" del Project |
 | — | Arquitectura **v2.2** (2026-11-17, PR #25): v2.0 consolidada (DEC-191), contrato de ingesta 3.0 (v2.1, PR #24) y 3.1, redondeo, nivel del aviso y capturas de Jesús (DEC-221 a DEC-223) |
 | 3. Arranque técnico | **Etapa 3 mínima hecha (2026-11-17, EXT-001):** los 5 agentes (PR #18), OpenSpec 2.1.0, `CLAUDE.md`, `src/` y `tests/`, `pyproject.toml` (pytest y ruff), hook de commits, gates de GitHub Actions y reglas `deny` (DEC-192 a DEC-196). Pendiente para la Etapa 3 completa: gitleaks y umbral de cobertura, comandos `/oip:*`, `deploy/` y separación Core / Worker (DEC-173, antes de la primera línea del Worker) |
-| 4–6 | No iniciado. Siguiente: **análisis de la parte B** con `oip-analista` (G3), con el criterio de DEC-228: un cambio de OpenSpec con cinco capacidades y tareas de 4 a 8 h |
+| 4–6 | No iniciado. Siguiente: **análisis de la parte B** con `oip-analista` y `oip-disenador` (G3, DEC-229), con el criterio de DEC-228: un cambio de OpenSpec con cinco capacidades y tareas de 4 a 8 h |
 | Tablero | GitHub Project "OIP" creado (Requerimiento → Inspección → Análisis → Desarrollo → Hecho) |
 | Infraestructura | Vercel ✅ · VPS por contratar (2 vCPU / 4 GB para arrancar, DEC-127) · Keepa diferido (DEC-124) |
 
@@ -274,7 +276,8 @@ Antes de cada actividad, Claude avisa cuál toca para ajustar el selector. Fable
 | Redacción del REQ (v2 en adelante) | Opus (Fable 5.2 si sigue disponible) | **Alto** | Escenarios con números que deben cuadrar con todas las reglas |
 | Inspección del REQ (`oip-inspector`) | Opus | **Alto** | Contexto aislado; es el gate formal |
 | Arranque técnico (Etapa 3) | Opus | Medio | Mucha configuración; las instrucciones de los agentes nuevos piden cuidado |
-| Propuesta OpenSpec (`oip-analista`) | Opus | Alto | Traduce criterios del REQ a escenarios y diseño |
+| Specs (`oip-analista`) | Opus | Alto | Traduce criterios del REQ a escenarios sin perder un número |
+| Diseño y tareas (`oip-disenador`) | Opus | Alto | Revisa las specs y decide el cómo; un error aquí se arrastra a todas las tareas |
 | Codificación (`oip-developer`) | Sonnet u Opus | Medio | Tareas acotadas (1 tarea = 1 PR) con pruebas por escenario |
 | Pruebas (`oip-tester`) | Sonnet | Medio | Mecánico una vez que los escenarios están bien escritos |
 | Capturas, preguntas y ajustes pequeños | Cualquiera | Bajo | Transcribir y ordenar |

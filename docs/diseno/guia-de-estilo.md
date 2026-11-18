@@ -1,6 +1,6 @@
 # Guía de estilo — OIP
 
-**Qué es:** la guía de estilo que pide `flujo-general.md` §12.1. La citan `oip-analista` en cada propuesta con interfaz, `oip-developer` al construir y `oip-tester` al verificar.
+**Qué es:** la guía de estilo que pide `flujo-general.md` §12.1. La citan `oip-analista` y `oip-disenador` en cada propuesta con interfaz, `oip-developer` al construir y `oip-tester` al verificar.
 **Versión:** 1.0 — 2026-11-16 · **Estado:** VIGENTE (aprobada por Jesús en DEC-184 a DEC-190; las "Propuesta" de este documento quedaron decididas allí)
 **Origen:** el sistema visual de `prometheus-automation-shopper`. OIP es de la **misma familia**: misma base monocroma, misma tipografía y mismos componentes. Se tomó del **código** (`tailwind.config.js`, `src/index.css`, `src/components/ui.tsx`, `src/lib/theme.ts`), no de sus `.md`, que tienen errores.
 **Alcance por incremento:**
