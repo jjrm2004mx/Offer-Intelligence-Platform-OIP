@@ -19,15 +19,19 @@ Sin marcador de escenario: T02 no tiene escenarios propios.
 """
 
 import copy
+import json
 import re
+import zoneinfo
 from datetime import date
 from decimal import Decimal
+from importlib import metadata, resources
 from pathlib import Path
 from types import MappingProxyType
+from typing import Annotated
 
 import pytest
 import yaml
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, TypeAdapter, ValidationError
 
 from oip.catalogos import Categoria, Nivel
 from oip.configuracion import (
@@ -36,6 +40,7 @@ from oip.configuracion import (
     ComisionPorTramos,
     Configuracion,
     ErrorConfiguracion,
+    General,
     TasaAsignada,
     TasaPropia,
     _CargadorYaml,
@@ -951,3 +956,247 @@ def test_validaciones_cruzadas_salen_con_su_ruta_real_y_juntas():
         "categories.video_game_consoles.return_rate.from_category: video_games no tiene tasa propia"
     ) in errores, errores
     assert not any(e.startswith("(archivo)") for e in errores), errores
+
+
+# --- Tercera pasada (commit dd34876): D-3, O-1 y O-2 ------------------------------------
+# D-3: version en una línea con cualquier separador de str.splitlines.
+# O-1 (Jesús, 2026-11-18): zona exacta de zone.tab del paquete tzdata (sin alias ni
+#     mayúsculas distintas).
+# O-2 (Jesús, 2026-11-18): dominio con etiquetas [a-z0-9-] de 1 a 63, sin guion en los
+#     extremos, y TLD solo de letras.
+
+_SEPARADORES_DE_LINEA = {
+    "LF": "\n",
+    "CR": "\r",
+    "CRLF": "\r\n",
+    "VT": "\x0b",
+    "FF": "\x0c",
+    "FS": "\x1c",
+    "GS": "\x1d",
+    "RS": "\x1e",
+    "NEL": "\x85",
+    "LS": " ",
+    "PS": " ",
+}
+
+
+def _version_python(valor: str) -> tuple[str, ...]:
+    # Escapado (JSON es YAML entre comillas dobles): un NEL crudo dentro de comillas se
+    # pliega a un espacio al leer el YAML, y la prueba no llegaría a la validación.
+    escapado = json.dumps(valor, ensure_ascii=True)
+    return _errores_texto(_base_con(('version: "escenarios-base-1"', f"version: {escapado}")))
+
+
+def test_d3_la_lista_de_separadores_es_la_de_splitlines():
+    # La prueba no depende del código: se comprueba contra str.splitlines de Python.
+    for nombre, separador in _SEPARADORES_DE_LINEA.items():
+        assert len(f"a{separador}b".splitlines()) == 2, nombre
+
+
+@pytest.mark.parametrize(
+    "separador", _SEPARADORES_DE_LINEA.values(), ids=_SEPARADORES_DE_LINEA.keys()
+)
+def test_d3_separador_de_linea_en_medio_de_version_rechaza(separador):
+    errores = _version_python(f"escenarios{separador}base-1")
+    assert any(e.startswith("version:") for e in errores), errores
+
+
+@pytest.mark.parametrize(
+    "separador", _SEPARADORES_DE_LINEA.values(), ids=_SEPARADORES_DE_LINEA.keys()
+)
+def test_d3_separador_de_linea_al_inicio_de_version_rechaza(separador):
+    errores = _version_python(f"{separador}escenarios-base-1")
+    assert any(e.startswith("version:") for e in errores), errores
+
+
+_D4 = pytest.mark.xfail(
+    strict=True,
+    reason=(
+        "D-4: un separador de línea de str.splitlines al final de version (FS, GS, RS) carga; "
+        "LF, CR, NEL, LS y PS al final sí rechazan"
+    ),
+)
+
+
+@pytest.mark.parametrize(
+    "separador",
+    [
+        pytest.param(s, id=n, marks=_D4 if n in {"FS", "GS", "RS"} else ())
+        for n, s in _SEPARADORES_DE_LINEA.items()
+    ],
+)
+def test_d3_separador_de_linea_al_final_de_version_rechaza(separador):
+    """Una versión que termina en un separador de línea no está "en una línea, sin espacios
+    al final": ``"a\\x1c".splitlines(keepends=True) == ["a\\x1c"]`` y ``strip()`` lo quita.
+    Se ve igual que ``a`` y es otra versión."""
+    valor = f"escenarios-base-1{separador}"
+    assert valor.strip() != valor
+    errores = _version_python(valor)
+    assert any(e.startswith("version:") for e in errores), errores
+
+
+@pytest.mark.parametrize("version", ["a", "v1.0", "escenarios-base-1", "a b", "2026-11-18.1"])
+def test_d3_version_normal_sigue_cargando(version):
+    cargada = cargar_configuracion_texto(_texto(_con(_base(), "version", version)))
+    assert cargada.version == version
+
+
+# O-1. zone.tab viene en el paquete tzdata (rueda pura de Python: igual en Windows y Linux).
+def _zone_tab() -> set[str]:
+    texto = resources.files("tzdata").joinpath("zoneinfo", "zone.tab").read_text(encoding="utf-8")
+    return {linea.split("\t")[2] for linea in texto.splitlines() if linea and linea[0] != "#"}
+
+
+def test_o1_zone_tab_viene_en_tzdata_que_es_rueda_pura_y_dependencia_declarada():
+    assert resources.files("tzdata").joinpath("zoneinfo", "zone.tab").is_file()
+    rueda = metadata.distribution("tzdata").read_text("WHEEL") or ""
+    assert "Root-Is-Purelib: true" in rueda
+    assert "py3-none-any" in rueda
+    requeridas = metadata.distribution("oip-core").requires or []
+    assert any(re.match(r"^tzdata\b", r) for r in requeridas), requeridas
+
+
+def test_o1_el_codigo_lee_zone_tab_del_paquete_tzdata_y_no_del_sistema():
+    texto = CODIGO.read_text(encoding="utf-8")
+    assert 'resources.files("tzdata")' in texto
+    assert "/usr/share/zoneinfo" not in texto
+
+
+def test_o1_toda_zona_de_zone_tab_carga_y_toda_otra_de_tzdata_rechaza():
+    canonicas = _zone_tab()
+    assert "America/Tijuana" in canonicas
+    campo = General.model_fields["timezone"]
+    adaptador = TypeAdapter(Annotated[campo.annotation, campo])
+    rechazadas = []
+    for zona in sorted(canonicas):
+        try:
+            adaptador.validate_python(zona)
+        except ValidationError:
+            rechazadas.append(zona)
+    assert rechazadas == []
+    aceptadas = []
+    for zona in sorted(zoneinfo.available_timezones() - canonicas):
+        try:
+            adaptador.validate_python(zona)
+            aceptadas.append(zona)
+        except ValidationError:
+            pass
+    assert aceptadas == []
+
+
+@pytest.mark.parametrize(
+    "zona",
+    [
+        "America/Ensenada",
+        "America/Santa_Isabel",
+        "America/Buenos_Aires",
+        "America/Indianapolis",
+        "America/Montreal",
+        "Asia/Calcutta",
+        "Asia/Saigon",
+        "Europe/Kiev",
+        "Pacific/Johnston",
+        "Australia/ACT",
+    ],
+)
+def test_o1_alias_antiguo_con_forma_region_ciudad_rechaza(zona):
+    # Precondición: existe en tzdata (el rechazo es por alias, no por inexistente).
+    assert zona in zoneinfo.available_timezones()
+    assert zona not in _zone_tab()
+    errores = _errores_texto(_base_con(("timezone: America/Tijuana", f"timezone: {zona}")))
+    assert any(e.startswith("general.timezone") for e in errores), errores
+
+
+@pytest.mark.parametrize(
+    "zona", ["America/TIJUANA", "AMERICA/Tijuana", "america/tijuana", "America/tijuana"]
+)
+def test_o1_zona_con_otras_mayusculas_rechaza(zona):
+    errores = _errores_texto(_base_con(("timezone: America/Tijuana", f"timezone: {zona}")))
+    assert any(e.startswith("general.timezone") for e in errores), errores
+
+
+@pytest.mark.parametrize(
+    "zona",
+    [
+        "America/Tijuana",
+        "America/Kentucky/Louisville",
+        "America/Argentina/Buenos_Aires",
+        "America/Ciudad_Juarez",
+        "Europe/Amsterdam",
+        "Europe/Kyiv",
+        "Asia/Kolkata",
+    ],
+)
+def test_o1_zona_canonica_carga(zona):
+    cargada = cargar_configuracion_texto(
+        _base_con(("timezone: America/Tijuana", f"timezone: {zona}"))
+    )
+    assert cargada.contenido.general.timezone == zona
+
+
+# O-2. Dominio estricto (datos sintéticos; ningún dominio de comercio).
+_RUTAS_DOMINIO = pytest.mark.parametrize(
+    "ruta",
+    ["retailers.walmart.domains", "private_sellers.platforms.offerup.domains"],
+    ids=["comercio", "plataforma"],
+)
+
+
+@pytest.mark.parametrize(
+    "dominio",
+    [
+        "127.0x1",
+        "0x7f.0x1",
+        "10.1",
+        "0177.0.0.1",
+        "example.c0m",
+        "example.123",
+        "-a.example.com",
+        "a-.example.com",
+        "example-.com",
+        "example.-com",
+        "a..example.com",
+        ".example.com",
+        "example.com.",
+        "a_b.example.com",
+        "example.c",
+        "x" * 64 + ".example.com",
+        "example." + "c" * 64,
+        "example.xn--p1ai",
+    ],
+)
+@_RUTAS_DOMINIO
+def test_o2_dominio_con_etiqueta_o_tld_invalido_rechaza(dominio, ruta):
+    errores = _errores(_con(_base(), ruta, ["example.com", dominio]))
+    assert any(e.startswith(f"{ruta}.1") for e in errores), errores
+
+
+@pytest.mark.parametrize(
+    "dominio",
+    [
+        "example.com",
+        "a1.example-2.org",
+        "xn--bcher-kva.example.com",
+        "1.2.3.example.net",
+        "a.b.c.example.org",
+        "x" * 63 + ".example.com",
+        "example." + "c" * 63,
+    ],
+)
+@_RUTAS_DOMINIO
+def test_o2_dominio_con_etiquetas_validas_carga(dominio, ruta):
+    cargada = cargar_configuracion_texto(_texto(_con(_base(), ruta, [dominio])))
+    nodo = cargada.contenido
+    for parte in ruta.split("."):
+        nodo = nodo[parte] if isinstance(nodo, MappingProxyType) else getattr(nodo, parte)
+    assert tuple(nodo) == (dominio,)
+
+
+def test_o2_todos_los_dominios_de_los_dos_archivos_cumplen_la_regla_y_cargan():
+    regla = re.compile(r"^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$")
+    for archivo in (BASE, PRODUCCION):
+        contenido = cargar_configuracion(archivo).contenido
+        dominios = [d for c in contenido.retailers.values() for d in c.domains]
+        dominios += [d for p in contenido.private_sellers.platforms.values() for d in p.domains]
+        assert dominios, archivo
+        assert all(regla.fullmatch(d) for d in dominios), (archivo, dominios)
