@@ -35,6 +35,8 @@ from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal, InvalidOperation
 from enum import StrEnum
+from functools import cache
+from importlib import resources
 from pathlib import Path
 from types import MappingProxyType
 from typing import Annotated, Any, Literal
@@ -129,7 +131,19 @@ Factor = Annotated[_Dec, Field(gt=0)]
 Entero = Annotated[int, Strict(), Field(ge=0)]
 EnteroPositivo = Annotated[int, Strict(), Field(ge=1)]
 Texto = Annotated[str, Strict(), Field(min_length=1)]
-TextoRecortado = Annotated[str, Strict(), Field(pattern=r"^\S(?:.*\S)?$")]
+
+
+def _una_linea(valor: str) -> str:
+    # Cualquier separador que ``str.splitlines`` trate como salto (\r, \v, \f, \x1c-\x1e,
+    # NEL, U+2028, U+2029), no solo \n, parte el texto en dos líneas.
+    if len(valor.splitlines()) != 1:
+        raise ValueError("se esperaba un texto en una sola línea")
+    return valor
+
+
+TextoRecortado = Annotated[
+    str, Strict(), Field(pattern=r"^\S(?:.*\S)?$"), AfterValidator(_una_linea)
+]
 """Texto no vacío, en una línea, sin espacios al inicio ni al final (``version``)."""
 Bandera = Annotated[bool, Strict()]
 Fecha = Annotated[date, Strict()]
@@ -137,10 +151,23 @@ Codigo = Annotated[str, Strict(), Field(pattern=r"^[a-z0-9]+(?:[_-][a-z0-9]+)*$"
 """Código en minúsculas y snake_case (o con guion, como ``hd-0123``)."""
 
 
+# Etiqueta de 1 a 63 caracteres [a-z0-9-], sin guion al inicio ni al final; el último
+# segmento (TLD) solo letras, con lo que quedan fuera las IP en cualquier forma que entienda
+# inet_aton (10.0.0.1, 127.0x1, 0x7f.0x1) y TLD como 123 o c0m. Sin look-around: el motor
+# de expresiones de pydantic (Rust) no lo admite.
+_ETIQUETA = re.compile(r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?")
+_TLD = re.compile(r"[a-z]{2,63}")
+
+
 def _dominio_con_nombre(valor: str) -> str:
-    # El último segmento con al menos una letra: una IP (10.0.0.1) no es un dominio.
-    if not any(c.isalpha() for c in valor.rpartition(".")[2]):
-        raise ValueError(f"se esperaba un nombre de dominio, no una IP: {valor}")
+    *etiquetas, tld = valor.split(".")
+    if not _TLD.fullmatch(tld):
+        raise ValueError(f"se esperaba un nombre de dominio con TLD de letras, no una IP: {valor}")
+    if not all(_ETIQUETA.fullmatch(e) for e in etiquetas):
+        raise ValueError(
+            f"cada etiqueta del dominio va de 1 a 63 caracteres [a-z0-9-], "
+            f"sin guion al inicio ni al final: {valor}"
+        )
     return valor
 
 
@@ -175,17 +202,34 @@ class CuentaAmazon(StrEnum):
 
 
 # Zona IANA con la forma Región/Ciudad (America/Tijuana, America/Argentina/Salta). Fuera
-# quedan los nombres que dependen del equipo (localtime) o no son una ciudad (UTC, Etc/*,
-# alias como US/Pacific); con tzdata, la misma regla vale en Windows y en Linux.
+# quedan los nombres que dependen del equipo (localtime), los que no son una ciudad (UTC,
+# Etc/*, US/Pacific) y los alias antiguos de IANA aunque tengan forma Región/Ciudad
+# (America/Ensenada, Asia/Calcutta). La lista canónica es ``zone.tab`` del paquete tzdata
+# (las zonas vigentes de cada país y región, sin los nombres antiguos): igual en Windows y
+# en Linux y sin mantener una lista a mano. Distingue mayúsculas (America/tijuana no vale).
 _ZONA_IANA = re.compile(
     r"^(?:Africa|America|Antarctica|Arctic|Asia|Atlantic|Australia|Europe|Indian|Pacific)"
     r"(?:/[A-Za-z][A-Za-z0-9_+-]*){1,2}$"
 )
 
 
+@cache
+def _zonas_canonicas() -> frozenset[str]:
+    texto = resources.files("tzdata").joinpath("zoneinfo", "zone.tab").read_text("utf-8")
+    return frozenset(
+        campos[2]
+        for linea in texto.splitlines()
+        if linea and not linea.startswith("#")
+        for campos in [linea.split("\t")]
+        if len(campos) >= 3
+    )
+
+
 def _zona_valida(nombre: str) -> str:
     if not _ZONA_IANA.match(nombre):
         raise ValueError(f"se esperaba una zona IANA Región/Ciudad, como America/Tijuana: {nombre}")
+    if nombre not in _zonas_canonicas():
+        raise ValueError(f"zona horaria desconocida o alias antiguo de IANA: {nombre}")
     try:
         ZoneInfo(nombre)
     except (ZoneInfoNotFoundError, ValueError):

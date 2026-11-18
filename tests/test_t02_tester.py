@@ -908,7 +908,8 @@ def test_dominio_ip_rechaza_en_comercios_y_plataformas(dominio, ruta):
     assert any(e.startswith(f"{ruta}.1") for e in errores), errores
 
 
-@pytest.mark.parametrize("dominio", ["example.com", "shop.example.org", "example.c0m"])
+# example.c0m ya no carga: Jesús pidió TLD solo de letras el 2026-11-18 (O-2).
+@pytest.mark.parametrize("dominio", ["example.com", "shop.example.org", "a1.example-2.org"])
 def test_dominio_con_nombre_carga(dominio):
     datos = _con(_base(), "private_sellers.platforms.offerup.domains", [dominio])
     cargada = cargar_configuracion_texto(_texto(datos))

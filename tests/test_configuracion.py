@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 import yaml
-from pydantic import BaseModel
+from pydantic import BaseModel, TypeAdapter, ValidationError
 
 from oip.catalogos import Categoria, Nivel
 from oip.configuracion import (
@@ -19,6 +19,7 @@ from oip.configuracion import (
     ConfiguracionVersionada,
     ErrorConfiguracion,
     TasaAsignada,
+    TextoRecortado,
     _CargadorYaml,
     cargar_configuracion,
     cargar_configuracion_texto,
@@ -492,6 +493,79 @@ def test_version_vacia_o_con_espacios_en_los_extremos_rechaza(version):
     assert any(e.startswith("version:") for e in errores), errores
 
 
+# D-3: cualquier separador que str.splitlines trate como salto, no solo \n.
+@pytest.mark.parametrize(
+    "version",
+    [
+        "a\rb",
+        "a\r\nb",
+        "a\x0bb",
+        "a\x0cb",
+        "a\x1cb",
+        "a\x1db",
+        "a\x1eb",
+        "a\u2028b",
+        "a\u2029b",
+    ],
+)
+def test_version_con_cualquier_separador_de_linea_rechaza(version):
+    errores = _errores(_poner(_datos_base(), "version", version))
+    assert any(e.startswith("version:") for e in errores), errores
+
+
+def test_version_con_nel_escapado_en_el_yaml_rechaza():
+    # El volcador de PyYAML pliega NEL en comillas simples; aquí va escapado (\N).
+    texto = _texto(_datos_base()).replace("version: escenarios-base-1", 'version: "a\\Nb"')
+    assert 'version: "a\\Nb"' in texto
+    with pytest.raises(ErrorConfiguracion) as info:
+        cargar_configuracion_texto(texto)
+    assert any(e.startswith("version:") for e in info.value.errores), info.value.errores
+
+
+@pytest.mark.parametrize(
+    "separador", ["\n", "\r", "\x0b", "\x0c", "\x1c", "\x1d", "\x1e", "\x85", "\u2028", "\u2029"]
+)
+def test_texto_recortado_rechaza_todo_separador_de_splitlines(separador):
+    adaptador = TypeAdapter(TextoRecortado)
+    assert adaptador.validate_python("ab") == "ab"
+    with pytest.raises(ValidationError):
+        adaptador.validate_python(f"a{separador}b")
+
+
+# O-1 (Jesús, 2026-11-18): alias antiguos de IANA con forma Región/Ciudad, fuera de zone.tab.
+@pytest.mark.parametrize(
+    "zona",
+    [
+        "America/Ensenada",
+        "America/Buenos_Aires",
+        "Asia/Calcutta",
+        "Pacific/Johnston",
+        "America/Indianapolis",
+        "Europe/Kiev",
+        "America/tijuana",
+        "AMERICA/TIJUANA",
+    ],
+)
+def test_zona_alias_antiguo_o_con_otras_mayusculas_rechaza(zona):
+    errores = _errores(_poner(_datos_base(), "general.timezone", zona))
+    assert any(e.startswith("general.timezone:") for e in errores), errores
+
+
+@pytest.mark.parametrize(
+    "zona",
+    [
+        "America/Tijuana",
+        "America/Argentina/Salta",
+        "America/Indiana/Indianapolis",
+        "Asia/Kolkata",
+        "Europe/Kyiv",
+    ],
+)
+def test_zona_canonica_de_zone_tab_carga(zona):
+    cargada = cargar_configuracion_texto(_texto(_poner(_datos_base(), "general.timezone", zona)))
+    assert cargada.contenido.general.timezone == zona
+
+
 @pytest.mark.parametrize("version", ["escenarios-base-1", "2026-11-18.1", "prueba 2"])
 def test_version_sin_espacios_en_los_extremos_carga(version):
     cargada = cargar_configuracion_texto(_texto(_poner(_datos_base(), "version", version)))
@@ -513,6 +587,48 @@ def test_dominio_que_es_una_ip_rechaza(dominio):
 def test_dominio_con_nombre_carga(dominio):
     datos = _poner(_datos_base(), "retailers.homedepot.domains", [dominio])
     assert cargar_configuracion_texto(_texto(datos))
+
+
+# O-2 (Jesús, 2026-11-18): etiquetas de 1 a 63 [a-z0-9-] sin guion en los extremos y TLD
+# solo de letras; fuera las IP en forma inet_aton.
+@pytest.mark.parametrize(
+    "dominio",
+    [
+        "127.0x1",
+        "0x7f.0x1",
+        "10.1",
+        "example.c0m",
+        "example.c",
+        "-example.com",
+        "example-.com",
+        "shop.-example.com",
+        "a" * 64 + ".com",
+        "example..com",
+        "example.com-",
+        "example.co_m",
+    ],
+)
+def test_dominio_con_etiqueta_o_tld_invalido_rechaza(dominio):
+    datos = _poner(_datos_base(), "retailers.homedepot.domains", [dominio])
+    errores = _errores(datos)
+    assert any(e.startswith("retailers.homedepot.domains.0:") for e in errores), errores
+    datos = _poner(_datos_base(), "private_sellers.platforms", {"prueba": {"domains": [dominio]}})
+    errores = _errores(datos)
+    assert any(e.startswith("private_sellers.platforms.prueba.domains.0:") for e in errores)
+
+
+@pytest.mark.parametrize(
+    "dominio", ["a.example.com", "a" * 63 + ".example.com", "x-1.example.museum", "1.example.io"]
+)
+def test_dominio_con_etiquetas_validas_carga(dominio):
+    datos = _poner(_datos_base(), "retailers.homedepot.domains", [dominio])
+    cargada = cargar_configuracion_texto(_texto(datos))
+    assert cargada.contenido.retailers["homedepot"].domains == (dominio,)
+
+
+def test_los_dominios_del_repo_siguen_cargando():
+    for archivo in (PRODUCCION, BASE):
+        assert cargar_configuracion(archivo).contenido.retailers
 
 
 def test_sin_ficha_de_amazon_rechaza():
