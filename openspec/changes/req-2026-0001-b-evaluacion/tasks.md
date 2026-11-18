@@ -31,9 +31,9 @@ Tareas de la parte B del REQ-2026-0001 v2.9 (`req-2026-0001-b-evaluacion`). **1 
 - **Depende de:** —. **Estimación:** 6 h.
 - **DoD:** común; `pip install -e ".[dev]"` funciona en Windows (`py -3`) y Linux.
 
-- [ ] 1.1 Crear la estructura de subpaquetes, agregar las dependencias y el marcador `integracion`, y verificar que `pytest` y `ruff` corren limpios
-- [ ] 1.2 Implementar `dinero.py` con la lista cerrada de `TipoMonto` y verificar las pruebas unitarias de redondeo, negativos, `float` y porcentajes
-- [ ] 1.3 Implementar `catalogos.py` (§9) y verificar con pruebas unitarias los valores y el orden de motivos, niveles y calidad
+- [x] 1.1 Crear la estructura de subpaquetes, agregar las dependencias y el marcador `integracion`, y verificar que `pytest` y `ruff` corren limpios
+- [x] 1.2 Implementar `dinero.py` con la lista cerrada de `TipoMonto` y verificar las pruebas unitarias de redondeo, negativos, `float` y porcentajes
+- [x] 1.3 Implementar `catalogos.py` (§9) y verificar con pruebas unitarias los valores y el orden de motivos, niveles y calidad
 
 ## 2. T02 — Configuración versionada (cimientos)
 

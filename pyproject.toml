@@ -4,7 +4,15 @@ version = "0.0.0"
 description = "Offer Intelligence Platform (OIP), Core. Proyecto personal y privado."
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+# Dependencias de la parte B (design.md §5 de req-2026-0001-b-evaluacion). Ninguna es cliente HTTP.
+dependencies = [
+    "pydantic>=2.9",
+    "PyYAML>=6.0",
+    "SQLAlchemy>=2.0",
+    "psycopg[binary]>=3.2",
+    "alembic>=1.14",
+    "tzdata",
+]
 
 [project.optional-dependencies]
 dev = [
@@ -26,6 +34,7 @@ pythonpath = ["src"]
 addopts = "-ra --strict-markers"
 markers = [
     "scenario(id): escenario del REQ que cubre la prueba, por ejemplo scenario('B1')",
+    "integracion: necesita PostgreSQL + TimescaleDB; se salta sin OIP_TEST_DATABASE_URL",
 ]
 
 [tool.ruff]
