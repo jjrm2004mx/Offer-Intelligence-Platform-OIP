@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
@@ -80,6 +81,18 @@ class ErrorConfiguracion(ValueError):
         super().__init__("configuración inválida:\n- " + "\n- ".join(self.errores))
 
 
+class _ErroresConRuta(ValueError):
+    """Errores de una validación con la ruta de cada parámetro, relativa al campo validado.
+
+    ``_traducir`` antepone la ruta del campo (``categories`` + ``tools``); una subruta vacía
+    nombra el campo mismo.
+    """
+
+    def __init__(self, errores: list[tuple[str, str]]) -> None:
+        self.errores = tuple(errores)
+        super().__init__("; ".join(f"{r}: {m}" if r else m for r, m in self.errores))
+
+
 # --- Tipos de valor -------------------------------------------------------------------
 
 
@@ -116,12 +129,28 @@ Factor = Annotated[_Dec, Field(gt=0)]
 Entero = Annotated[int, Strict(), Field(ge=0)]
 EnteroPositivo = Annotated[int, Strict(), Field(ge=1)]
 Texto = Annotated[str, Strict(), Field(min_length=1)]
+TextoRecortado = Annotated[str, Strict(), Field(pattern=r"^\S(?:.*\S)?$")]
+"""Texto no vacío, en una línea, sin espacios al inicio ni al final (``version``)."""
 Bandera = Annotated[bool, Strict()]
 Fecha = Annotated[date, Strict()]
 Codigo = Annotated[str, Strict(), Field(pattern=r"^[a-z0-9]+(?:[_-][a-z0-9]+)*$")]
 """Código en minúsculas y snake_case (o con guion, como ``hd-0123``)."""
-Dominio = Annotated[str, Strict(), Field(max_length=253, pattern=r"^[a-z0-9-]+(?:\.[a-z0-9-]+)+$")]
-"""Dominio sin esquema ni ruta, en minúsculas (``example.com``)."""
+
+
+def _dominio_con_nombre(valor: str) -> str:
+    # El último segmento con al menos una letra: una IP (10.0.0.1) no es un dominio.
+    if not any(c.isalpha() for c in valor.rpartition(".")[2]):
+        raise ValueError(f"se esperaba un nombre de dominio, no una IP: {valor}")
+    return valor
+
+
+Dominio = Annotated[
+    str,
+    Strict(),
+    Field(max_length=253, pattern=r"^[a-z0-9-]+(?:\.[a-z0-9-]+)+$"),
+    AfterValidator(_dominio_con_nombre),
+]
+"""Dominio sin esquema ni ruta, en minúsculas y con nombre, no IP (``example.com``)."""
 MesDia = Annotated[str, Strict(), Field(pattern=r"^\d{2}-\d{2}$")]
 
 
@@ -145,7 +174,18 @@ class CuentaAmazon(StrEnum):
     ESTABLISHED = "established"
 
 
+# Zona IANA con la forma Región/Ciudad (America/Tijuana, America/Argentina/Salta). Fuera
+# quedan los nombres que dependen del equipo (localtime) o no son una ciudad (UTC, Etc/*,
+# alias como US/Pacific); con tzdata, la misma regla vale en Windows y en Linux.
+_ZONA_IANA = re.compile(
+    r"^(?:Africa|America|Antarctica|Arctic|Asia|Atlantic|Australia|Europe|Indian|Pacific)"
+    r"(?:/[A-Za-z][A-Za-z0-9_+-]*){1,2}$"
+)
+
+
 def _zona_valida(nombre: str) -> str:
+    if not _ZONA_IANA.match(nombre):
+        raise ValueError(f"se esperaba una zona IANA Región/Ciudad, como America/Tijuana: {nombre}")
     try:
         ZoneInfo(nombre)
     except (ZoneInfoNotFoundError, ValueError):
@@ -576,15 +616,40 @@ class Niveles(_Seccion):
 # --- Archivo completo ------------------------------------------------------------------
 
 
+def _todas_las_categorias(tabla: Mapping[Categoria, ValoresCategoria]) -> Any:
+    # Cada category del catálogo cerrado trae parámetros obligatorios (PAR-04; REQ §5).
+    faltan = [(c.value, "falta el parámetro") for c in Categoria if c not in tabla]
+    if faltan:
+        raise _ErroresConRuta(faltan)
+    return tabla
+
+
+def _una_ficha_de_amazon(tabla: Mapping[str, Comercio]) -> Any:
+    fichas = [c for c, v in tabla.items() if v.amazon_listing]
+    if len(fichas) != 1:
+        raise _ErroresConRuta(
+            [
+                (
+                    "",
+                    "debe haber exactamente un comercio con amazon_listing: true; "
+                    f"hay {len(fichas)} {fichas}",
+                )
+            ]
+        )
+    return tabla
+
+
 class Configuracion(_Seccion):
     """Contenido validado de un archivo de configuración (PAR-01 a PAR-13)."""
 
-    version: Texto
+    version: TextoRecortado
     schema_version: Literal["1"] = Field(alias="schemaVersion")
     general: General
-    retailers: _tabla(Codigo, Comercio, minimo=1)
+    retailers: Annotated[_tabla(Codigo, Comercio, minimo=1), AfterValidator(_una_ficha_de_amazon)]
     stores: _tabla(Codigo, Sucursal)
-    categories: _tabla(Categoria, ValoresCategoria, minimo=1)
+    categories: Annotated[
+        _tabla(Categoria, ValoresCategoria, minimo=1), AfterValidator(_todas_las_categorias)
+    ]
     lists: Listas
     shipping: Envio
     taxes: Impuestos
@@ -597,24 +662,23 @@ class Configuracion(_Seccion):
 
     @model_validator(mode="after")
     def _referencias_cruzadas(self) -> Configuracion:
-        errores: list[str] = []
+        errores: list[tuple[str, str]] = []
         for codigo, sucursal in self.stores.items():
             if sucursal.retailer not in self.retailers:
-                errores.append(f"stores.{codigo}.retailer: comercio desconocido")
-        fichas = [c for c, v in self.retailers.items() if v.amazon_listing]
-        if len(fichas) > 1:
-            errores.append(f"retailers: solo un comercio puede ser la ficha de Amazon: {fichas}")
+                errores.append((f"stores.{codigo}.retailer", "comercio desconocido"))
         for codigo, valores in self.categories.items():
             tasa = valores.return_rate
             if isinstance(tasa, TasaAsignada):
                 origen = self.categories.get(tasa.from_category)
                 if origen is None or not isinstance(origen.return_rate, TasaPropia):
                     errores.append(
-                        f"categories.{codigo}.return_rate.from_category: "
-                        f"{tasa.from_category} no tiene tasa propia"
+                        (
+                            f"categories.{codigo}.return_rate.from_category",
+                            f"{tasa.from_category} no tiene tasa propia",
+                        )
                     )
         if errores:
-            raise ValueError("; ".join(errores))
+            raise _ErroresConRuta(errores)
         return self
 
 
@@ -633,11 +697,37 @@ class ConfiguracionVersionada:
 
 
 class _CargadorYaml(yaml.SafeLoader):
-    """``SafeLoader`` que lee los números con punto como ``Decimal`` y rechaza claves repetidas."""
+    """``SafeLoader`` que lee los números con punto como ``Decimal``, rechaza claves repetidas
+    y las formas de YAML 1.1 que cambian un número en silencio (``060`` octal = 48,
+    ``1:30`` sexagesimal = 90; decisión de Jesús del 2026-11-18)."""
+
+
+# Entero decimal sin cero inicial (0, 60, -5, 1_000); fuera quedan 060, 0x1F, 0b11 y 1:30.
+_ENTERO_DECIMAL = re.compile(r"^[-+]?(?:0|[1-9][0-9_]*)$")
+
+
+def _entero_desde_yaml(cargador: yaml.SafeLoader, nodo: yaml.ScalarNode) -> int:
+    texto = str(cargador.construct_scalar(nodo))
+    if not _ENTERO_DECIMAL.match(texto):
+        raise yaml.constructor.ConstructorError(
+            None,
+            None,
+            f"número no admitido: {texto} (sin cero inicial, sin base ni ':'; YAML 1.1 lo "
+            "leería como octal, hexadecimal, binario o sexagesimal)",
+            nodo.start_mark,
+        )
+    return int(texto.replace("_", ""))
 
 
 def _decimal_desde_yaml(cargador: yaml.SafeLoader, nodo: yaml.ScalarNode) -> Decimal:
     texto = str(cargador.construct_scalar(nodo)).replace("_", "")
+    if ":" in texto:
+        raise yaml.constructor.ConstructorError(
+            None,
+            None,
+            f"número no admitido: {texto} (YAML 1.1 lo leería como sexagesimal)",
+            nodo.start_mark,
+        )
     try:
         valor = Decimal(texto)
     except InvalidOperation:
@@ -660,10 +750,19 @@ def _mapa_sin_repetidos(cargador: yaml.SafeLoader, nodo: yaml.MappingNode) -> di
             raise yaml.constructor.ConstructorError(
                 None, None, f"clave repetida: {clave}", nodo_clave.start_mark
             )
-        resultado[clave] = cargador.construct_object(nodo_valor, deep=True)
+        try:
+            resultado[clave] = cargador.construct_object(nodo_valor, deep=True)
+        except yaml.constructor.ConstructorError as error:
+            if error.context is not None or not isinstance(nodo_valor, yaml.ScalarNode):
+                raise
+            # Nombra el parámetro del valor rechazado, además de su posición.
+            raise yaml.constructor.ConstructorError(
+                f"en el parámetro {clave}", nodo_clave.start_mark, error.problem, error.problem_mark
+            ) from None
     return resultado
 
 
+_CargadorYaml.add_constructor("tag:yaml.org,2002:int", _entero_desde_yaml)
 _CargadorYaml.add_constructor("tag:yaml.org,2002:float", _decimal_desde_yaml)
 _CargadorYaml.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, _mapa_sin_repetidos)
 
@@ -685,13 +784,23 @@ def _huella(datos: Mapping[str, Any]) -> str:
     return hashlib.sha256(texto.encode("utf-8")).hexdigest()
 
 
+# Uniones discriminadas: campo de la unión y etiquetas de sus variantes.
+_VARIANTES = {
+    "commission": {"flat", "total_threshold", "tiers"},
+    "return_rate": {"own", "assigned"},
+}
+
+
 def _ruta(loc: tuple[int | str, ...]) -> str:
-    # pydantic agrega a la ruta el nombre de la variante de una unión discriminada.
-    partes = [str(p) for p in loc if not (isinstance(p, str) and p in _VARIANTES)]
+    # pydantic agrega la etiqueta de la variante justo después del campo de la unión
+    # (commission.tiers.tiers.0 → commission.tiers.0). Solo se quita esa etiqueta, no un
+    # campo que se llame igual.
+    partes = [
+        str(p)
+        for i, p in enumerate(loc)
+        if not (i > 0 and isinstance(p, str) and p in _VARIANTES.get(str(loc[i - 1]), ()))
+    ]
     return ".".join(partes) or "(archivo)"
-
-
-_VARIANTES = {"flat", "total_threshold", "tiers", "own", "assigned"}
 
 
 def _traducir(error: ValidationError) -> list[str]:
@@ -699,7 +808,13 @@ def _traducir(error: ValidationError) -> list[str]:
     for detalle in error.errors(include_url=False):
         ruta = _ruta(detalle["loc"])
         tipo = detalle["type"]
-        if tipo == "missing":
+        causa = detalle.get("ctx", {}).get("error")
+        if isinstance(causa, _ErroresConRuta):
+            base = ruta if detalle["loc"] else ""
+            for subruta, mensaje in causa.errores:
+                completa = ".".join(p for p in (base, subruta) if p) or "(archivo)"
+                mensajes.append(f"{completa}: {mensaje}")
+        elif tipo == "missing":
             mensajes.append(f"{ruta}: falta el parámetro")
         elif tipo == "extra_forbidden":
             mensajes.append(f"{ruta}: sección o parámetro desconocido")

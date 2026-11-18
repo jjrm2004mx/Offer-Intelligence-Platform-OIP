@@ -410,3 +410,131 @@ def test_sin_valores_por_defecto_salvo_los_opcionales_declarados():
         for nombre, campo in m.model_fields.items():
             if f"{m.__name__}.{nombre}" in _OPCIONALES:
                 assert campo.default is None
+
+
+# --- Endurecimiento del esquema (decisión de Jesús del 2026-11-18, PR #32) --------------
+
+
+@pytest.mark.parametrize(
+    ("original", "cambio"),
+    [
+        ("usual_window_days: 60", "usual_window_days: 060"),  # YAML 1.1: octal = 48
+        ("usual_window_days: 60", "usual_window_days: -060"),
+        ("usual_window_days: 60", "usual_window_days: 0x3C"),  # hexadecimal
+        ("usual_window_days: 60", "usual_window_days: 0b111100"),  # binario
+        ("default_delivery_km: 10", "default_delivery_km: 1:30"),  # sexagesimal = 90
+        ("default_delivery_km: 10", "default_delivery_km: 1:30.5"),
+    ],
+)
+def test_numero_con_cero_inicial_base_o_sexagesimal_rechaza(original, cambio):
+    texto = BASE.read_text(encoding="utf-8")
+    assert original in texto
+    with pytest.raises(ErrorConfiguracion) as info:
+        cargar_configuracion_texto(texto.replace(original, cambio, 1))
+    (error,) = info.value.errores
+    parametro = original.split(":")[0]
+    assert f"en el parámetro {parametro}" in error
+    assert "número no admitido" in error
+    assert "line " in error  # y su posición
+
+
+def test_numeros_normales_siguen_cargando():
+    texto = "a: 0\nb: 0.30\nc: 0.5\nd: 60\ne: -5\nf: 1_000\ng: 7.75\nh: -0\ni: +5\n"
+    datos = yaml.load(texto, Loader=_CargadorYaml)  # noqa: S506
+    assert datos == {
+        "a": 0,
+        "b": Decimal("0.30"),
+        "c": Decimal("0.5"),
+        "d": 60,
+        "e": -5,
+        "f": 1000,
+        "g": Decimal("7.75"),
+        "h": 0,
+        "i": 5,
+    }
+    assert str(datos["b"]) == "0.30"
+    assert type(datos["d"]) is int
+
+
+@pytest.mark.parametrize(
+    "zona",
+    [
+        "localtime",  # la zona del equipo: depende de la máquina
+        "UTC",
+        "GMT",
+        "Etc/UTC",
+        "Etc/GMT+8",
+        "US/Pacific",  # alias, no Región/Ciudad
+        "Mexico/BajaNorte",
+        "posix/America/Tijuana",
+        "America/Tijuana ",
+        "america/tijuana",
+        "America/Ciudad_Inexistente",
+        "America/../Tijuana",
+    ],
+)
+def test_zona_horaria_que_no_es_region_ciudad_rechaza(zona):
+    errores = _errores(_poner(_datos_base(), "general.timezone", zona))
+    assert any(e.startswith("general.timezone:") for e in errores), errores
+
+
+@pytest.mark.parametrize(
+    "zona", ["America/Tijuana", "America/Argentina/Buenos_Aires", "Europe/Madrid", "Asia/Tokyo"]
+)
+def test_zona_horaria_region_ciudad_carga(zona):
+    cargada = cargar_configuracion_texto(_texto(_poner(_datos_base(), "general.timezone", zona)))
+    assert cargada.contenido.general.timezone == zona
+
+
+@pytest.mark.parametrize("version", ["", "   ", " escenarios-base-1", "2026-11-18.1 ", "a\nb"])
+def test_version_vacia_o_con_espacios_en_los_extremos_rechaza(version):
+    errores = _errores(_poner(_datos_base(), "version", version))
+    assert any(e.startswith("version:") for e in errores), errores
+
+
+@pytest.mark.parametrize("version", ["escenarios-base-1", "2026-11-18.1", "prueba 2"])
+def test_version_sin_espacios_en_los_extremos_carga(version):
+    cargada = cargar_configuracion_texto(_texto(_poner(_datos_base(), "version", version)))
+    assert cargada.version == version
+
+
+# Dominios sintéticos: los de comercios solo van en config/ y tests/fixtures/.
+@pytest.mark.parametrize("dominio", ["10.0.0.1", "192.168.1.20", "example.123"])
+def test_dominio_que_es_una_ip_rechaza(dominio):
+    datos = _poner(_datos_base(), "retailers.homedepot.domains", [dominio])
+    errores = _errores(datos)
+    assert any(e.startswith("retailers.homedepot.domains.0:") for e in errores), errores
+    datos = _poner(_datos_base(), "private_sellers.platforms", {"prueba": {"domains": [dominio]}})
+    errores = _errores(datos)
+    assert any(e.startswith("private_sellers.platforms.prueba.domains.0:") for e in errores)
+
+
+@pytest.mark.parametrize("dominio", ["example.com", "shop.example.co", "a1.example-2.org"])
+def test_dominio_con_nombre_carga(dominio):
+    datos = _poner(_datos_base(), "retailers.homedepot.domains", [dominio])
+    assert cargar_configuracion_texto(_texto(datos))
+
+
+def test_sin_ficha_de_amazon_rechaza():
+    datos = _poner(_datos_base(), "retailers.amazon.amazon_listing", False)
+    errores = _errores(datos)
+    assert any(e.startswith("retailers: debe haber exactamente un comercio") for e in errores)
+
+
+def test_dos_fichas_de_amazon_rechaza():
+    datos = _poner(_datos_base(), "retailers.walmart.amazon_listing", True)
+    errores = _errores(datos)
+    assert any(e.startswith("retailers: debe haber exactamente un comercio") for e in errores)
+
+
+def test_errores_cruzados_salen_con_su_ruta_real():
+    datos = _poner(_datos_base(), "stores.xx-1", {"retailer": "kmart"})
+    assert "stores.xx-1.retailer: comercio desconocido" in _errores(datos)
+    datos = _poner(
+        _datos_base(),
+        "categories.toys.return_rate",
+        {"source": "assigned", "from_category": "watches"},
+    )
+    assert "categories.toys.return_rate.from_category: watches no tiene tasa propia" in (
+        _errores(datos)
+    )
