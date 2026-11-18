@@ -12,26 +12,35 @@ context: |
   Antes de escribir cualquier artefacto, lee CLAUDE.md del repo. Fuentes que mandan:
   - Qué y por qué: el requerimiento (issue con etiqueta "Requerimiento") y las RN de
     docs/negocio/reglas/ en la versión que cita el REQ.
-  - Cómo: docs/arquitectura/arquitectura-tecnica.md (v2.0, ADR-001 a ADR-028) y
+  - Cómo: docs/arquitectura/arquitectura-tecnica.md (v2.2, ADR-001 a ADR-028) y
     docs/proceso/registro-de-decisiones.md.
   - Avisos e interfaz: docs/diseno/guia-de-estilo.md.
 
   Reglas que no se negocian:
   - La IP de casa nunca consulta comercios (DEC-041, DEC-122). El Core no tiene spiders
     ni clientes HTTP hacia comercios (DEC-173).
-  - Dinero con Decimal y ROUND_HALF_UP a centavos; porcentajes sin redondear para
-    comparar (DEC-060).
-  - Cada criterio de aceptación del REQ es un escenario con el mismo ID (B1, C7...).
+  - Dinero con Decimal y ROUND_HALF_UP a centavos, solo en los montos de la lista
+    cerrada del REQ §5 y una sola vez al final de cada fórmula; porcentajes sin
+    redondear para calcular y comparar, mostrados con 1 decimal (DEC-060, precisada
+    por DEC-207 y DEC-222). El precio habitual no se redondea (DEC-226).
+  - Las RN están congeladas (DEC-209): donde el REQ declara un supuesto S-xx o una
+    prevalencia (§4), manda el REQ y se cita el supuesto.
+  - Cada criterio de aceptación del REQ es un escenario con el mismo ID (B1, C7...);
+    cada variante (a), (b)... es un escenario propio: "B30 (e)".
 
 rules:
   proposal:
     - "Cita Issue: #N, la versión del REQ y la parte (A, B, C o D)."
     - "Copia el alcance del REQ sin ampliarlo; lo que falte va a Preguntas."
+    - "Lista los requisitos no funcionales de la parte con su sección del REQ (DEC-229)."
   specs:
     - "Cada requisito cita su RN con versión, y su supuesto S-xx si aplica."
     - "Cada escenario conserva el ID, los datos y los resultados del REQ."
+    - "Cada variante (a), (b)... del REQ es un escenario propio con su ID y letra."
   design:
+    - "Obligatorio en OIP. Lo escribe oip-disenador; contenido mínimo en .claude/agents/oip-disenador.md (DEC-228, DEC-229)."
     - "Incluye la tabla de ADR con respeta / toca."
   tasks:
-    - "1 tarea = 1 PR, con escenarios, dependencias, horas y Definition of Done."
-    - "Termina con la matriz de cobertura: escenario, requisito, tarea, RN."
+    - "1 tarea = 1 PR, de 4 a 8 h, con escenarios, dependencias, horas y Definition of Done (DEC-228)."
+    - "Cada tarea con comportamientos esperados y guía de implementación; hitos al inicio (DEC-229)."
+    - "Termina con la matriz de cobertura: escenario y variante, capacidad, requisito, tarea, RN."
