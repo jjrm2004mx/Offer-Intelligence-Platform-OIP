@@ -50,7 +50,7 @@ Con los dos canales cerrados (ninguno disponible ni por revisar), el sistema SHA
 - **AND** resultado **`DESCARTADA`**, motivo `SIN CANAL DISPONIBLE`
 
 ### Requirement: Revisión manual con nivel calculado
-Una oferta identificada solo por nombre SHALL dar `REVISION_MANUAL` con `COINCIDENCIA NO CONFIRMADA`, sin aviso. `nivel_calculado` (nivel de RN-009 §4.3 con el mínimo por unidad y la baja por competencia más barata, sin los demás requisitos de canal) MUST guardarse siempre que se pueda calcular, también en `REVISION_MANUAL` (RN-009 v2 §4.1, RN-013 v1; DEC-202).
+Si la oferta se identifica solo por nombre, el sistema SHALL agregar el motivo `COINCIDENCIA NO CONFIRMADA`, que lleva a `REVISION_MANUAL` (sin aviso) según la precedencia de §3.2.4. `nivel_calculado` (nivel de RN-009 §4.3 con el mínimo por unidad y la baja por competencia más barata, sin los demás requisitos de canal) MUST guardarse siempre que se pueda calcular, también en `REVISION_MANUAL` (RN-009 v2 §4.1, RN-013 v1; DEC-202).
 
 #### Scenario: B5 — Coincidencia no confirmada → revisión
 - **GIVEN** los datos de B1, pero la publicación no trae código ni modelo (solo nombre)
@@ -71,7 +71,7 @@ Si vende un tercero en el comercio, o no se sabe quién vende, el sistema SHALL 
 - **AND** resultado **`REVISION_MANUAL`**, motivo principal `VENDEDOR EXTERNO`
 
 ### Requirement: Demanda desconocida sin otro canal con nivel
-Con Amazon por revisar y ningún otro canal con nivel, el sistema SHALL dar `REVISION_MANUAL` con `DEMANDA DESCONOCIDA`. En el canal por revisar MUST calcular el margen ajustado y `nivel_calculado` informativo, sin unidades, días ni rendimiento (RN-004 v2, RN-009 v2; S-30).
+Con Amazon por revisar y ningún otro canal con nivel, el sistema SHALL agregar el motivo `DEMANDA DESCONOCIDA`, que lleva a `REVISION_MANUAL` según la precedencia de §3.2.4. En el canal por revisar MUST calcular el margen ajustado y `nivel_calculado` informativo, sin unidades, días ni rendimiento (RN-004 v2, RN-009 v2; S-30).
 
 #### Scenario: B11 — Demanda desconocida sin otro canal → revisión
 - **GIVEN** los datos de B10 (a), y además Jesús calificó herramientas con demanda local **baja**
@@ -81,7 +81,7 @@ Con Amazon por revisar y ningún otro canal con nivel, el sistema SHALL dar `REV
 - **AND** resultado **`REVISION_MANUAL`**, motivo `DEMANDA DESCONOCIDA`
 
 ### Requirement: Compra a particular con inspección
-La compra a un particular SHALL dar `PARTICULAR` (inspección física obligatoria) y `REVISION_MANUAL`. El costo de compra MUST incluir la recogida y no lleva impuesto; el usado usa el valor de referencia de RN-014 en lugar del precio habitual, solo se evalúa en venta local y su calidad del precio no aplica (RN-001 v2, RN-008 v2, RN-014 v1, RN-015 v1, RN-016 v1; S-05, S-12, S-13, S-14; DEC-215).
+En una compra a un particular, el sistema SHALL agregar el motivo `PARTICULAR` (inspección física obligatoria), que lleva a `REVISION_MANUAL` según la precedencia de §3.2.4. El costo de compra MUST incluir la recogida y no lleva impuesto; el usado usa el valor de referencia de RN-014 en lugar del precio habitual, solo se evalúa en venta local y su calidad del precio no aplica (RN-001 v2, RN-008 v2, RN-014 v1, RN-015 v1, RN-016 v1; S-05, S-12, S-13, S-14; DEC-215).
 
 #### Scenario: B18 — Particular → revisión con inspección
 - **GIVEN** captura manual de un atornillador DEWALT DCF840 usado, de un particular en San Diego, $70, modelo + marca y mismo contenido; usados comparables (precios pedidos) $120, $130 y $140; recogida $9.50; sin estimado de Jesús; **sin datos de Amazon** (ni ficha ni mínimo de 60 días)
