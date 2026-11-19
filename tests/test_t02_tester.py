@@ -298,7 +298,7 @@ def test_cargada_trae_version_schema_version_y_huella():
     base = cargar_configuracion(BASE)
     produccion = cargar_configuracion(PRODUCCION)
     assert (base.version, base.schema_version) == ("escenarios-base-1", "1")
-    assert (produccion.version, produccion.schema_version) == ("2026-11-18.1", "1")
+    assert (produccion.version, produccion.schema_version) == ("2026-11-18.2", "1")
     assert re.fullmatch(r"[0-9a-f]{64}", base.sha256)
     assert base.sha256 != produccion.sha256
 
@@ -1284,7 +1284,7 @@ def test_o3_version_valida_sigue_cargando_desde_el_yaml(version):
 
 def test_o3_los_dos_archivos_del_repo_siguen_cargando_con_su_version():
     assert cargar_configuracion(BASE).version == "escenarios-base-1"
-    assert cargar_configuracion(PRODUCCION).version == "2026-11-18.1"
+    assert cargar_configuracion(PRODUCCION).version == "2026-11-18.2"
 
 
 # O-4: cota mínima declarada, razonable e instalada.

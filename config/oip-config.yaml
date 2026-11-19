@@ -1,19 +1,21 @@
 # Configuración inicial de PRODUCCIÓN de OIP, parte B (REQ-2026-0001 v2.9; design.md §7, PAR-01 a PAR-13).
 #
-# Cómo leer los comentarios (DEC-234 punto 7, PROVISIONAL hasta que Jesús revise este archivo en el PR de T02):
+# Cómo leer los comentarios (DEC-234 punto 7; valores revisados por Jesús el 2026-11-18 en el PR #32, G4):
 #   [REQ §5]      valor de la "Configuración base" del REQ §5.
 #   [REQ §x/S-nn] valor de otra sección o de un supuesto del REQ.
 #   [RN-nnn §x]   valor de la RN, en la versión que cita el REQ §4 (porque REQ §5 no lo fija).
-#   [RN ← "—"]    REQ §5 tiene "—" en ese dato y el valor sale de la RN indicada (DEC-234 punto 7). REVISAR.
+#   [RN ← "—"]    REQ §5 tiene "—" en ese dato y el valor sale de la RN indicada (DEC-234 punto 7).
 #   [AUSENTE]     REQ §5 tiene "—" y la RN tampoco da un valor: la clave se omite a propósito.
 #   [DEC-nnn]     decisión del registro de decisiones.
-#   [REVISAR]     interpretación o valor provisional que Jesús debe confirmar.
+#   [JESÚS aaaa-mm-dd]  decisión de Jesús en esa fecha (revisión G4 del PR #32): acepta, confirma o fija el valor.
+#   [PROVISIONAL aaaa-mm-dd]  valor provisional por decisión de Jesús en esa fecha: se usa así y se cambia
+#                 aquí, sin tocar el código (sube "version" y carga con `oip config cargar`).
 #
 # Porcentajes en puntos (15 = 15%); montos en USD. Un número con punto se lee como Decimal (nunca float).
 # Cambiar un valor = editar este archivo, subir "version" y cargarlo con `oip config cargar` (RNF-2).
 # Los dominios de comercios solo viven aquí y en tests/fixtures/ (gate de egress, DEC-173).
 
-version: "2026-11-18.1"               # [design.md §7] formato AAAA-MM-DD.n
+version: "2026-11-18.2"               # [design.md §7] formato AAAA-MM-DD.n
 schemaVersion: "1"                    # [design.md §7] esquema de la parte B
 
 general:                              # PAR-01
@@ -42,7 +44,7 @@ general:                              # PAR-01
 
 retailers:                            # PAR-02 [arquitectura v2.2 C-30; DEC-132] comercios del Inc. 1
   # chain = código de la cadena (comercio = cadena, DEC-216). domains = dominios autorizados para la
-  # validación sintáctica de productUrl (REQ §3.2 paso 1); nunca se abren. [REVISAR] dominios.
+  # validación sintáctica de productUrl (REQ §3.2 paso 1); nunca se abren. [PROVISIONAL 2026-11-18] dominios sin cambios, configurables (decisión de Jesús).
   homedepot: {chain: homedepot, domains: [homedepot.com], amazon_listing: false}
   walmart: {chain: walmart, domains: [walmart.com], amazon_listing: false}
   target: {chain: target, domains: [target.com], amazon_listing: false}
@@ -51,7 +53,7 @@ retailers:                            # PAR-02 [arquitectura v2.2 C-30; DEC-132]
   nintendo: {chain: nintendo, domains: [nintendo.com], amazon_listing: false}       # Nintendo Store
   amazon: {chain: amazon, domains: [amazon.com], amazon_listing: true}              # ficha de Amazon (DEC-203)
 
-stores: {}                            # PAR-03 [REVISAR] sin sucursales todavía: las da de alta la parte A
+stores: {}                            # PAR-03 [PROVISIONAL 2026-11-18] sin cambios, configurable (decisión de Jesús); sin sucursales todavía: las da de alta la parte A
                                       # (storeCode del Worker). Límite por cliente: RN-008 §4.4, si lo hay.
 
 categories:                           # PAR-04 [REQ §5 tabla por category; RN-004, RN-005, RN-006, RN-015, RN-017]
@@ -76,7 +78,7 @@ categories:                           # PAR-04 [REQ §5 tabla por category; RN-0
     initial_local_demand: medium
     provenance_risk: false                                           # [RN-015 §4]
   home_kitchen:
-    # commission                                                     # [AUSENTE] RN-006 §4.1 no tiene fila "Hogar y cocina" (su "Hogar e iluminación" es home_lighting, arquitectura §8) → COMISIÓN DESCONOCIDA. [REVISAR]
+    commission: {type: flat, rate_pct: 15, min_per_unit: 0.30}       # [JESÚS 2026-11-18] decisión de Jesús: REQ §5 tiene "—" y RN-006 §4.1 no tiene fila "Hogar y cocina" (su "Hogar e iluminación" es home_lighting, arquitectura §8)
     return_rate: {source: own, rate_pct: 8}                          # [REQ §5]
     return_loss_pct: 50                                              # [REQ §5]
     amazon_restricted: false                                         # [RN-006 §4.3]
@@ -128,7 +130,7 @@ categories:                           # PAR-04 [REQ §5 tabla por category; RN-0
     return_rate: {source: own, rate_pct: 12}                         # [RN ← "—"] RN-005 §4 relojes 12%
     return_loss_pct: 50                                              # [REQ §5]
     amazon_restricted: true                                          # [RN-006 §4.3] relojes
-    main_category_size: 248469279                                    # [RN ← "—"] RN-004 §4 "Ropa, zapatos y joyería" (oct-2025), umbral 1,242,346
+    main_category_size: 248469279                                    # [RN ← "—"] RN-004 §4 "Ropa, zapatos y joyería" (oct-2025), umbral 1,242,346; [JESÚS 2026-11-18] confirmado
     subcategory_rank_required: true                                  # [RN-004 §4] primeros 100 de la subcategoría
     initial_local_demand: medium
     provenance_risk: true                                            # [RN-015 §4] relojes
@@ -140,13 +142,13 @@ categories:                           # PAR-04 [REQ §5 tabla por category; RN-0
     return_rate: {source: own, rate_pct: 11}                         # [RN ← "—"] RN-005 §4 joyería 11%
     return_loss_pct: 75                                              # [REQ §5]
     amazon_restricted: true                                          # [RN-006 §4.3] joyería fina
-    main_category_size: 248469279                                    # [RN ← "—"] RN-004 §4 (oct-2025), umbral 1,242,346
+    main_category_size: 248469279                                    # [RN ← "—"] RN-004 §4 (oct-2025), umbral 1,242,346; [JESÚS 2026-11-18] confirmado
     subcategory_rank_required: true                                  # [RN-004 §4]
     initial_local_demand: medium
     provenance_risk: false                                           # [RN-015 §4] no está en la lista
   toys:
     commission: {type: flat, rate_pct: 15, min_per_unit: 0.30}       # [RN ← "—"] RN-006 §4.1 juguetes 15%
-    return_rate: {source: own, rate_pct: 5}                          # [RN ← "—"] RN-005 §4 juguetes 5% (propuesta nueva en la RN)
+    return_rate: {source: own, rate_pct: 5}                          # [RN ← "—"] RN-005 §4 juguetes 5% (propuesta nueva en la RN); [JESÚS 2026-11-18] aceptado
     return_loss_pct: 50                                              # [REQ §5]
     amazon_restricted: false                                         # [RN-006 §4.3; S-10] solo en temporada (lists.toy_season)
     # main_category_size                                             # [AUSENTE] RN-004 §4 "Por cargar"
@@ -155,13 +157,13 @@ categories:                           # PAR-04 [REQ §5 tabla por category; RN-0
     provenance_risk: false
 
 lists:                                # PAR-05 [REQ §6 "Listas"; RN-006 §4.3; RN-015 §4] listas que mantiene Jesús
-  amazon_restricted_brands: []        # [RN-006 §4.3] "lista que crece con cada caso"; empieza vacía. [REVISAR]
+  amazon_restricted_brands: []        # [RN-006 §4.3] "lista que crece con cada caso"; empieza vacía. [PROVISIONAL 2026-11-18] sin cambios, configurable
   amazon_restricted_products: []      # [RN-006 §4.3] por producto; empieza vacía
-  avoid_always: []                    # [RN-015 §4] por identificador de producto (recalls, regulados, seguridad infantil); empieza vacía. [REVISAR]
-  luxury_brands: []                   # [RN-015 §4; S-21] lista que mantiene Jesús; empieza vacía. [REVISAR]
-  hazmat_brands: []                   # [RN-006 §4.3; S-07] perfumes, aerosoles, baterías de litio: por marca o producto (design.md Pendiente 7). [REVISAR]
+  avoid_always: []                    # [RN-015 §4] por identificador de producto (recalls, regulados, seguridad infantil); empieza vacía. [PROVISIONAL 2026-11-18] sin cambios, configurable
+  luxury_brands: []                   # [RN-015 §4; S-21] lista que mantiene Jesús; empieza vacía. [PROVISIONAL 2026-11-18] sin cambios, configurable
+  hazmat_brands: []                   # [RN-006 §4.3; S-07] perfumes, aerosoles, baterías de litio: por marca o producto (design.md Pendiente 7). [PROVISIONAL 2026-11-18] sin cambios, configurable
   hazmat_products: []
-  provenance_risk_brands: []          # [RN-015 §4] baterías y perfumes no son category: por marca o producto. [REVISAR]
+  provenance_risk_brands: []          # [RN-015 §4] baterías y perfumes no son category: por marca o producto. [PROVISIONAL 2026-11-18] sin cambios, configurable
   provenance_risk_products: []
   toy_season: {start: "11-01", end: "12-31"}   # [REQ S-10] juguetes en temporada navideña
 
@@ -176,12 +178,13 @@ shipping:                             # PAR-06 [REQ §5; RN-006 §4.2; RN-001 §
   shipping_to_me_default: 0.00        # [REQ §5] envío hacia mí $0 (PO Box: RN-001 §4, dirección pendiente)
 
 taxes:                                # PAR-07 [REQ §5, §6; DEC-220]
-  # [REVISAR] Sin ubicaciones cargadas: el REQ §9 pide que Jesús confirme Chula Vista y National City (8.75%)
-  # en el buscador oficial de la CDTFA ANTES de cargarlas, con su fecha de vigencia. Mientras, todas usan el
-  # respaldo de 7.75%. Formato de cada una:
+  # [PROVISIONAL 2026-11-18] Decisión de Jesús: Chula Vista y National City (8.75%) siguen pendientes, sin
+  # ubicaciones cargadas; el REQ §9 pide confirmarlas en el buscador oficial de la CDTFA ANTES de cargarlas,
+  # con su fecha de vigencia. Mientras, todas usan el respaldo de 7.75% (provisional y configurable).
+  # Para cargar una ubicación: agrégala en "locations" con este formato, sube "version" y carga el archivo:
   #   chula_vista: {rate_pct: 8.75, source: CDTFA, effective_date: AAAA-MM-DD}
   locations: {}
-  fallback_rate_pct: 7.75             # [REQ §5; DEC-220] respaldo y PO Box de San Diego
+  fallback_rate_pct: 7.75             # [REQ §5; DEC-220] respaldo y PO Box de San Diego; [PROVISIONAL 2026-11-18] configurable
   private_sellers_exempt: true        # [REQ §5; S-14] particulares sin impuesto
 
 price_reference:                      # PAR-08 [REQ §5; RN-002 §4]
@@ -194,12 +197,13 @@ price_reference:                      # PAR-08 [REQ §5; RN-002 §4]
   amazon_min_window_days: 60          # [REQ S-01; RN-002 §4.2] mínimo de 60 días en Amazon
 
 private_sellers:                      # PAR-09 [REQ §6; DEC-212; DEC-223]
-  platforms:                          # enlace https de una plataforma permitida (DEC-212). [REVISAR] dominios y prefijo
+  platforms:                          # enlace https de una plataforma permitida (DEC-212). [PROVISIONAL 2026-11-18] dominios y prefijo sin cambios, configurables
     offerup: {domains: [offerup.com]}
     facebook_marketplace: {domains: [facebook.com], path_prefix: /marketplace}
   cities:                             # [REQ §6] ciudad de recogida (solo la ciudad); zona de venta local: Tijuana y el condado de San Diego [RN-016 §4; DEC-171]
-    # [REVISAR] km y horas de recogida: provisionales con la entrega por defecto de S-24 (10 km y 0.5 h = $9.50,
-    # el valor de la recogida de B18). Jesús los ajusta por ciudad (km desde la garita, DEC-223).
+    # [PROVISIONAL 2026-11-18] Decisión de Jesús: km y horas de recogida provisionales pero configurables, con la
+    # entrega por defecto de S-24 (10 km y 0.5 h = $9.50, el valor de la recogida de B18). Se ajustan por ciudad
+    # aquí (km desde la garita, DEC-223).
     tijuana: {pickup_km: 10, pickup_hours: 0.5, in_local_sale_zone: true}
     san_diego: {pickup_km: 10, pickup_hours: 0.5, in_local_sale_zone: true}
     chula_vista: {pickup_km: 10, pickup_hours: 0.5, in_local_sale_zone: true}

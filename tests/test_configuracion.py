@@ -16,6 +16,7 @@ from oip.catalogos import Categoria, Nivel
 from oip.configuracion import (
     ESQUEMAS_SOPORTADOS,
     ComisionConUmbral,
+    ComisionFija,
     ComisionPorTramos,
     Configuracion,
     ConfiguracionVersionada,
@@ -164,7 +165,7 @@ def test_base_valores_del_req_5():
 
 
 def test_produccion_toma_de_las_rn_los_guiones_del_req():
-    # DEC-234 punto 7 (PROVISIONAL hasta que Jesús revise el PR de T02).
+    # DEC-234 punto 7; valores revisados por Jesús el 2026-11-18 (G4 del PR #32).
     categorias = cargar_configuracion(PRODUCCION).contenido.categories
     assert categorias[Categoria.ELECTRONICS].commission.rate_pct == Decimal("8")  # RN-006
     assert categorias[Categoria.TOYS].commission.rate_pct == Decimal("15")  # RN-006
@@ -172,8 +173,12 @@ def test_produccion_toma_de_las_rn_los_guiones_del_req():
     assert categorias[Categoria.WATCHES].return_rate.rate_pct == Decimal("12")  # RN-005
     assert categorias[Categoria.JEWELRY].return_rate.rate_pct == Decimal("11")  # RN-005
     assert categorias[Categoria.TOYS].return_rate.rate_pct == Decimal("5")  # RN-005
-    # RN-006 §4.1 no da comisión de "Hogar y cocina": sigue ausente (COMISIÓN DESCONOCIDA).
-    assert categorias[Categoria.HOME_KITCHEN].commission is None
+    # RN-006 §4.1 no da comisión de "Hogar y cocina": 15% por decisión de Jesús del 2026-11-18
+    # (REQ §5 sigue con "—": base.yaml no la trae).
+    comision_hogar = categorias[Categoria.HOME_KITCHEN].commission
+    assert isinstance(comision_hogar, ComisionFija)
+    assert comision_hogar.rate_pct == Decimal("15")
+    assert comision_hogar.min_per_unit == Decimal("0.30")
 
 
 # --- Objeto inmutable con huella estable (2.1) -----------------------------------------
