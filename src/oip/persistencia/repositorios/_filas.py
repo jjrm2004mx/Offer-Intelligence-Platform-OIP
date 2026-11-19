@@ -10,6 +10,10 @@ memoria se comporta como la base:
   escala, o más dígitos enteros que la precisión, se rechaza con ``ValueError`` antes de
   escribir: PostgreSQL lo redondearía en silencio y el repositorio no redondea (DEC-207).
   ``numeric`` sin escala conserva el valor exacto. Nunca pasa por ``float``.
+- ``integer`` y ``bigint`` fuera de su rango, y ``char(n)`` de más de ``n``, también se
+  rechazan con ``ValueError`` antes de escribir (PostgreSQL daría un error de la base).
+- La memoria aplica además los ``CHECK`` del esquema desde su texto SQL (``_checks``), con
+  el mismo nombre de restricción en ``ErrorDeIntegridad``.
 - ``timestamptz`` vuelve en UTC; una fecha y hora sin desfase se rechaza.
 - **Vacío = ausente:** un texto vacío o solo espacios se rechaza (los ``CHECK``
   ``*_no_vacio`` de T05); lo ausente es ``None``.

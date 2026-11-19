@@ -1,8 +1,9 @@
 """``RepositorioMemoria`` (CMP-20): el repositorio en memoria para pruebas y desarrollo.
 
-Guarda las **mismas filas** que ``RepositorioPostgres`` (``_filas``), con las claves
-primarias, los únicos (también el de ``listing`` con ``coalesce(store_code, '')``) y las
-claves foráneas de los metadatos de ``oip.persistencia.tablas``: una violación levanta
+Guarda las **mismas filas** que ``RepositorioPostgres`` (``_filas``), con los ``CHECK`` del
+esquema (evaluados desde su texto SQL en ``_checks``), las claves primarias, los únicos
+(también el de ``listing`` con ``coalesce(store_code, '')``) y las claves foráneas de los
+metadatos de ``oip.persistencia.tablas``: una violación levanta
 ``ErrorDeIntegridad`` con el nombre de la misma restricción que daría PostgreSQL. Cada
 método que escribe es una transacción: valida todas sus filas y solo entonces las agrega.
 
@@ -22,7 +23,7 @@ from oip.catalogos import Resultado, TipoRegistro
 from oip.configuracion import ConfiguracionVersionada
 from oip.evaluacion.contexto import ObservacionRegistrada, RegistroEvaluacion
 from oip.persistencia import tablas
-from oip.persistencia.repositorios import _filas
+from oip.persistencia.repositorios import _checks, _filas
 from oip.persistencia.repositorios._filas import Fila
 from oip.persistencia.repositorios._tipos import (
     CapturaGuardada,
@@ -114,6 +115,10 @@ class _Transaccion:
 
     def insertar(self, tabla_sa: Table, fila: Fila) -> None:
         tabla = self._repo._tablas[tabla_sa.name]
+        # Como PostgreSQL: primero los CHECK, luego los únicos y las claves foráneas.
+        restriccion = _checks.violado(tabla_sa.name, fila)
+        if restriccion is not None:
+            raise ErrorDeIntegridad(restriccion)
         for nombre, clave in tabla.unicos:
             valor = clave(fila)
             if valor is not None and self._existe(tabla, nombre, valor) is not None:
@@ -311,7 +316,11 @@ class RepositorioMemoria:
         fila = self._t(tablas.load_run).por_pk(id_carga)
         if fila is None:
             raise ValueError("terminar_carga: la carga no existe")
-        fila.update(_filas.cambios_reporte(fila, reporte))
+        actualizada = {**fila, **_filas.cambios_reporte(fila, reporte)}
+        restriccion = _checks.violado(tablas.load_run.name, actualizada)
+        if restriccion is not None:
+            raise ErrorDeIntegridad(restriccion)
+        fila.update(actualizada)
 
     def leer_carga(self, id_carga: UUID) -> CargaGuardada | None:
         fila = self._t(tablas.load_run).por_pk(id_carga)

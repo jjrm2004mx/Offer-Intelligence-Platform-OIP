@@ -966,3 +966,46 @@ def test_una_observacion_sin_su_disponibilidad_da_un_error_del_repositorio(repo)
     assert error.value.__context__ is None and error.value.__cause__ is None
     with pytest.raises(ErrorRepositorio):
         repo.observaciones_del_producto(ID_PRODUCTO, instante=_t(1))
+
+
+# --- Los CHECK del esquema en memoria (_checks) -----------------------------------------
+
+
+def test_la_memoria_evalua_todos_los_check_del_esquema_desde_su_texto():
+    from sqlalchemy import CheckConstraint
+
+    from oip.persistencia.repositorios import _checks
+
+    for nombre, tabla in tablas.metadata.tables.items():
+        esperados = {str(r.name) for r in tabla.constraints if isinstance(r, CheckConstraint)}
+        assert {n for n, _ in _checks.CHECKS[nombre]} == esperados, nombre
+
+
+@pytest.mark.parametrize(
+    ("tabla", "fila", "violado"),
+    [
+        # NULL no viola un CHECK (lógica de tres valores, como PostgreSQL).
+        ("local_comparable", {"asking_price": None, "currency": None}, None),
+        ("local_comparable", {"asking_price": Decimal("0.00")}, "asking_price_positivo"),
+        ("local_comparable", {"currency": "MXN", "exchange_rate": None}, "mxn_con_tipo_de_cambio"),
+        ("client_request", {"items": ["a", "b", "c", "d"]}, "items_de_1_a_3"),
+        (
+            "client_request",
+            {"accepted_conditions": ["new", "nuevo"]},
+            "accepted_conditions_catalogo",
+        ),
+        ("load_rejection", {"reason": "CAMPO OBLIGATORIO FALTANTE (model)"}, None),
+        ("load_rejection", {"reason": "CAMPO OBLIGATORIO FALTANTE (a b)"}, "reason_catalogo"),
+        ("load_rejection", {"field": "a b"}, "field_nombre"),
+        ("evaluation", {"main_reason": None, "reasons": []}, None),
+        ("evaluation", {"main_reason": "EVITAR", "reasons": []}, "motivo_principal"),
+        ("evaluation", {"main_reason": "EVITAR", "reasons": ["EVITAR", "PARTICULAR"]}, None),
+        ("config_version", {"content": '["no", "objeto"]'}, "content_objeto"),
+    ],
+)
+def test_los_check_en_memoria_siguen_la_semantica_de_sql(tabla, fila, violado):
+    from oip.persistencia.repositorios import _checks
+
+    completa = {c.name: None for c in tablas.metadata.tables[tabla].columns} | fila
+    esperado = None if violado is None else f"ck_{tabla}_{violado}"
+    assert _checks.violado(tabla, completa) == esperado

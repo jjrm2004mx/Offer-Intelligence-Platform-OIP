@@ -88,6 +88,9 @@ def _valor(columna: Any, valor: Any, ruta: str) -> Any:
     if isinstance(tipo, Integer | BigInteger):
         if type(valor) is not int:
             raise TypeError(f"{ruta}: se esperaba un entero")
+        bits = 64 if isinstance(tipo, BigInteger) else 32
+        if not -(2 ** (bits - 1)) <= valor < 2 ** (bits - 1):
+            raise ValueError(f"{ruta}: no cabe en {'bigint' if bits == 64 else 'integer'}")
         return valor
     if isinstance(tipo, Boolean):
         if type(valor) is not bool:
@@ -116,7 +119,12 @@ def _valor(columna: Any, valor: Any, ruta: str) -> Any:
         if type(valor) is not str:
             raise TypeError(f"{ruta}: se esperaba el texto JSON canónico")
         return valor
-    if isinstance(tipo, Text | CHAR):
+    if isinstance(tipo, CHAR):
+        texto = _texto(valor, ruta)
+        if tipo.length is not None and len(texto) > tipo.length:
+            raise ValueError(f"{ruta}: más de {tipo.length} caracteres")
+        return texto
+    if isinstance(tipo, Text):
         return _texto(valor, ruta)
     raise TypeError(f"{ruta}: tipo de columna no admitido")  # pragma: no cover
 

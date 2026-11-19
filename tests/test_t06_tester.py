@@ -150,7 +150,7 @@ _DEFECTO_CHECK = (
 
 @pytest.fixture(
     params=[
-        pytest.param("memoria", marks=pytest.mark.xfail(strict=True, reason=_DEFECTO_CHECK)),
+        pytest.param("memoria"),
         pytest.param("postgres", marks=pytest.mark.integracion),
     ]
 )
@@ -738,24 +738,8 @@ def test_defecto_ya_no_recomendado_sin_evaluacion_anterior_se_rechaza(repo_check
 @pytest.mark.parametrize(
     "param",
     [
-        pytest.param(
-            "memoria",
-            marks=pytest.mark.xfail(
-                strict=True,
-                reason="IMPLEMENTATION DEFECT (T06): memoria guarda un entero fuera de integer",
-            ),
-        ),
-        pytest.param(
-            "postgres",
-            marks=[
-                pytest.mark.integracion,
-                pytest.mark.xfail(
-                    strict=True,
-                    reason="IMPLEMENTATION DEFECT (T06): PostgreSQL da ErrorRepositorio "
-                    "(integer out of range) en lugar de ValueError antes de escribir",
-                ),
-            ],
-        ),
+        pytest.param("memoria"),
+        pytest.param("postgres", marks=[pytest.mark.integracion]),
     ],
 )
 def test_defecto_un_entero_que_no_cabe_en_integer_se_rechaza_antes_de_escribir(param):
