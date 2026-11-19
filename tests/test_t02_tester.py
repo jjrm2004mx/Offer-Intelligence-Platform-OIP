@@ -1313,3 +1313,45 @@ def test_o4_zone_tab_instalado_trae_las_zonas_que_justifican_la_cota():
     for zona in ("Europe/Kyiv", "America/Ciudad_Juarez"):
         cargada = cargar_configuracion_texto(_texto(_con(_base(), "general.timezone", zona)))
         assert cargada.contenido.general.timezone == zona
+
+
+# --- Revisión G4 de Jesús del 2026-11-18 (commit 6ef35a6) ------------------------------
+# Decisión 2: home_kitchen 15% flat con mínimo $0.30 solo en producción;
+# base.yaml (REQ §5) sigue con "—".
+def test_g4_home_kitchen_15_flat_en_produccion_con_decimal_exacto():
+    comision = (
+        cargar_configuracion(PRODUCCION).contenido.categories[Categoria.HOME_KITCHEN].commission
+    )
+    assert type(comision) is ComisionFija
+    assert type(comision.rate_pct) is Decimal and comision.rate_pct == D("15")
+    assert type(comision.min_per_unit) is Decimal and str(comision.min_per_unit) == "0.30"
+
+
+def test_g4_base_sigue_sin_comision_de_home_kitchen_como_dice_el_req():
+    assert (
+        cargar_configuracion(BASE).contenido.categories[Categoria.HOME_KITCHEN].commission is None
+    )
+
+
+def test_g4_produccion_sin_revisar_pendiente_y_con_la_fuente_de_cada_decision():
+    texto = PRODUCCION.read_text(encoding="utf-8")
+    assert "[REVISAR]" not in texto
+    linea_hogar = next(
+        ln for ln in texto.splitlines() if "commission:" in ln and "Hogar y cocina" in ln
+    )
+    assert "[JESÚS 2026-11-18]" in linea_hogar
+    # Decisiones 1 y 3: toys 5% y tamaño de watches/jewelry, confirmados con su marca.
+    assert texto.count("[JESÚS 2026-11-18] confirmado") == 2
+    assert "[JESÚS 2026-11-18] aceptado" in texto
+    # Decisiones 4 a 6: impuestos, recogida y listas, marcados provisionales.
+    assert texto.count("[PROVISIONAL 2026-11-18]") >= 8
+
+
+# Decisiones 4 y 5: los valores provisionales no cambiaron con la revisión.
+def test_g4_valores_provisionales_sin_cambio():
+    contenido = yaml.safe_load(PRODUCCION.read_text(encoding="utf-8"))
+    assert contenido["taxes"]["locations"] == {}
+    assert str(contenido["taxes"]["fallback_rate_pct"]) == "7.75"
+    for ciudad in contenido["private_sellers"]["cities"].values():
+        assert (ciudad["pickup_km"], ciudad["pickup_hours"]) == (10, 0.5)
+    assert contenido["stores"] == {}
