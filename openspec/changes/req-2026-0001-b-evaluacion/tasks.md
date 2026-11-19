@@ -109,8 +109,9 @@ Tareas de la parte B del REQ-2026-0001 v2.9 (`req-2026-0001-b-evaluacion`). **1 
 - **Depende de:** T05. **Estimación:** 8 h.
 - **DoD:** común; evidencia de la batería contra PostgreSQL en local.
 
-- [ ] 6.1 Implementar `Repositorio` y `RepositorioMemoria` y verificar la batería de contrato en CI
+- [x] 6.1 Implementar `Repositorio` y `RepositorioMemoria` y verificar la batería de contrato en CI
 - [ ] 6.2 Implementar `RepositorioPostgres` con la conexión por secreto y verificar la misma batería en integración
+  - Implementado en el PR de T06 (con la migración `0003_registro_de_rechazo`, DEC-250). Pendiente la evidencia de la batería contra PostgreSQL + TimescaleDB en Rocky (Jesús, DEC-233): la casilla se marca con esa corrida.
 
 ## 7. T07 — Validación de cada observación (B20)
 
