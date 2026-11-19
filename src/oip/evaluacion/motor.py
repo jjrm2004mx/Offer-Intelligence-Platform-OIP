@@ -12,7 +12,9 @@ un ``Avance`` nuevo.
 
 En T04 los pasos 1 a 10 eran **funciones vacías** (devuelven el avance sin cambios): las
 llenan las tareas siguientes, cada una con sus reglas. T07 llena el paso 1 (validar); T09,
-los pasos 3 y 4 (precio habitual, episodio de liquidación, descuento real y franja). Los
+los pasos 3 y 4 (precio habitual, episodio de liquidación, descuento real y franja); T10,
+el precio de mercado hoy y el MSRP del paso 3, el descuento anunciado con sus marcas y
+``SIN HISTORIAL SUFICIENTE`` del paso 4 y la calidad del precio del paso 5. Los
 motivos y la precedencia (``resultado``, CMP-16) y el armado del registro ya están completos.
 """
 
@@ -28,6 +30,7 @@ from oip.catalogos import (
     Confianza,
     EstadoCanal,
     Identificacion,
+    Marca,
     Motivo,
     Nivel,
     Resultado,
@@ -102,32 +105,71 @@ def identificar(contexto: ContextoEvaluacion, avance: Avance) -> Avance:
 def calcular_referencias(contexto: ContextoEvaluacion, avance: Avance) -> Avance:
     """Paso 3 (RN-002; CMP-11): precio habitual y episodio, mercado hoy, MSRP, mínimo de 60
     días y venta esperada en Amazon. T09: el precio habitual con su fuente y su episodio de
-    liquidación (``referencias``); las demás referencias las agregan sus tareas."""
+    liquidación; T10: el precio de mercado hoy básico y el MSRP (solo se muestra). El mínimo
+    de 60 días y la venta esperada en Amazon los agregan sus tareas."""
     return dataclasses.replace(avance, referencias=referencias.calcular_referencias(contexto))
 
 
 def calcular_descuento(contexto: ContextoEvaluacion, avance: Avance) -> Avance:
-    """Paso 4 (RN-003; CMP-12): descuento anunciado y real, franja y marcas. T09: el
-    descuento real contra el precio habitual que aplica y el motivo de su franja.
+    """Paso 4 (RN-003; CMP-12): descuento anunciado y real, franja y marcas.
 
     Solo en una oferta **nueva** (S-13): la de un usado se mide contra el valor de
-    referencia de RN-014 (REQ §3.2 paso 3), que agrega su tarea. Sin precio habitual no hay
-    descuento real.
+    referencia de RN-014 (REQ §3.2 paso 3) y no lleva ``SIN HISTORIAL SUFICIENTE``; lo
+    agrega su tarea (T20). Sin precio habitual no hay descuento real y aplica el motivo
+    ``SIN HISTORIAL SUFICIENTE`` (REQ §3.2.3). El descuento anunciado y sus marcas
+    (``PRECIO ANTES INFLADO``, ``DESCUENTO ANUNCIADO NO COMPROBADO``) se calculan con o sin
+    precio habitual.
     """
-    habitual = avance.referencias.precio_habitual if avance.referencias else None
     oferta = contexto.oferta.observacion
     precio = oferta.price.current
-    if habitual is None or precio is None or not referencias.es_nuevo(oferta):
+    if precio is None or not referencias.es_nuevo(oferta):
         return avance
+    parametros = contexto.configuracion.contenido.discount_quality
+    tachado = oferta.price.was
+    anunciado = descuento.descuento_anunciado(tachado, precio)
+    tipico = referencias.precio_tipico_de_la_tienda(contexto) if tachado is not None else None
+    marcas = tuple(m.value for m in descuento.marcas_del_anunciado(tachado, tipico, parametros))
+    avance = dataclasses.replace(
+        avance,
+        descuento_anunciado=anunciado,
+        marcas=(*avance.marcas, *(m for m in marcas if m not in avance.marcas)),
+    )
+    habitual = avance.referencias.precio_habitual if avance.referencias else None
+    if habitual is None:
+        motivos = (*avance.motivos, Motivo.SIN_HISTORIAL_SUFICIENTE)
+        return dataclasses.replace(avance, motivos=motivos)
     real = descuento.descuento_real(habitual, precio)
-    motivo = descuento.franja(real, contexto.configuracion.contenido.discount_quality)
+    motivo = descuento.franja(real, parametros)
     motivos = avance.motivos if motivo is None else (*avance.motivos, motivo)
     return dataclasses.replace(avance, descuento_real=real, motivos=motivos)
 
 
 def calcular_calidad(contexto: ContextoEvaluacion, avance: Avance) -> Avance:
-    """Paso 5 (RN-012; CMP-12): calidad del precio."""
-    return avance
+    """Paso 5 (RN-012 v1; S-22, S-28; CMP-12): calidad del precio, que se muestra junto al
+    resultado y no lo cambia. En un usado no aplica (DEC-215; S-13 para el estado
+    desconocido). Sin datos (ni precio habitual ni precio de mercado hoy) queda vacía."""
+    oferta = contexto.oferta.observacion
+    precio = oferta.price.current
+    if precio is None:
+        return avance
+    if not referencias.es_nuevo(oferta):
+        return dataclasses.replace(avance, calidad_precio=CalidadPrecio.NO_APLICA)
+    refs = avance.referencias if avance.referencias is not None else Referencias()
+    hoy = referencias.mercado_hoy(contexto)
+    datos = descuento.DatosCalidad(
+        precio=precio,
+        precio_habitual=refs.precio_habitual,
+        descuento_real=avance.descuento_real if refs.precio_habitual is not None else None,
+        precio_mercado_hoy=None if hoy is None else hoy.precio,
+        otros_comercios=0 if hoy is None else len(hoy.otras_cadenas),
+        minimo_registrado=referencias.minimo_registrado(contexto),
+        dias_historial=referencias.dias_de_historial(contexto),
+        descuento_anunciado=avance.descuento_anunciado,
+        precio_antes_inflado=Marca.PRECIO_ANTES_INFLADO.value in avance.marcas,
+    )
+    parametros = contexto.configuracion.contenido.discount_quality
+    calidad = descuento.calidad_del_precio(datos, parametros)
+    return dataclasses.replace(avance, calidad_precio=calidad)
 
 
 def calcular_costo_compra(contexto: ContextoEvaluacion, avance: Avance) -> Avance:

@@ -753,6 +753,15 @@ def _con_paso(monkeypatch, indice, funcion):
     monkeypatch.setattr(motor, "PASOS", tuple(pasos))
 
 
+def _sin_motivos_del_descuento(monkeypatch):
+    """Desde T10 el paso 4 (índice 3) da SIN HISTORIAL SUFICIENTE a una oferta nueva sin
+    precio habitual, y este contexto no trae historial: las pruebas de NIVEL_ASIGNADO y
+    SIN_NIVEL lo dejan sin efecto para probar solo la precedencia."""
+    pasos = list(motor.PASOS)
+    pasos[3] = lambda contexto, avance: avance
+    monkeypatch.setattr(motor, "PASOS", tuple(pasos))
+
+
 def test_con_pasos_vacios_el_motor_es_puro_y_reproducible(monkeypatch):
     contexto = _contexto()
 
@@ -835,6 +844,7 @@ def test_motor_nivel_asignado_con_canal_disponible_con_nivel(monkeypatch):
             canal_aviso=Canal.AMAZON,
         )
 
+    _sin_motivos_del_descuento(monkeypatch)
     _con_paso(monkeypatch, 9, llenar)
     r = motor.evaluar(_contexto())
     assert r.resultado is Resultado.NIVEL_ASIGNADO
@@ -854,6 +864,7 @@ def test_motor_canal_por_revisar_solo_con_nivel_calculado_no_da_nivel(monkeypatc
     def llenar(contexto, avance):
         return dataclasses.replace(avance, canales=(por_revisar,))
 
+    _sin_motivos_del_descuento(monkeypatch)
     _con_paso(monkeypatch, 9, llenar)
     r = motor.evaluar(_contexto())
     assert r.resultado is Resultado.SIN_NIVEL

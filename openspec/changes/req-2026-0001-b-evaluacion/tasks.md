@@ -168,8 +168,8 @@ Tareas de la parte B del REQ-2026-0001 v2.9 (`req-2026-0001-b-evaluacion`). **1 
 - **Depende de:** T09. **Estimación:** 7 h.
 - **DoD:** común.
 
-- [ ] 10.1 Implementar el descuento con sus marcas y el precio de mercado hoy y verificar B7
-- [ ] 10.2 Implementar la calidad del precio y verificar B6
+- [x] 10.1 Implementar el descuento con sus marcas y el precio de mercado hoy y verificar B7
+- [x] 10.2 Implementar la calidad del precio y verificar B6
 
 ## 11. T11 — Evaluación por canal de punta a punta (B1)
 

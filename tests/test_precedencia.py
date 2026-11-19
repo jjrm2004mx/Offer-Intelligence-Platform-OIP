@@ -169,16 +169,30 @@ def test_evaluar_es_puro_y_reproducible_byte_a_byte():
     assert primero.id_carga == contexto.id_carga
 
 
-def test_con_los_pasos_vacios_no_hay_motivos_ni_nivel():
+def _con_pasos(monkeypatch, **reemplazos):
+    pasos = tuple(reemplazos.get(p.__name__, p) for p in motor.PASOS)
+    monkeypatch.setattr(motor, "PASOS", pasos)
+
+
+def _sin_cambios(contexto, avance):
+    return avance
+
+
+def test_sin_motivos_de_los_pasos_no_hay_motivos_ni_nivel(monkeypatch):
+    # Desde T10 el paso 4 da SIN HISTORIAL SUFICIENTE a una oferta nueva sin precio
+    # habitual (este contexto no trae historial): se deja sin efecto para probar la
+    # precedencia sin motivos.
+    _con_pasos(monkeypatch, calcular_descuento=_sin_cambios)
     registro = motor.evaluar(_contexto())
     assert registro.resultado is Resultado.SIN_NIVEL
     assert registro.motivos == ()
     assert registro.motivo_principal is None
 
 
-def _con_pasos(monkeypatch, **reemplazos):
-    pasos = tuple(reemplazos.get(p.__name__, p) for p in motor.PASOS)
-    monkeypatch.setattr(motor, "PASOS", pasos)
+def test_sin_historial_el_paso_4_da_revision_manual():
+    registro = motor.evaluar(_contexto())
+    assert registro.resultado is Resultado.REVISION_MANUAL
+    assert registro.motivos == (Motivo.SIN_HISTORIAL_SUFICIENTE,)
 
 
 def test_el_motor_aplica_la_precedencia_a_los_motivos_de_los_pasos(monkeypatch):
@@ -211,7 +225,12 @@ def test_nivel_asignado_solo_con_un_canal_disponible_con_nivel(monkeypatch):
             canal_aviso=Canal.LOCAL,
         )
 
-    _con_pasos(monkeypatch, evaluar_canales=evaluar_canales, elegir_canal=elegir_canal)
+    _con_pasos(
+        monkeypatch,
+        calcular_descuento=_sin_cambios,
+        evaluar_canales=evaluar_canales,
+        elegir_canal=elegir_canal,
+    )
     registro = motor.evaluar(_contexto())
     assert registro.resultado is Resultado.NIVEL_ASIGNADO
     assert registro.nivel_aviso is Nivel.RECOMENDABLE
@@ -223,7 +242,7 @@ def test_un_canal_por_revisar_con_nivel_calculado_no_da_nivel(monkeypatch):
         canal = EvaluacionCanal(Canal.AMAZON, EstadoCanal.POR_REVISAR, nivel=Nivel.COMPRAR_YA)
         return dataclasses.replace(avance, canales=(canal,))
 
-    _con_pasos(monkeypatch, evaluar_canales=evaluar_canales)
+    _con_pasos(monkeypatch, calcular_descuento=_sin_cambios, evaluar_canales=evaluar_canales)
     assert motor.evaluar(_contexto()).resultado is Resultado.SIN_NIVEL
 
 
