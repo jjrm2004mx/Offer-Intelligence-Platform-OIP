@@ -25,10 +25,15 @@ _RENGLON = (
 )
 
 
-def configuracion_con_tienda_prueba() -> ConfiguracionVersionada:
-    """La configuración base de los escenarios más el comercio ``tienda-prueba``."""
-    texto = BASE.read_text(encoding="utf-8")
+def con_tienda_prueba(texto: str) -> str:
+    """El texto YAML de una configuración con el comercio ``tienda-prueba`` agregado a
+    ``retailers`` (para las pruebas que cambian un parámetro de base.yaml)."""
     if texto.count("\nretailers:\n") != 1:
         raise AssertionError("base.yaml: se esperaba una sola sección retailers")
-    texto = texto.replace("\nretailers:\n", "\nretailers:\n" + _RENGLON, 1)
+    return texto.replace("\nretailers:\n", "\nretailers:\n" + _RENGLON, 1)
+
+
+def configuracion_con_tienda_prueba() -> ConfiguracionVersionada:
+    """La configuración base de los escenarios más el comercio ``tienda-prueba``."""
+    texto = con_tienda_prueba(BASE.read_text(encoding="utf-8"))
     return cargar_configuracion_texto(texto, origen="base.yaml + tienda-prueba")

@@ -2,10 +2,12 @@
 episodio de liquidación (T09; capacidad ``referencias-de-precio``; RN-002 v2, RN-003 v2;
 DEC-201, DEC-224, DEC-226).
 
-"Dado" parcial (design.md §12, DEC-232): el producto solo lo vende Home Depot Chula Vista y
-no tiene canal con precio, así que las anotaciones ``SOLO_REFERENCIA`` (día −14) y
-``MERCADO YA BARATO`` (día 26) se verifican como la **franja** del descuento real (el
-motivo), no como el resultado. Las pruebas entran por el motor con un ``ContextoEvaluacion``.
+"Dado" parcial (design.md §12, DEC-232): el producto solo lo vende una sucursal (Home Depot
+Chula Vista en el REQ; en el fixture, el comercio sintético ``tienda-prueba`` de example.com,
+porque desde T07 el paso 1 valida el dominio) y no tiene canal con precio, así que las
+anotaciones ``SOLO_REFERENCIA`` (día −14) y ``MERCADO YA BARATO`` (día 26) se verifican
+como la **franja** del descuento real (el motivo), no como el resultado. Las pruebas entran
+por el motor con un ``ContextoEvaluacion``.
 
 Fixtures sintéticos: día 0 = 2026-11-18 en ``America/Tijuana`` (PAR-01); las horas van en
 hora local, así que el cambio de horario del 2026-11-01 y la observación de las 22:00 del
@@ -17,21 +19,21 @@ from __future__ import annotations
 
 import datetime as dt
 from decimal import Decimal
-from pathlib import Path
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
 import pytest
 
+from config_tienda_prueba import TIENDA_PRUEBA, configuracion_con_tienda_prueba
 from oip.catalogos import Motivo
-from oip.configuracion import cargar_configuracion
 from oip.dinero import formatear_porcentaje
 from oip.entradas.contrato import leer_observacion
 from oip.evaluacion import motor, referencias
 from oip.evaluacion.contexto import ContextoEvaluacion, ObservacionRegistrada
 from oip.evaluacion.descuento import descuento_real
 
-CONFIG = cargar_configuracion(Path(__file__).parent / "fixtures" / "config" / "base.yaml")
+# Desde T07 el paso 1 valida el dominio de la oferta: comercio sintético de example.com.
+CONFIG = configuracion_con_tienda_prueba()
 ZONA = ZoneInfo("America/Tijuana")
 HOY = dt.date(2026, 11, 18)
 PRODUCTO = UUID(int=900)
@@ -49,7 +51,7 @@ def _momento(dia: int, hora: int = 12) -> dt.datetime:
 
 def _observacion(dia: int, precio: str, hora: int = 12) -> ObservacionRegistrada:
     datos = {
-        "retailerCode": "homedepot",
+        "retailerCode": TIENDA_PRUEBA,
         "storeCode": "hd-chula-vista",
         "productUrl": "https://tienda.example.com/p/b30",
         "title": "Producto B30",

@@ -31,8 +31,9 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
+from config_tienda_prueba import TIENDA_PRUEBA, con_tienda_prueba, configuracion_con_tienda_prueba
 from oip.catalogos import Motivo
-from oip.configuracion import cargar_configuracion, cargar_configuracion_texto
+from oip.configuracion import cargar_configuracion_texto
 from oip.dinero import formatear_porcentaje
 from oip.entradas.contrato import leer_observacion
 from oip.evaluacion import motor, referencias
@@ -40,7 +41,8 @@ from oip.evaluacion.contexto import ContextoEvaluacion, ObservacionRegistrada, R
 
 RAIZ = Path(__file__).resolve().parent
 RUTA_CONFIG = RAIZ / "fixtures" / "config" / "base.yaml"
-CONFIG = cargar_configuracion(RUTA_CONFIG)
+# Desde T07 el paso 1 valida el dominio de la oferta: comercio sintético de example.com.
+CONFIG = configuracion_con_tienda_prueba()
 SRC_EVALUACION = RAIZ.parent / "src" / "oip" / "evaluacion"
 
 TIJUANA = ZoneInfo("America/Tijuana")
@@ -72,7 +74,7 @@ def _obs(
     store: str = "hd-chula-vista",
 ) -> ObservacionRegistrada:
     datos = {
-        "retailerCode": "homedepot",
+        "retailerCode": TIENDA_PRUEBA,
         "storeCode": store,
         "productUrl": f"https://tienda.example.com/p/{publicacion.int:x}",
         "title": "Producto sintético T09",
@@ -585,7 +587,7 @@ def test_el_resultado_no_depende_de_la_zona_de_la_maquina(monkeypatch):
 
 
 def _config_con(**cambios) -> object:
-    texto = RUTA_CONFIG.read_text(encoding="utf-8")
+    texto = con_tienda_prueba(RUTA_CONFIG.read_text(encoding="utf-8"))
     for clave, valor in cambios.items():
         texto, n = re.subn(rf"(\n  {clave}: )\d+", rf"\g<1>{valor}", texto)
         assert n == 1, clave

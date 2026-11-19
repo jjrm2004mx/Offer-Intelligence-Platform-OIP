@@ -16,15 +16,17 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
+from config_tienda_prueba import TIENDA_PRUEBA, con_tienda_prueba, configuracion_con_tienda_prueba
 from oip.catalogos import Motivo
-from oip.configuracion import cargar_configuracion, cargar_configuracion_texto
+from oip.configuracion import cargar_configuracion_texto
 from oip.entradas.contrato import leer_observacion
 from oip.evaluacion import motor, referencias
 from oip.evaluacion.contexto import ContextoEvaluacion, Episodio, ObservacionRegistrada
 from oip.evaluacion.descuento import descuento_real, franja
 
 BASE = Path(__file__).parent / "fixtures" / "config" / "base.yaml"
-CONFIG = cargar_configuracion(BASE)
+# Desde T07 el paso 1 valida el dominio de la oferta: comercio sintético de example.com.
+CONFIG = configuracion_con_tienda_prueba()
 PARAMETROS = CONFIG.contenido.price_reference
 ZONA = ZoneInfo("America/Tijuana")
 HOY = dt.date(2026, 11, 18)
@@ -55,7 +57,7 @@ def _obs(
     **cambios,
 ) -> ObservacionRegistrada:
     datos = {
-        "retailerCode": "homedepot",
+        "retailerCode": TIENDA_PRUEBA,
         "storeCode": "hd-chula-vista",
         "productUrl": "https://tienda.example.com/p/1",
         "title": "Producto de prueba",
@@ -245,7 +247,7 @@ def test_sin_historial_alguno_las_referencias_quedan_vacias():
 
 
 def test_la_ventana_y_el_historial_suficiente_salen_de_la_configuracion():
-    texto = BASE.read_text("utf-8")
+    texto = con_tienda_prueba(BASE.read_text("utf-8"))
     texto = texto.replace(
         "sufficient_history_observations: 5", "sufficient_history_observations: 11"
     )
@@ -308,7 +310,7 @@ def test_tras_el_limite_una_baja_nueva_abre_otro_episodio():
 
 
 def test_el_limite_del_episodio_sale_de_la_configuracion():
-    texto = BASE.read_text("utf-8").replace(
+    texto = con_tienda_prueba(BASE.read_text("utf-8")).replace(
         "clearance_episode_max_days: 30", "clearance_episode_max_days: 2"
     )
     otra = cargar_configuracion_texto(texto).contenido.price_reference
