@@ -62,8 +62,8 @@ Tareas de la parte B del REQ-2026-0001 v2.9 (`req-2026-0001-b-evaluacion`). **1 
 - **Depende de:** T01. **Estimación:** 6 h.
 - **DoD:** común.
 
-- [ ] 3.1 Implementar el modelo del contrato 3.1 con las reglas del particular y verificar las pruebas unitarias de obligatorios, `schemaVersion`, `title` y GTIN
-- [ ] 3.2 Implementar los 7 esquemas de capturas y verificar las pruebas unitarias de obligatorios, conversión de MXN y campos desconocidos descartados
+- [x] 3.1 Implementar el modelo del contrato 3.1 con las reglas del particular y verificar las pruebas unitarias de obligatorios, `schemaVersion`, `title` y GTIN
+- [x] 3.2 Implementar los 7 esquemas de capturas y verificar las pruebas unitarias de obligatorios, conversión de MXN y campos desconocidos descartados
 
 ## 4. T04 — Contexto, registro de evaluación y esqueleto del motor (cimientos)
 
