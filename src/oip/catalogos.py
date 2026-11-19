@@ -234,6 +234,16 @@ class CalidadPrecio(StrEnum):
     NO_APLICA = "NO_APLICA"
 
 
+# --- Identificación (RN-013) -------------------------------------------------------------
+
+
+class Identificacion(StrEnum):
+    """Coincidencia del producto (RN-013): columna ``identification`` de TAB-05 y TAB-10."""
+
+    CONFIRMED = "confirmed"
+    UNCONFIRMED = "unconfirmed"
+
+
 # --- Confianza y demanda -----------------------------------------------------------------
 
 
