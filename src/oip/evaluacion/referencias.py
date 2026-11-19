@@ -1,9 +1,12 @@
 """Paso 3 de REQ §3.2: referencias de precio (CMP-11; RN-002 v2, RN-003 v2).
 
-Este módulo calcula, por ahora, el **precio habitual** con su **episodio de liquidación**
-(T09; REQ §3.2 paso 3, DEC-201, DEC-224 b, DEC-226; design.md §10 puntos 1 y 2). El precio
-de mercado hoy, el mínimo de 60 días y la venta esperada en Amazon, el MSRP y el valor de
-referencia de usados los agregan sus tareas.
+Este módulo calcula el **precio habitual** con su **episodio de liquidación** (T09; REQ §3.2
+paso 3, DEC-201, DEC-224 b, DEC-226; design.md §10 puntos 1 y 2) y, desde T10, el **precio
+de mercado hoy** básico, el **MSRP** (solo se muestra), el **precio típico de la tienda**
+(RN-003) y los datos que usa la calidad del precio (RN-012): las cadenas del mercado hoy, el
+mínimo registrado y los días de historial. El mínimo de 60 días y la venta esperada en
+Amazon, la regla de comercio = cadena en el mercado hoy (con su excepción en liquidación) y
+el valor de referencia de usados los agregan sus tareas (T11, T16, T20).
 
 Implementa la interfaz ``FuentePrecios`` (``PriceReferenceSource`` de la arquitectura §2.2,
 ADR-007) con la fuente ``historial_propio``: cada referencia guarda la fuente que la dio.
@@ -37,6 +40,25 @@ Reglas (todas sus cifras salen de PAR-08, ``price_reference``; ninguna está en 
   ``clearance_episode_max_days`` días (el día de la baja es el día 1). Después hace falta
   una baja nueva. Durante el episodio, la oferta de esa publicación se evalúa contra el
   valor congelado; la mediana del producto sigue incluyendo los días del episodio.
+- **Precio típico de la tienda** (RN-003 §4; design.md §10.1): lo mismo que el precio
+  habitual del producto (mediana, sin el día evaluado, con historial suficiente), pero solo
+  con las publicaciones de la cadena de la oferta (PAR-02, ``retailers.<código>.chain``) y
+  en la ventana ``store_typical_window_days``.
+- **Precio de mercado hoy** (RN-002 v2 §4.1, S-03; design.md §10.4): de cada publicación del
+  producto, sin la de la oferta evaluada, la observación más reciente con antigüedad
+  (``instante − extractedAt``) de ``market_today_max_age_hours`` horas o menos, nueva,
+  vendida por el comercio y disponible; el precio de mercado hoy es el más bajo de esas
+  observaciones. "Disponible" (S-03): en línea, ``in_stock_confirmed``; en tienda física,
+  confianza Alta o Media de RN-007 §4.1 al instante; en la ficha de Amazon, un botón de
+  compra (``buyBoxPrice``) no nulo (design.md §10.3). La exclusión de la misma cadena y su
+  excepción en liquidación en sucursal son de T16 (DEC-216).
+- **Cadenas del mercado hoy** (RN-012 §4, "comercios"): las cadenas distintas de la evaluada
+  entre las publicaciones que dan el precio de mercado hoy (design.md §10.4).
+- **Mínimo registrado** (S-22): el precio diario más bajo del producto en todos los
+  comercios seguidos, sin la oferta evaluada. **Días de historial**: del primer día con
+  observación del producto al día evaluado.
+- **MSRP** (DEC-218): solo se muestra; no entra en ningún cálculo. Es el de la captura
+  ``msrp`` más reciente del contexto o, sin captura, el que trae la observación de la oferta.
 
 Puro (design.md §14): sin reloj, sin I/O, sin red y sin aleatoriedad; el resultado depende
 solo del contexto.
@@ -52,7 +74,8 @@ from typing import Protocol
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
-from oip.catalogos import Condicion, Vendedor
+from oip.catalogos import Condicion, EstadoDisponibilidad, ModoCompra, Vendedor
+from oip.configuracion import Confianza as ParametrosConfianza
 from oip.configuracion import ReferenciaPrecio as ParametrosReferencia
 from oip.entradas.contrato import Observacion
 from oip.evaluacion.contexto import (
@@ -66,17 +89,25 @@ __all__ = [
     "FUENTE_HISTORIAL_PROPIO",
     "FuentePrecios",
     "HistorialPropio",
+    "MercadoHoy",
     "ObservacionDiaria",
     "PrecioHabitual",
+    "cadena_de",
     "calcular_referencias",
     "dia_calendario",
     "dia_evaluado",
+    "dias_de_historial",
+    "disponible_para_mercado_hoy",
     "episodio_vigente",
     "es_nuevo",
     "historial_suficiente",
     "mediana",
+    "mercado_hoy",
+    "minimo_registrado",
+    "msrp",
     "observaciones_diarias",
     "precio_habitual_del_producto",
+    "precio_tipico_de_la_tienda",
     "serie_de_la_publicacion",
 ]
 
@@ -344,18 +375,209 @@ class HistorialPropio:
         return PrecioHabitual(normal, self.fuente, None)
 
 
+# --- Cadena (PAR-02) -----------------------------------------------------------------------
+
+
+def cadena_de(codigo_comercio: str, contexto: ContextoEvaluacion) -> str:
+    """Cadena del comercio (PAR-02, ``retailers.<código>.chain``; DEC-216). Un código que no
+    está en la configuración es su propia cadena: no se junta con ninguna otra."""
+    comercio = contexto.configuracion.contenido.retailers.get(codigo_comercio)
+    return codigo_comercio if comercio is None else comercio.chain
+
+
+# --- Precio típico de la tienda (RN-003) --------------------------------------------------
+
+
+def precio_tipico_de_la_tienda(contexto: ContextoEvaluacion) -> Decimal | None:
+    """Precio típico de la cadena de la oferta (RN-003 §4; design.md §10.1): la mediana de las
+    observaciones diarias de sus publicaciones en los ``store_typical_window_days`` días
+    anteriores al día evaluado, sin ese día. ``None`` sin historial suficiente de esa tienda
+    (PAR-08)."""
+    parametros = _parametros(contexto)
+    cadena = cadena_de(contexto.oferta.observacion.retailer_code, contexto)
+    de_la_cadena = (
+        r
+        for r in _guardadas(contexto)
+        if _cuenta_para_el_habitual(r.observacion)
+        and cadena_de(r.observacion.retailer_code, contexto) == cadena
+    )
+    diarias = _ultimas_del_dia(de_la_cadena, _zona(contexto))
+    hoy = dia_evaluado(contexto)
+    desde = hoy - dt.timedelta(days=parametros.store_typical_window_days)
+    en_ventana = [d for d in diarias if desde <= d.dia < hoy]
+    if not historial_suficiente(en_ventana, parametros):
+        return None
+    return mediana([d.precio for d in en_ventana])
+
+
+# --- Precio de mercado hoy (RN-002 §4.1, S-03) ------------------------------------------
+
+
+@dataclasses.dataclass(frozen=True, slots=True)
+class MercadoHoy:
+    """Precio de mercado hoy (el más bajo, sin redondear) y las cadenas distintas de la
+    evaluada que dan datos de hoy (RN-012 §4, mínimo de comercios; design.md §10.4)."""
+
+    precio: Decimal
+    otras_cadenas: frozenset[str]
+
+
+_MICROSEGUNDO = dt.timedelta(microseconds=1)
+_MICROSEGUNDOS_POR_HORA = Decimal(3_600_000_000)
+
+
+def _horas(edad: dt.timedelta) -> Decimal:
+    """Antigüedad en horas, exacta y sin ``float`` (``timedelta.total_seconds`` es float)."""
+    return Decimal(edad // _MICROSEGUNDO) / _MICROSEGUNDOS_POR_HORA
+
+
+def _confianza_alta_o_media_en_tienda(
+    observacion: Observacion, edad_horas: Decimal, parametros: ParametrosConfianza
+) -> bool:
+    """Confianza Alta o Media de RN-007 §4.1 para un dato de tienda física (S-03), con las
+    ventanas de PAR-13 (``levels.confidence``; las de liquidación si ``isClearance``).
+
+    - Cantidad exacta: Alta hasta ``exact_high_max_hours`` y Media hasta ``max_age_hours``.
+    - "En existencia" sin número: Media hasta ``no_number_medium_max_hours``.
+    - "Pocas unidades" o existencia limitada (``limited_stock``): Media hasta
+      ``few_units_medium_max_hours``.
+    - Agotado, no confirmada o cualquier dato más viejo: Baja o sin existencia.
+
+    El ajuste por el historial de visitas de la tienda (RN-007 §4.1) no se aplica: el
+    contexto no trae visitas (lo completa la tarea de la confianza, T11).
+    """
+    ventanas = parametros.clearance if observacion.is_clearance else parametros.normal
+    estado = observacion.availability.state
+    if estado is EstadoDisponibilidad.LIMITED_STOCK:
+        return edad_horas <= parametros.few_units_medium_max_hours
+    if estado not in (EstadoDisponibilidad.IN_STOCK, EstadoDisponibilidad.IN_STOCK_CONFIRMED):
+        return False
+    if observacion.availability.quantity is not None:
+        return edad_horas <= ventanas.max_age_hours
+    return edad_horas <= ventanas.no_number_medium_max_hours
+
+
+def disponible_para_mercado_hoy(observacion: Observacion, contexto: ContextoEvaluacion) -> bool:
+    """Qué es "disponible" para el precio de mercado hoy (S-03; design.md §10.3 y §10.4).
+
+    Ficha de Amazon: botón de compra no nulo (oferta nueva hoy). Tienda física
+    (``purchaseMode = tienda``): confianza Alta o Media al ``instante`` (RN-007 §4.1). En
+    línea y recoger en tienda (RN-007 §4.2, se trata como compra en línea): disponible
+    confirmada (``in_stock_confirmed``).
+    """
+    if observacion.amazon_listing is not None:
+        return observacion.amazon_listing.buy_box_price is not None
+    if observacion.purchase_mode is ModoCompra.TIENDA:
+        edad = _horas(contexto.instante - observacion.extracted_at)
+        confianza = contexto.configuracion.contenido.levels.confidence
+        return _confianza_alta_o_media_en_tienda(observacion, edad, confianza)
+    return observacion.availability.state is EstadoDisponibilidad.IN_STOCK_CONFIRMED
+
+
+def _cuenta_para_el_mercado_hoy(
+    registrada: ObservacionRegistrada, contexto: ContextoEvaluacion, limite: dt.timedelta
+) -> bool:
+    observacion = registrada.observacion
+    edad = contexto.instante - observacion.extracted_at
+    return (
+        dt.timedelta(0) <= edad <= limite
+        and _precio_de_referencia(observacion) is not None
+        and _cuenta_para_el_habitual(observacion)
+        and disponible_para_mercado_hoy(observacion, contexto)
+    )
+
+
+def mercado_hoy(contexto: ContextoEvaluacion) -> MercadoHoy | None:
+    """Precio de mercado hoy básico (RN-002 v2 §4.1; design.md §10.4) y sus cadenas.
+
+    De cada publicación del producto, sin la publicación de la oferta evaluada, la
+    observación más reciente que cumple: antigüedad de ``market_today_max_age_hours`` o
+    menos, nueva, vendida por el comercio, disponible (S-03) y con precio. El precio es el
+    más bajo de esas observaciones, sin redondear. ``None`` si ninguna publicación tiene un
+    dato así (RN-002 §11: no hay precio de mercado hoy).
+    """
+    oferta = contexto.oferta
+    limite = dt.timedelta(hours=_parametros(contexto).market_today_max_age_hours)
+    mas_recientes: dict[UUID, ObservacionRegistrada] = {}
+    for registrada in _guardadas(contexto):
+        if registrada.id_publicacion is None or registrada.id is None:
+            continue
+        if registrada.id_publicacion == oferta.id_publicacion or registrada.id == oferta.id:
+            continue
+        if not _cuenta_para_el_mercado_hoy(registrada, contexto, limite):
+            continue
+        anterior = mas_recientes.get(registrada.id_publicacion)
+        clave = (registrada.observacion.extracted_at, registrada.id)
+        if anterior is None or clave > (anterior.observacion.extracted_at, anterior.id):
+            mas_recientes[registrada.id_publicacion] = registrada
+    if not mas_recientes:
+        return None
+    # Cada una tiene precio: lo exige _cuenta_para_el_mercado_hoy.
+    precios = [
+        p for r in mas_recientes.values() if (p := _precio_de_referencia(r.observacion)) is not None
+    ]
+    evaluada = cadena_de(oferta.observacion.retailer_code, contexto)
+    cadenas = {cadena_de(r.observacion.retailer_code, contexto) for r in mas_recientes.values()}
+    return MercadoHoy(precio=min(precios), otras_cadenas=frozenset(cadenas - {evaluada}))
+
+
+# --- Datos de la calidad del precio (RN-012, S-22) ---------------------------------------
+
+
+def _diarias_sin_la_oferta(contexto: ContextoEvaluacion) -> tuple[ObservacionDiaria, ...]:
+    oferta = contexto.oferta.id
+    que_cuentan = (
+        r
+        for r in _guardadas(contexto)
+        if r.id != oferta and _cuenta_para_el_habitual(r.observacion)
+    )
+    return _ultimas_del_dia(que_cuentan, _zona(contexto))
+
+
+def minimo_registrado(contexto: ContextoEvaluacion) -> Decimal | None:
+    """Mínimo registrado (S-22): el precio diario más bajo del producto en todos los
+    comercios seguidos (nuevo, vendido por el comercio), sin la oferta evaluada. ``None``
+    sin observaciones."""
+    diarias = _diarias_sin_la_oferta(contexto)
+    return min((d.precio for d in diarias), default=None)
+
+
+def dias_de_historial(contexto: ContextoEvaluacion) -> int:
+    """Días de historial del producto (RN-012 §4, Oferta excepcional): del primer día con
+    observación diaria al día evaluado. 0 sin observaciones."""
+    diarias = _diarias_sin_la_oferta(contexto)
+    if not diarias:
+        return 0
+    return (dia_evaluado(contexto) - min(d.dia for d in diarias)).days
+
+
+# --- MSRP (solo se muestra) ------------------------------------------------------------
+
+
+def msrp(contexto: ContextoEvaluacion) -> Decimal | None:
+    """MSRP que se muestra (DEC-218; EXT-041): el de la captura ``msrp`` más reciente del
+    contexto (por ``date``; con la misma fecha, la última del contexto) o, sin captura, el de
+    la observación de la oferta. No entra en ningún cálculo."""
+    if contexto.msrp:
+        ultima = max(enumerate(contexto.msrp), key=lambda par: (par[1].date, par[0]))[1]
+        return ultima.value
+    propio = contexto.oferta.observacion.msrp
+    return None if propio is None else propio.value
+
+
 def calcular_referencias(
     contexto: ContextoEvaluacion, fuente: FuentePrecios | None = None
 ) -> Referencias:
-    """Referencias de precio de la oferta (TAB-10 ``references``). Hoy: el precio habitual
-    con su fuente y, si lo hay, su episodio. Sin historial suficiente, sin precio habitual
-    ni fuente (vacío = ausente)."""
+    """Referencias de precio de la oferta (TAB-10 ``references``): el precio habitual con su
+    fuente y, si lo hay, su episodio; el precio de mercado hoy y el MSRP (solo se muestra).
+    Una referencia que no se puede calcular queda en ``None`` (vacío = ausente)."""
     fuente = HistorialPropio() if fuente is None else fuente
     habitual = fuente.precio_habitual(contexto)
-    if habitual is None:
-        return Referencias()
+    hoy = mercado_hoy(contexto)
     return Referencias(
-        precio_habitual=habitual.valor,
-        fuente_precio_habitual=habitual.fuente,
-        episodio=habitual.episodio,
+        precio_habitual=None if habitual is None else habitual.valor,
+        fuente_precio_habitual=None if habitual is None else habitual.fuente,
+        episodio=None if habitual is None else habitual.episodio,
+        precio_mercado_hoy=None if hoy is None else hoy.precio,
+        msrp=msrp(contexto),
     )
