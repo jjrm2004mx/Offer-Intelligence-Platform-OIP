@@ -77,8 +77,8 @@ Tareas de la parte B del REQ-2026-0001 v2.9 (`req-2026-0001-b-evaluacion`). **1 
 - **Depende de:** T02, T03. **Estimación:** 7 h.
 - **DoD:** común.
 
-- [ ] 4.1 Implementar `ContextoEvaluacion` y `RegistroEvaluacion` con su serialización canónica y verificar la prueba de ida y vuelta
-- [ ] 4.2 Implementar la precedencia de §3.2.4 y el esqueleto del motor y verificar las pruebas unitarias de la tabla de precedencia
+- [x] 4.1 Implementar `ContextoEvaluacion` y `RegistroEvaluacion` con su serialización canónica y verificar la prueba de ida y vuelta
+- [x] 4.2 Implementar la precedencia de §3.2.4 y el esqueleto del motor y verificar las pruebas unitarias de la tabla de precedencia
 
 ## 5. T05 — Modelo de datos y migraciones (cimientos)
 
