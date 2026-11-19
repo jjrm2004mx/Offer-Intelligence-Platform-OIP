@@ -8,7 +8,12 @@ son los de la arquitectura §8. Este módulo agrega solo las reglas de la parte 
   en una observación 3.0, ``listed`` no es un código válido y ``pickupLocation`` no existe.
 - **Publicación de un particular** (DEC-227 b, DEC-212): además de los obligatorios del
   contrato exige ``pickupLocation``, ``brand`` y ``model``, y su ``title`` lo arma el Core
-  con ``brand`` + ``model``, ignorando el que venga (sin texto del vendedor, R-20).
+  con ``brand`` + ``model``, ignorando el que venga (sin texto del vendedor, R-20). Si uno
+  de ``retailerCode``, ``seller`` o ``purchaseMode`` vale ``particular``, los tres deben
+  valerlo (DEC-239). Se descartan ``availability.text`` y ``evidence``, texto libre que no
+  es parte de la publicación (DEC-236).
+- ``availability`` sin ``state`` cuenta como ``availability.state`` faltante (DEC-237).
+- Enteros y booleanos estrictos (DEC-238); ``extractedAt`` y las demás horas, con desfase.
 - **GTIN** con dígito verificador (RN-013, arquitectura §7.3): un GTIN inválido no rechaza
   la observación, pero ``gtin_valido`` es falso y no confirma la coincidencia.
 - ``price.current`` > 0 y con 2 decimales como máximo: si no, la observación queda
@@ -37,7 +42,9 @@ from oip.catalogos import (
     Vendedor,
 )
 from oip.entradas._comun import (
+    Booleano,
     Dec,
+    Entero,
     Esquema,
     RegistroInvalido,
     ausente,
@@ -46,6 +53,7 @@ from oip.entradas._comun import (
 )
 
 __all__ = [
+    "CAMPOS_PARTICULAR",
     "OBLIGATORIOS_CONTRATO",
     "OBLIGATORIOS_PARTICULAR",
     "VERSIONES_ACEPTADAS",
@@ -81,6 +89,14 @@ OBLIGATORIOS_CONTRATO = (
 #: Obligatorios de la publicación de un particular (DEC-227 b), en este orden.
 OBLIGATORIOS_PARTICULAR = ("pickupLocation", "brand", "model")
 
+#: Campos que valen ``particular`` en la publicación de un particular, en el orden de
+#: REQ §6 (familia 1). Si uno lo vale, los tres deben valerlo (DEC-239).
+CAMPOS_PARTICULAR = ("retailerCode", "seller", "purchaseMode")
+
+#: Texto libre que se descarta de la publicación de un particular (DEC-236; REQ §6 y §10,
+#: R-20). ``availability.text`` se quita dentro de ``availability``.
+_DESCARTADOS_PARTICULAR = ("evidence",)
+
 _PARTICULAR = "particular"
 _LONGITUDES_GTIN = (8, 12, 13, 14)  # GTIN-8, GTIN-12 (UPC-A), GTIN-13 (EAN), GTIN-14
 
@@ -101,15 +117,24 @@ def gtin_valido(gtin: str | None) -> bool:
     return (10 - suma % 10) % 10 == verificador
 
 
+def _vale_particular(valor: object) -> bool:
+    return isinstance(valor, str) and valor.strip() == _PARTICULAR
+
+
 def es_publicacion_de_particular(datos: Mapping[str, Any]) -> bool:
-    """Una observación es de un particular si ``seller``, ``retailerCode`` o ``purchaseMode``
+    """Una observación es de un particular si ``retailerCode``, ``seller`` o ``purchaseMode``
     vale ``particular`` (REQ §6: los tres llevan ese valor). Con cualquiera de los tres se
-    aplican las reglas del particular, para no dejar pasar texto del vendedor."""
-    for campo in ("seller", "retailerCode", "purchaseMode"):
-        valor = datos.get(campo)
-        if isinstance(valor, str) and valor.strip() == _PARTICULAR:
-            return True
-    return False
+    aplican las reglas del particular, para no dejar pasar texto del vendedor; si no valen
+    los tres, ``leer_observacion`` la rechaza (DEC-239)."""
+    return any(_vale_particular(datos.get(campo)) for campo in CAMPOS_PARTICULAR)
+
+
+def _incoherente_de_particular(datos: Mapping[str, Any]) -> str | None:
+    """El primero de ``CAMPOS_PARTICULAR`` que no vale ``particular`` (DEC-239)."""
+    for campo in CAMPOS_PARTICULAR:
+        if not _vale_particular(datos.get(campo)):
+            return campo
+    return None
 
 
 # --- Partes del contrato --------------------------------------------------------------
@@ -125,20 +150,20 @@ class Precio(Esquema):
 
 
 class Disponibilidad(Esquema):
-    """``availability``."""
+    """``availability``. Sin ``state`` cuenta como ``availability.state`` faltante (DEC-237)."""
 
-    state: EstadoDisponibilidad | None = None
+    state: EstadoDisponibilidad
     text: str | None = None
-    quantity: int | None = None
+    quantity: Entero | None = None
     scope: str | None = None
-    add_to_cart: bool | None = None
+    add_to_cart: Booleano | None = None
 
 
 class Envio(Esquema):
     """``shipping``."""
 
     to_me_cost: Dec | None = None
-    days: int | None = None
+    days: Entero | None = None
     mode: str | None = None
 
 
@@ -155,11 +180,11 @@ class FichaAmazon(Esquema):
     hoy (S-02); las referencias usan este precio y no ``price.current`` (DEC-234 punto 3)."""
 
     buy_box_price: Dec | None = None
-    sellers_new: int | None = None
-    rank_main: int | None = None
-    rank_sub: int | None = None
-    reviews: int | None = None
-    bought_last_month: int | None = None
+    sellers_new: Entero | None = None
+    rank_main: Entero | None = None
+    rank_sub: Entero | None = None
+    reviews: Entero | None = None
+    bought_last_month: Entero | None = None
 
 
 class Observacion(Esquema):
@@ -188,7 +213,7 @@ class Observacion(Esquema):
     seller: Vendedor
     condition: Condicion | None = None
     availability: Disponibilidad
-    is_clearance: bool | None = None
+    is_clearance: Booleano | None = None
     purchase_mode: ModoCompra
     tax_location: str | None = None
     pickup_location: str | None = None
@@ -197,7 +222,7 @@ class Observacion(Esquema):
     amazon_listing: FichaAmazon | None = None
     extracted_at: AwareDatetime
     extraction_method: str | None = None
-    blocked: bool
+    blocked: Booleano
     evidence: dict[str, Any] | None = None
 
     @property
@@ -241,8 +266,9 @@ def leer_observacion(datos: Mapping[str, Any]) -> Observacion:
     Levanta ``RegistroInvalido`` con ``CAMPO OBLIGATORIO FALTANTE (<campo>)`` y el nombre
     del campo en el archivo: primero ``schemaVersion`` no aceptada, luego los obligatorios
     del contrato (en el orden de la arquitectura §8), luego los del particular y al final
-    los demás campos con un valor no válido. Un código fuera de las tablas cerradas cuenta
-    como faltante (DEC-234 punto 2). Los campos desconocidos se descartan.
+    los demás campos con un valor no válido. Un código fuera de las tablas cerradas, o un
+    opcional con un valor no válido, cuenta como faltante (DEC-234 punto 2, DEC-244). Los
+    campos desconocidos se descartan.
 
     El precio inválido no levanta: queda en ``Observacion.precio_invalido``.
     """
@@ -265,6 +291,16 @@ def leer_observacion(datos: Mapping[str, Any]) -> Observacion:
                 faltan.append("availability.state")
 
     if es_publicacion_de_particular(registro):
+        # DEC-239: retailerCode, seller y purchaseMode valen particular los tres.
+        incoherente = _incoherente_de_particular(registro)
+        if incoherente is not None:
+            faltan.append(incoherente)
+        # DEC-236: sin texto libre del vendedor (REQ §6 y §10, R-20).
+        for campo in _DESCARTADOS_PARTICULAR:
+            registro.pop(campo, None)
+        disponibilidad = registro.get("availability")
+        if isinstance(disponibilidad, Mapping):
+            registro["availability"] = {k: v for k, v in disponibilidad.items() if k != "text"}
         # DEC-227 b y DEC-212: title = brand + model, armado por el Core.
         orden.remove("title")
         orden.extend(OBLIGATORIOS_PARTICULAR)

@@ -9,25 +9,45 @@
   ``CAMPO OBLIGATORIO FALTANTE (<campo>)`` (design.md §6; DEC-234 punto 2).
 - Los campos desconocidos se descartan sin guardarlos (design.md §6, RNF-7, RNF-11).
 - Los montos se leen como ``Decimal`` sin pasar por ``float`` (DEC-060, design.md §8).
+- Enteros y booleanos **estrictos** (``Entero``, ``Booleano``; DEC-238): ``true`` no se lee
+  como 1, ni ``"false"`` o ``0`` como ``False``. Convertir el texto de un CSV es del cargador
+  (T08).
+- ``FechaHoraCaptura``: fecha y hora de una captura de Jesús; sin desfase se toma en la zona
+  que pasa el llamador (``general.timezone`` de PAR-01; DEC-240). En las observaciones se
+  sigue exigiendo el desfase (``AwareDatetime``).
 """
 
 from __future__ import annotations
 
+import datetime as dt
 import types
 import typing
 from collections.abc import Iterable, Mapping, Sequence
 from decimal import Decimal
 from typing import Annotated, Any
 
-from pydantic import BaseModel, BeforeValidator, ConfigDict, ValidationError
+from pydantic import (
+    AwareDatetime,
+    BaseModel,
+    BeforeValidator,
+    ConfigDict,
+    StrictBool,
+    StrictInt,
+    ValidationError,
+    ValidationInfo,
+)
 from pydantic.alias_generators import to_camel
 
 from oip.catalogos import MotivoRechazo, motivo_campo_faltante
 from oip.dinero import leer_monto
 
 __all__ = [
+    "CONTEXTO_ZONA",
+    "Booleano",
     "Dec",
+    "Entero",
     "Esquema",
+    "FechaHoraCaptura",
     "RegistroInvalido",
     "a_decimal",
     "ausente",
@@ -106,6 +126,45 @@ def decimal_o_none(valor: object) -> Decimal | None:
 
 Dec = Annotated[Decimal, BeforeValidator(a_decimal)]
 """``Decimal`` leído sin ``float``."""
+
+Entero = StrictInt
+"""Entero estricto: ni ``bool`` ni texto ni ``Decimal`` (DEC-238)."""
+
+Booleano = StrictBool
+"""Booleano estricto: ni ``0``/``1`` ni ``"true"``/``"false"`` (DEC-238)."""
+
+#: Clave del contexto de validación con la zona de las capturas (``tzinfo`` o ``None``).
+CONTEXTO_ZONA = "zona"
+
+
+def _localizar(valor: object, info: ValidationInfo) -> object:
+    """Fecha y hora sin desfase → la misma hora en la zona del contexto (DEC-240).
+
+    Solo toca una fecha **con hora** sin desfase; una fecha sola, un texto que no es ISO 8601
+    o un valor con desfase pasan tal cual (``AwareDatetime`` decide). Sin zona en el
+    contexto, la fecha y hora sin desfase se rechaza como antes. En el cambio de horario,
+    una hora ambigua toma la primera (``fold=0``) y una inexistente, el desfase anterior."""
+    contexto = info.context if isinstance(info.context, Mapping) else {}
+    zona = contexto.get(CONTEXTO_ZONA)
+    if not isinstance(zona, dt.tzinfo):
+        return valor
+    fecha_hora: dt.datetime | None = None
+    if isinstance(valor, dt.datetime):
+        fecha_hora = valor
+    elif isinstance(valor, str):
+        texto = valor.strip()
+        if len(texto) > 10 and texto[10] in "T ":
+            try:
+                fecha_hora = dt.datetime.fromisoformat(texto)
+            except ValueError:
+                return valor
+    if fecha_hora is None or fecha_hora.tzinfo is not None:
+        return valor
+    return fecha_hora.replace(tzinfo=zona)
+
+
+FechaHoraCaptura = Annotated[AwareDatetime, BeforeValidator(_localizar)]
+"""Fecha y hora de una captura de Jesús: sin desfase, en la zona de PAR-01 (DEC-240)."""
 
 
 def ausente(valor: object) -> bool:
@@ -201,6 +260,7 @@ def validar_esquema[M: BaseModel](
     obligatorios: Sequence[str] | None = None,
     faltan: Iterable[str] = (),
     ignorar: Iterable[str] = (),
+    contexto: Mapping[str, Any] | None = None,
 ) -> M:
     """Valida ``datos`` con ``modelo`` o levanta ``RegistroInvalido`` con el primer problema.
 
@@ -209,7 +269,8 @@ def validar_esquema[M: BaseModel](
     todos los de ``orden``), cuya ausencia se detecta aquí; ``faltan``, los que el llamador
     ya sabe que faltan o no son válidos (producto, tipo de cambio); ``ignorar``, los que no
     se reportan. Los demás errores (tipo, tabla cerrada, rango) se ordenan según ``orden`` y
-    después en el orden de declaración del esquema.
+    después en el orden de declaración del esquema. ``contexto`` llega a los validadores
+    (por ejemplo, la zona de las capturas en ``CONTEXTO_ZONA``).
     """
     if not isinstance(datos, Mapping):
         raise TypeError("el registro debe ser un mapa de campos")
@@ -218,7 +279,9 @@ def validar_esquema[M: BaseModel](
     problemas = [c for c in siempre if ausente(obtener(datos, c))]
     problemas.extend(faltan)
     try:
-        resultado = modelo.model_validate(_sin_vacios(datos))
+        resultado = modelo.model_validate(
+            _sin_vacios(datos), context=dict(contexto) if contexto is not None else None
+        )
     except ValidationError as error:
         for detalle in error.errors(include_url=False, include_context=False, include_input=False):
             campo = _campo_de_error(modelo, detalle["loc"])

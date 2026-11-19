@@ -1,20 +1,23 @@
 """Pruebas unitarias de oip.entradas.capturas (CMP-06, CTR-04; design.md §6 y §12; T03 3.2).
 
-Fixtures sintéticos. Los valores de CSV llegan como texto: los esquemas los aceptan.
+Fixtures sintéticos. Enteros y booleanos estrictos (DEC-238): el texto de un CSV lo convierte
+el cargador (T08), no los esquemas.
 """
 
 import copy
 import json
 import logging
-from datetime import date
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from uuid import UUID
+from zoneinfo import ZoneInfo
 
 import pytest
 from pydantic import ValidationError
 
 from oip.catalogos import Canal, Categoria, Condicion, DemandaLocal, TipoRegistro
 from oip.entradas.capturas import (
+    CONDICIONES_POR_DEFECTO,
     ESQUEMAS_CAPTURA,
     CapturaMsrp,
     ComparableLocal,
@@ -97,14 +100,7 @@ OBLIGATORIOS = {
         "purchasedOn",
         "soldOn",
     ),
-    "client_request": (
-        "clientAlias",
-        "items",
-        "quantity",
-        "acceptedConditions",
-        "modality",
-        "date",
-    ),
+    "client_request": ("clientAlias", "items", "quantity", "modality", "date"),
 }
 
 CON_PRODUCTO = ("local_comparable", "local_estimate", "msrp")
@@ -250,19 +246,27 @@ def test_store_visit_sin_producto_ni_oportunidad():
         ("local_comparable", "currency", "EUR"),
         ("local_comparable", "date", "15/11/2026"),
         ("local_comparable", "sold", "tal vez"),
+        ("local_comparable", "sold", "true"),  # DEC-238: el texto lo convierte T08
+        ("local_comparable", "sold", 0),
+        ("local_comparable", "sold", 1),
         ("local_estimate", "condition", "nuevo"),
         ("local_estimate", "price", 95.0),  # float: nunca se acepta
         ("msrp", "value", "ciento"),
         ("actual_result", "channel", "ebay"),
         ("actual_result", "units", "dos"),
+        ("actual_result", "units", "2"),  # DEC-238
+        ("actual_result", "units", True),
+        ("actual_result", "units", Decimal("2")),
         ("actual_result", "salePrice", 75.0),
         ("client_request", "modality", "delivery"),
         ("client_request", "quantity", 0),
+        ("client_request", "quantity", True),  # DEC-238: true no es 1
+        ("client_request", "quantity", "3"),
         ("client_request", "items", []),
         ("client_request", "items", ["a", "b", "c", "d"]),
         ("client_request", "items", ["a", " "]),
-        ("client_request", "acceptedConditions", []),
         ("client_request", "acceptedConditions", ["new", "nuevo"]),
+        ("client_request", "acceptedConditions", "new"),
     ],
 )
 def test_valor_no_valido_o_fuera_de_la_tabla_cuenta_como_faltante(tipo, campo, valor):
@@ -343,13 +347,10 @@ def test_precio_pedido_no_positivo_se_marca_para_precio_invalido(precio):
     assert comparable.price_usd is None
 
 
-def test_comparable_desde_texto_de_csv():
-    datos = {
-        k: str(v).lower() if isinstance(v, bool) else v
-        for k, v in VALIDAS["local_comparable"].items()
-    }
-    datos["sold"] = "true"
-    assert leer_captura("local_comparable", datos).sold is True
+@pytest.mark.parametrize("vendido", [True, False])
+def test_sold_es_un_booleano_estricto(vendido):
+    datos = {**VALIDAS["local_comparable"], "sold": vendido}
+    assert leer_captura("local_comparable", datos).sold is vendido
 
 
 # --- Demás capturas -------------------------------------------------------------------
@@ -384,9 +385,66 @@ def test_visita_a_tienda():
     assert visita.visited_at.utcoffset().total_seconds() == 0
 
 
-def test_resultado_real_desde_texto():
-    datos = {**VALIDAS["actual_result"], "units": "2"}
-    real = leer_captura("actual_result", datos)
+# --- Fecha y hora sin desfase en las capturas (DEC-240) -------------------------------
+
+TIJUANA = "America/Tijuana"  # general.timezone de tests/fixtures/config/base.yaml
+
+
+@pytest.mark.parametrize(
+    ("texto", "desfase"),
+    [
+        ("2026-11-16T19:30:00", -8),  # invierno (PST)
+        ("2026-07-16T19:30:00", -7),  # verano (PDT)
+        ("2026-11-16 19:30", -8),
+    ],
+)
+def test_visited_at_sin_desfase_se_toma_en_la_zona_de_la_configuracion(texto, desfase):
+    datos = {**VALIDAS["store_visit"], "visitedAt": texto}
+    visita = leer_captura("store_visit", datos, zona=TIJUANA)
+    assert visita.visited_at.utcoffset() == timedelta(hours=desfase)
+    assert visita.visited_at.replace(tzinfo=None) == datetime.fromisoformat(texto)
+
+
+def test_la_zona_tambien_se_acepta_como_tzinfo():
+    datos = {**VALIDAS["store_visit"], "visitedAt": "2026-11-16T19:30:00"}
+    visita = leer_captura("store_visit", datos, zona=ZoneInfo(TIJUANA))
+    assert visita.visited_at.utcoffset() == timedelta(hours=-8)
+
+
+def test_visited_at_como_datetime_sin_zona_tambien_se_localiza():
+    datos = {**VALIDAS["store_visit"], "visitedAt": datetime.fromisoformat("2026-11-16T19:30")}
+    visita = leer_captura("store_visit", datos, zona=TIJUANA)
+    assert visita.visited_at.utcoffset() == timedelta(hours=-8)
+
+
+def test_la_zona_sale_del_parametro_no_del_codigo():
+    datos = {**VALIDAS["store_visit"], "visitedAt": "2026-11-16T19:30:00"}
+    visita = leer_captura("store_visit", datos, zona="America/Mexico_City")
+    assert visita.visited_at.utcoffset() == timedelta(hours=-6)
+
+
+@pytest.mark.parametrize("texto", ["2026-11-16T19:30:00Z", "2026-11-16T19:30:00-05:00"])
+def test_visited_at_con_desfase_conserva_el_suyo(texto):
+    datos = {**VALIDAS["store_visit"], "visitedAt": texto}
+    visita = leer_captura("store_visit", datos, zona=TIJUANA)
+    assert visita.visited_at == datetime.fromisoformat(texto)
+
+
+@pytest.mark.parametrize("texto", ["2026-11-16", "ayer", "16/11/2026 19:30"])
+def test_visited_at_sin_hora_o_no_iso_se_rechaza_aun_con_zona(texto):
+    datos = {**VALIDAS["store_visit"], "visitedAt": texto}
+    with pytest.raises(RegistroInvalido) as error:
+        leer_captura("store_visit", datos, zona=TIJUANA)
+    assert error.value.motivo == "CAMPO OBLIGATORIO FALTANTE (visitedAt)"
+
+
+def test_visited_at_sin_desfase_y_sin_zona_se_rechaza():
+    datos = {**VALIDAS["store_visit"], "visitedAt": "2026-11-16T19:30:00"}
+    assert _motivo("store_visit", datos) == "CAMPO OBLIGATORIO FALTANTE (visitedAt)"
+
+
+def test_resultado_real():
+    real = leer_captura("actual_result", VALIDAS["actual_result"])
     assert isinstance(real, ResultadoReal)
     assert real.channel is Canal.LOCAL
     assert real.units == 2
@@ -414,6 +472,30 @@ def test_solicitud_de_cliente():
     assert solicitud.items == ("DCF840", "036000291452")
     assert solicitud.accepted_conditions == (Condicion.NEW,)
     assert solicitud.modality is Modalidad.LINK_ONLY
+
+
+@pytest.mark.parametrize(
+    "cambio",
+    [None, {"acceptedConditions": None}, {"acceptedConditions": []}, {"acceptedConditions": ""}],
+    ids=["ausente", "null", "lista-vacia", "texto-vacio"],
+)
+def test_accepted_conditions_ausente_o_vacio_vale_solo_nuevo(cambio):
+    """RN-011 punto 2 y REQ §3.4 punto 1: por defecto, solo nuevo (DEC-241)."""
+    datos = _sin(VALIDAS["client_request"], "acceptedConditions")
+    datos.update(cambio or {})
+    solicitud = leer_captura("client_request", datos)
+    assert solicitud.accepted_conditions == CONDICIONES_POR_DEFECTO == (Condicion.NEW,)
+
+
+def test_accepted_conditions_con_otros_estados():
+    datos = {**VALIDAS["client_request"], "acceptedConditions": ["new", "used"]}
+    solicitud = leer_captura("client_request", datos)
+    assert solicitud.accepted_conditions == (Condicion.NEW, Condicion.USED)
+
+
+def test_accepted_conditions_no_valido_va_despues_de_los_obligatorios():
+    datos = _sin({**VALIDAS["client_request"], "acceptedConditions": ["nuevo"]}, "date")
+    assert _motivo("client_request", datos) == "CAMPO OBLIGATORIO FALTANTE (date)"
 
 
 def test_client_request_no_tiene_campo_de_notas():

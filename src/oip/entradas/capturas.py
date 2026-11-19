@@ -11,7 +11,12 @@ obligatorios de REQ §6. Campos en camelCase en el archivo, códigos en inglés 
 - Los campos desconocidos se descartan sin guardarlos (R-20). ``recordType`` no es parte
   de ningún esquema: lo quita el cargador (DEC-227 a).
 - ``client_request`` **no tiene campo de notas** ni texto libre (RNF-11, DEC-231), y su
-  alias nunca sale en el ``repr`` del modelo ni en un mensaje de error.
+  alias nunca sale en el ``repr`` del modelo ni en un mensaje de error. ``acceptedConditions``
+  es opcional: ausente o vacío vale ``[new]`` (RN-011 punto 2; DEC-241).
+- Enteros y booleanos estrictos (DEC-238): el texto de un CSV lo convierte el cargador (T08).
+- Una fecha y hora sin desfase (``visitedAt``) se toma en la zona que se pasa en ``zona``:
+  la de ``general.timezone`` (PAR-01, ``America/Tijuana``; DEC-240). Sin ``zona``, se
+  rechaza como campo faltante.
 
 No se valida contra la configuración (ciudades de PAR-09: CMP-07 y CMP-08) ni se guarda
 nada (CMP-20).
@@ -26,13 +31,18 @@ from enum import StrEnum
 from types import MappingProxyType
 from typing import Annotated, Any, ClassVar
 from uuid import UUID
+from zoneinfo import ZoneInfo
 
-from pydantic import AwareDatetime, BeforeValidator, Field
+from pydantic import BeforeValidator, Field
 
 from oip.catalogos import Canal, Categoria, Condicion, DemandaLocal, TipoRegistro
 from oip.entradas._comun import (
+    CONTEXTO_ZONA,
+    Booleano,
     Dec,
+    Entero,
     Esquema,
+    FechaHoraCaptura,
     RegistroInvalido,
     ausente,
     decimal_o_none,
@@ -41,6 +51,7 @@ from oip.entradas._comun import (
 )
 
 __all__ = [
+    "CONDICIONES_POR_DEFECTO",
     "ESQUEMAS_CAPTURA",
     "Captura",
     "CapturaMsrp",
@@ -60,6 +71,10 @@ __all__ = [
 _PRODUCTO = ("gtin", "brand", "model")
 #: Obligatorios que dependen de otros campos: los decide ``_faltan`` de cada esquema.
 _CONDICIONALES = frozenset({*_PRODUCTO, "exchangeRate", "evaluationId"})
+
+#: ``acceptedConditions`` de una solicitud que no los trae: solo nuevo (RN-011 punto 2,
+#: REQ §3.4 punto 1, CTR-04; DEC-241).
+CONDICIONES_POR_DEFECTO: tuple[Condicion, ...] = (Condicion.NEW,)
 
 
 class Moneda(StrEnum):
@@ -95,12 +110,19 @@ class _Captura(Esquema):
         return []
 
     @classmethod
-    def leer(cls, datos: Mapping[str, Any]) -> _Captura:
+    def leer(cls, datos: Mapping[str, Any], zona: dt.tzinfo | None = None) -> _Captura:
         if not isinstance(datos, Mapping):
             raise TypeError("la captura debe ser un mapa de campos")
         orden = cls._orden()
         obligatorios = tuple(c for c in orden if c not in _CONDICIONALES)
-        return validar_esquema(cls, datos, orden, obligatorios, faltan=cls._faltan(datos))
+        return validar_esquema(
+            cls,
+            datos,
+            orden,
+            obligatorios,
+            faltan=cls._faltan(datos),
+            contexto={CONTEXTO_ZONA: zona},
+        )
 
     @classmethod
     def _orden(cls) -> tuple[str, ...]:
@@ -143,7 +165,7 @@ class ComparableLocal(_ConProducto):
     exchange_rate: Annotated[Dec, Field(gt=0)] | None = None
     city: str
     date: dt.date
-    sold: bool
+    sold: Booleano
 
     @classmethod
     def _faltan(cls, datos: Mapping[str, Any]) -> list[str]:
@@ -223,7 +245,7 @@ class VisitaTienda(_Captura):
     model: str | None = None
     evaluation_id: UUID | None = None
     result: ResultadoVisita
-    visited_at: AwareDatetime
+    visited_at: FechaHoraCaptura
 
     @classmethod
     def _faltan(cls, datos: Mapping[str, Any]) -> list[str]:
@@ -248,7 +270,7 @@ class ResultadoReal(_Captura):
 
     evaluation_id: UUID
     channel: Canal
-    units: int
+    units: Entero
     purchase_price: Dec
     sale_price: Dec
     actual_costs: Dec
@@ -256,14 +278,23 @@ class ResultadoReal(_Captura):
     sold_on: dt.date
 
 
+def _condiciones_o_por_defecto(valor: object) -> object:
+    """``acceptedConditions`` ``null`` o lista vacía → ``[new]`` (DEC-241)."""
+    if valor is None or (isinstance(valor, list | tuple) and not valor):
+        return CONDICIONES_POR_DEFECTO
+    return valor
+
+
 class SolicitudCliente(_Captura):
-    """``client_request`` (RN-011): el cliente solo por alias, **sin notas** (RNF-11)."""
+    """``client_request`` (RN-011): el cliente solo por alias, **sin notas** (RNF-11).
+
+    ``acceptedConditions`` es opcional: ausente, ``null`` o vacío vale ``[new]`` (RN-011
+    punto 2; DEC-241); un código fuera de la tabla cuenta como faltante."""
 
     ORDEN: ClassVar[tuple[str, ...]] = (
         "clientAlias",
         "items",
         "quantity",
-        "acceptedConditions",
         "modality",
         "date",
     )
@@ -272,8 +303,10 @@ class SolicitudCliente(_Captura):
     items: Annotated[
         tuple[Annotated[str, Field(min_length=1)], ...], Field(min_length=1, max_length=3)
     ]
-    quantity: Annotated[int, Field(ge=1)]
-    accepted_conditions: Annotated[tuple[Condicion, ...], Field(min_length=1)]
+    quantity: Annotated[Entero, Field(ge=1)]
+    accepted_conditions: Annotated[
+        tuple[Condicion, ...], BeforeValidator(_condiciones_o_por_defecto), Field(min_length=1)
+    ] = CONDICIONES_POR_DEFECTO
     modality: Modalidad
     postal_code: str | None = None
     date: dt.date
@@ -303,13 +336,20 @@ ESQUEMAS_CAPTURA: MappingProxyType[TipoRegistro, type[_Captura]] = MappingProxyT
 )
 
 
-def leer_captura(tipo: str, datos: Mapping[str, Any]) -> Captura:
+def leer_captura(
+    tipo: str, datos: Mapping[str, Any], *, zona: str | dt.tzinfo | None = None
+) -> Captura:
     """Lee una captura de ``tipo`` (``recordType`` ya quitado del registro).
 
     Un tipo que no es una de las 7 capturas levanta ``RegistroInvalido`` con ``TIPO DE
     REGISTRO DESCONOCIDO``; ``observation`` se lee con ``contrato.leer_observacion``.
+
+    ``zona`` es la de ``general.timezone`` de la configuración (PAR-01; nombre IANA o
+    ``tzinfo``): una fecha y hora sin desfase se toma en ella (DEC-240). El cargador (T08)
+    la pasa siempre; sin ella, una fecha y hora sin desfase se rechaza.
     """
     esquema = ESQUEMAS_CAPTURA.get(tipo) if isinstance(tipo, str) else None
     if esquema is None:
         raise RegistroInvalido.tipo_desconocido()
-    return esquema.leer(datos)  # type: ignore[return-value]
+    zona_info = ZoneInfo(zona) if isinstance(zona, str) else zona
+    return esquema.leer(datos, zona_info)  # type: ignore[return-value]

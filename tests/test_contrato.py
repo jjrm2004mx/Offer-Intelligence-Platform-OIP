@@ -19,6 +19,7 @@ from oip.catalogos import (
     motivo_campo_faltante,
 )
 from oip.entradas.contrato import (
+    CAMPOS_PARTICULAR,
     OBLIGATORIOS_CONTRATO,
     OBLIGATORIOS_PARTICULAR,
     VERSIONES_ACEPTADAS,
@@ -419,7 +420,138 @@ def test_una_observacion_de_comercio_no_exige_los_obligatorios_del_particular():
 def test_basta_un_campo_particular_para_aplicar_sus_reglas(campo):
     datos = {**COMERCIO, campo: "particular"}
     assert es_publicacion_de_particular(datos)
-    assert _motivo(datos) == "CAMPO OBLIGATORIO FALTANTE (pickupLocation)"
+
+
+# --- Coherencia del particular (DEC-239) ----------------------------------------------
+
+
+def test_campos_particular_en_el_orden_de_req_6():
+    assert CAMPOS_PARTICULAR == ("retailerCode", "seller", "purchaseMode")
+
+
+@pytest.mark.parametrize(
+    ("cambios", "esperado"),
+    [
+        ({"retailerCode": "tienda"}, "retailerCode"),
+        ({"seller": "comercio"}, "seller"),
+        ({"purchaseMode": "envio"}, "purchaseMode"),
+        ({"seller": "comercio", "purchaseMode": "envio"}, "seller"),
+        ({"retailerCode": "tienda", "purchaseMode": "envio"}, "retailerCode"),
+        ({"purchaseMode": "Particular"}, "purchaseMode"),
+    ],
+)
+def test_si_uno_vale_particular_los_tres_deben_valerlo(cambios, esperado):
+    assert _motivo({**PARTICULAR, **cambios}) == f"CAMPO OBLIGATORIO FALTANTE ({esperado})"
+
+
+@pytest.mark.parametrize("campo", ["seller", "retailerCode", "purchaseMode"])
+def test_un_comercio_con_un_solo_campo_particular_se_rechaza(campo):
+    datos = {**COMERCIO, campo: "particular", "pickupLocation": "san_diego"}
+    esperado = next(c for c in CAMPOS_PARTICULAR if c != campo)
+    assert _motivo(datos) == f"CAMPO OBLIGATORIO FALTANTE ({esperado})"
+
+
+def test_la_incoherencia_respeta_el_orden_del_contrato():
+    # category va antes que seller en la arquitectura §8.
+    datos = _sin({**PARTICULAR, "seller": "comercio"}, "category")
+    assert _motivo(datos) == "CAMPO OBLIGATORIO FALTANTE (category)"
+    # purchaseMode va antes que los obligatorios del particular.
+    datos = _sin({**PARTICULAR, "purchaseMode": "envio"}, "pickupLocation")
+    assert _motivo(datos) == "CAMPO OBLIGATORIO FALTANTE (purchaseMode)"
+
+
+# --- Particular sin texto libre (DEC-236) ---------------------------------------------
+
+
+def test_el_particular_descarta_availability_text_y_evidence():
+    datos = {
+        **PARTICULAR,
+        "availability": {"state": "listed", "text": "Pregunta por Ana al 555-0100"},
+        "evidence": {"nota": "Ana 555-0100"},
+        "sourceType": "manual",
+        "extractionMethod": "captura_jesus",
+    }
+    obs = leer_observacion(datos)
+    assert obs.availability.text is None
+    assert obs.evidence is None
+    assert obs.source_type == "manual"
+    assert obs.extraction_method == "captura_jesus"
+    volcado = json.dumps(obs.model_dump(mode="json", by_alias=True))
+    assert "555" not in volcado and "Ana" not in volcado
+
+
+def test_el_particular_conserva_content_mientras_se_resuelve_rn_013():
+    """``content`` no se descarta: RN-013 §4.1 confirma el producto con modelo + marca y el
+    mismo contenido, y B18 lo da ("mismo contenido"). Queda para Jesús (ver el PR)."""
+    obs = leer_observacion({**PARTICULAR, "content": "tool only"})
+    assert obs.content == "tool only"
+
+
+def test_un_comercio_conserva_availability_text_content_y_evidence():
+    obs = leer_observacion(COMERCIO)
+    assert obs.availability.text == "3 disponibles"
+    assert obs.content == "tool only"
+    assert obs.evidence == {"jsonld": True, "priceSelector": "..."}
+
+
+# --- availability sin state (DEC-237) -------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "disponibilidad",
+    [{}, {"text": "3 disponibles"}, {"state": ""}, {"state": None}, {"state": "  "}],
+    ids=["vacio", "sin-state", "state-vacio", "state-null", "state-espacios"],
+)
+def test_availability_sin_state_cuenta_como_faltante(disponibilidad):
+    datos = _con(COMERCIO, "availability", disponibilidad)
+    assert _motivo(datos) == "CAMPO OBLIGATORIO FALTANTE (availability.state)"
+
+
+def test_availability_state_va_en_el_lugar_de_availability():
+    datos = _sin(_con(COMERCIO, "availability", {}), "purchaseMode")
+    assert _motivo(datos) == "CAMPO OBLIGATORIO FALTANTE (availability.state)"
+    datos = _sin(_con(COMERCIO, "availability", {}), "seller")
+    assert _motivo(datos) == "CAMPO OBLIGATORIO FALTANTE (seller)"
+
+
+def test_particular_con_availability_solo_con_texto_cuenta_como_faltante():
+    datos = _con(PARTICULAR, "availability", {"text": "Llamar al 555-0100"})
+    assert _motivo(datos) == "CAMPO OBLIGATORIO FALTANTE (availability.state)"
+
+
+# --- Enteros y booleanos estrictos (DEC-238) ------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("ruta", "valor"),
+    [
+        ("availability.quantity", True),
+        ("availability.quantity", "3"),
+        ("availability.quantity", Decimal("3")),
+        ("availability.addToCart", 1),
+        ("availability.addToCart", "true"),
+        ("blocked", "false"),
+        ("blocked", 0),
+        ("blocked", 1),
+        ("isClearance", "true"),
+        ("isClearance", 1),
+        ("shipping.days", "2"),
+        ("shipping.days", False),
+        ("amazonListing.rankMain", True),
+        ("amazonListing.sellersNew", "3"),
+    ],
+)
+def test_enteros_y_booleanos_estrictos(ruta, valor):
+    base = {**COMERCIO, "amazonListing": {"buyBoxPrice": "99.00"}}
+    assert _motivo(_con(base, ruta, valor)) == motivo_campo_faltante(ruta)
+
+
+def test_enteros_y_booleanos_del_json_se_aceptan():
+    base = {**COMERCIO, "amazonListing": {"buyBoxPrice": "99.00", "rankMain": 1500}}
+    datos = _con(_con(base, "availability.addToCart", True), "blocked", True)
+    obs = leer_observacion(datos)
+    assert obs.availability.quantity == 3 and obs.availability.add_to_cart is True
+    assert obs.blocked is True and obs.amazon_listing.rank_main == 1500
 
 
 def test_campos_desconocidos_se_descartan_tambien_en_el_particular():

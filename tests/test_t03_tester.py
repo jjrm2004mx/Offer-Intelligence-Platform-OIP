@@ -312,9 +312,16 @@ def test_obligatorios_del_contrato_van_antes_que_los_del_particular():
 
 @pytest.mark.parametrize("campo", ["seller", "retailerCode", "purchaseMode"])
 def test_basta_un_campo_particular_para_armar_el_title(campo):
+    # Ajustada por DEC-239 (decisión de Jesús, 2026-11-18): si uno de los tres vale
+    # particular, los tres deben valerlo; con uno solo, la observación se rechaza con el
+    # primero de retailerCode, seller, purchaseMode (orden de REQ §6) que no lo vale.
     datos = _comercio()
     datos[campo] = "particular"
     datos["pickupLocation"] = "san_diego"
+    primero = next(c for c in ("retailerCode", "seller", "purchaseMode") if c != campo)
+    assert _rechazo(leer_observacion, datos).motivo == _motivo(primero)
+    for otro in ("retailerCode", "seller", "purchaseMode"):
+        datos[otro] = "particular"
     obs = leer_observacion(datos)
     assert obs.es_particular
     assert obs.title == "MarcaP MP-1"
@@ -487,11 +494,12 @@ _OBLIGATORIOS_CTR04 = {
         "purchasedOn",
         "soldOn",
     ],
+    # acceptedConditions ya no es obligatorio: ausente o vacío vale [new] (DEC-241,
+    # decisión de Jesús, 2026-11-18; RN-011 punto 2).
     "client_request": [
         "clientAlias",
         "items",
         "quantity",
-        "acceptedConditions",
         "modality",
         "date",
     ],
@@ -730,7 +738,8 @@ def test_client_request_no_tiene_notas_ni_texto_libre():
         ("items", [""]),
         ("quantity", 0),
         ("quantity", -1),
-        ("acceptedConditions", []),
+        # ("acceptedConditions", []) sale de aquí: vacío vale [new] (DEC-241); lo cubre
+        # test_client_request_sin_accepted_conditions_vale_solo_nuevo.
         ("modality", "otra"),
         ("date", "18/11/2026"),
     ],
@@ -748,13 +757,17 @@ def test_client_request_de_1_a_3_articulos(n):
     assert len(leer_captura("client_request", datos).items) == n
 
 
-def test_client_request_sin_accepted_conditions_se_rechaza():
-    """Implementado como obligatorio (REQ §6, columna de obligatorios de CTR-04). La
-    contradicción con "por defecto [new]" (REQ §3.4 punto 1, RN-011, columna de tipos de
-    CTR-04) la resuelve Jesús; esta prueba fija el comportamiento actual."""
+@pytest.mark.parametrize("vacio", ["ausente", None, []], ids=["ausente", "null", "vacio"])
+def test_client_request_sin_accepted_conditions_vale_solo_nuevo(vacio):
+    """Antes ``test_client_request_sin_accepted_conditions_se_rechaza``: fijaba el rechazo
+    mientras Jesús resolvía la contradicción entre REQ §6 (obligatorio) y "por defecto
+    [new]" (REQ §3.4 punto 1, RN-011 punto 2, columna de tipos de CTR-04). Jesús la resolvió
+    el 2026-11-18 (DEC-241): mandan las RN, ausente o vacío vale [new]."""
     datos = _quitar(_captura("client_request"), "acceptedConditions")
-    error = _rechazo(leer_captura, "client_request", datos)
-    assert error.motivo == _motivo("acceptedConditions")
+    if vacio != "ausente":
+        datos["acceptedConditions"] = vacio
+    solicitud = leer_captura("client_request", datos)
+    assert [str(c) for c in solicitud.accepted_conditions] == ["new"]
 
 
 def test_el_alias_no_sale_en_repr_ni_str():
