@@ -1189,3 +1189,127 @@ def test_o2_todos_los_dominios_de_los_dos_archivos_cumplen_la_regla_y_cargan():
         dominios += [d for p in contenido.private_sellers.platforms.values() for d in p.domains]
         assert dominios, archivo
         assert all(regla.fullmatch(d) for d in dominios), (archivo, dominios)
+
+
+# --- Cuarta pasada (commit 2ef181f): D-4, O-3 y O-4 -------------------------------------
+# D-4 y O-3 (Jesús, 2026-11-18): version sin ningún carácter de control Unicode (Cc) en
+#     ninguna posición; LS y PS (no Cc) siguen rechazados; nada que strip() quite.
+# O-4 (Jesús, 2026-11-18): tzdata con cota mínima.
+# La lista de Cc se genera de unicodedata (no del código): los 65 de U+0000-U+001F y
+# U+007F-U+009F, sin muestra.
+
+import sys  # noqa: E402
+import unicodedata  # noqa: E402
+
+_TODOS_LOS_CC = [chr(i) for i in range(sys.maxunicode + 1) if unicodedata.category(chr(i)) == "Cc"]
+_POSICIONES = {
+    "inicio": "{c}escenarios-base-1",
+    "medio": "escenarios{c}base-1",
+    "final": "escenarios-base-1{c}",
+}
+
+
+def test_o3_los_cc_son_los_65_de_c0_del_y_c1():
+    esperados = [chr(i) for i in (*range(0x00, 0x20), *range(0x7F, 0xA0))]
+    assert _TODOS_LOS_CC == esperados
+
+
+@pytest.mark.parametrize("posicion", _POSICIONES)
+@pytest.mark.parametrize("control", _TODOS_LOS_CC, ids=[f"U+{ord(c):04X}" for c in _TODOS_LOS_CC])
+def test_o3_todo_caracter_cc_en_version_rechaza_desde_el_yaml(control, posicion):
+    valor = _POSICIONES[posicion].format(c=control)
+    errores = _version_python(valor)
+    assert any(e.startswith("version:") for e in errores), errores
+    # El mensaje no reproduce el carácter de control (no se inyecta en logs ni terminal).
+    assert all(control not in e for e in errores), errores
+
+
+@pytest.mark.parametrize("posicion", _POSICIONES)
+@pytest.mark.parametrize("control", _TODOS_LOS_CC, ids=[f"U+{ord(c):04X}" for c in _TODOS_LOS_CC])
+def test_o3_todo_caracter_cc_en_version_rechaza_en_el_modelo(control, posicion):
+    # Directo al modelo, sin volcar a YAML: PyYAML vuelca NEL crudo y al leerlo lo pliega.
+    datos = _con(_base(), "version", _POSICIONES[posicion].format(c=control))
+    with pytest.raises(ValidationError) as info:
+        Configuracion.model_validate(datos)
+    assert [e["loc"] for e in info.value.errors()] == [("version",)], info.value.errors()
+
+
+@pytest.mark.parametrize("final", ["FS", "GS", "RS"])
+def test_d4_version_terminada_en_fs_gs_rs_rechaza_desde_el_yaml(final):
+    errores = _version_python("escenarios-base-1" + _SEPARADORES_DE_LINEA[final])
+    assert any(e.startswith("version:") for e in errores), errores
+
+
+@pytest.mark.parametrize(
+    "valor",
+    [
+        "\x1b[31mescenarios-base-1\x1b[0m",
+        "escenarios-base-1\x1b[2K",
+        "escenarios\x1b]0;titulo\x07base-1",
+        "\x9b31mescenarios-base-1",  # CSI de 8 bits (C1)
+    ],
+    ids=["color", "borrar-linea", "osc-titulo", "csi-c1"],
+)
+def test_o3_secuencia_ansi_en_version_rechaza(valor):
+    errores = _version_python(valor)
+    assert any(e.startswith("version:") for e in errores), errores
+    assert all("\x1b" not in e and "\x9b" not in e for e in errores), errores
+
+
+@pytest.mark.parametrize("posicion", _POSICIONES)
+@pytest.mark.parametrize("separador", [" ", " "], ids=["LS", "PS"])
+def test_o3_ls_y_ps_que_no_son_cc_siguen_rechazando(separador, posicion):
+    assert unicodedata.category(separador) != "Cc"
+    errores = _version_python(_POSICIONES[posicion].format(c=separador))
+    assert any(e.startswith("version:") for e in errores), errores
+
+
+@pytest.mark.parametrize("espacio", [" ", "　", " "], ids=["NBSP", "IDSP", "EMSP"])
+def test_o3_espacio_unicode_en_los_extremos_rechaza(espacio):
+    for valor in (f"{espacio}escenarios-base-1", f"escenarios-base-1{espacio}"):
+        assert valor.strip() != valor
+        errores = _version_python(valor)
+        assert any(e.startswith("version:") for e in errores), (valor, errores)
+
+
+@pytest.mark.parametrize(
+    "version",
+    ["a", "v1.0", "2026-11-18.1", "escenarios-base-1", "prueba 2", "versión-ñ", "a b"],
+)
+def test_o3_version_valida_sigue_cargando_desde_el_yaml(version):
+    escapado = json.dumps(version, ensure_ascii=True)
+    texto = _base_con(('version: "escenarios-base-1"', f"version: {escapado}"))
+    assert cargar_configuracion_texto(texto).version == version
+
+
+def test_o3_los_dos_archivos_del_repo_siguen_cargando_con_su_version():
+    assert cargar_configuracion(BASE).version == "escenarios-base-1"
+    assert cargar_configuracion(PRODUCCION).version == "2026-11-18.1"
+
+
+# O-4: cota mínima declarada, razonable e instalada.
+def _version_tzdata(texto: str) -> tuple[int, ...]:
+    return tuple(int(p) for p in texto.split("."))
+
+
+def test_o4_tzdata_declarada_con_cota_minima_y_la_instalada_la_cumple():
+    from packaging.requirements import Requirement
+
+    requeridas = [Requirement(r) for r in metadata.distribution("oip-core").requires or []]
+    tz = [r for r in requeridas if r.name == "tzdata"]
+    assert len(tz) == 1, requeridas
+    assert tz[0].marker is None  # también en Linux: zone.tab se lee del paquete, no del SO
+    minimas = [s.version for s in tz[0].specifier if s.operator == ">="]
+    assert minimas, tz[0]
+    # Razonable: no por debajo de 2022.7 (IANA 2022g, primera con America/Ciudad_Juarez).
+    assert _version_tzdata(minimas[0]) >= (2022, 7)
+    instalada = metadata.version("tzdata")
+    assert tz[0].specifier.contains(instalada), instalada
+
+
+def test_o4_zone_tab_instalado_trae_las_zonas_que_justifican_la_cota():
+    zonas = _zone_tab()
+    assert {"Europe/Kyiv", "America/Ciudad_Juarez"} <= zonas
+    for zona in ("Europe/Kyiv", "America/Ciudad_Juarez"):
+        cargada = cargar_configuracion_texto(_texto(_con(_base(), "general.timezone", zona)))
+        assert cargada.contenido.general.timezone == zona
