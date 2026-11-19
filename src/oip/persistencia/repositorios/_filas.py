@@ -72,6 +72,7 @@ from oip.persistencia.repositorios._tipos import (
 
 __all__ = [
     "TABLA_CAPTURA",
+    "OBSERVACION_INCOMPLETA",
     "Fila",
     "cambios_reporte",
     "captura_de_fila",
@@ -96,6 +97,12 @@ __all__ = [
     "publicacion_de_fila",
     "tipo_de_captura",
 ]
+
+#: Mensaje de una observación de TAB-05 sin su disponibilidad (TAB-06) o su publicación
+#: (TAB-04): datos inconsistentes. Sin ids ni valores de la fila.
+OBSERVACION_INCOMPLETA = (
+    "price_observation: la observación no tiene su disponibilidad o su publicación"
+)
 
 #: Tabla de cada captura (TAB-09).
 TABLA_CAPTURA: Mapping[TipoRegistro, Table] = {

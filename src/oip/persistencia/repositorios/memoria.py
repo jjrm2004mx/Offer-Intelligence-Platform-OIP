@@ -30,6 +30,7 @@ from oip.persistencia.repositorios._tipos import (
     Carga,
     CargaGuardada,
     ErrorDeIntegridad,
+    ErrorRepositorio,
     IdentificadorProducto,
     ObservacionNueva,
     Producto,
@@ -235,7 +236,8 @@ class RepositorioMemoria:
         disponibilidad = self._t(tablas.availability_observation).por_pk(*clave)
         ficha = self._t(tablas.amazon_listing_observation).por_pk(*clave)
         publicacion = self._t(tablas.listing).por_pk(precio["listing_id"])
-        assert disponibilidad is not None and publicacion is not None  # noqa: S101
+        if disponibilidad is None or publicacion is None:
+            raise ErrorRepositorio(_filas.OBSERVACION_INCOMPLETA)
         return _filas.observacion_de_filas(precio, disponibilidad, publicacion, ficha)
 
     def leer_observacion(self, id_: UUID) -> ObservacionRegistrada | None:

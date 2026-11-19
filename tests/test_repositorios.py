@@ -65,6 +65,7 @@ from oip.persistencia.repositorios import (
     CapturaNueva,
     Carga,
     ErrorDeIntegridad,
+    ErrorRepositorio,
     IdentificadorProducto,
     ObservacionNueva,
     Producto,
@@ -945,3 +946,23 @@ def test_un_obligatorio_faltante_o_un_texto_vacio_se_rechazan_antes_de_escribir(
     assert _cuenta(repo, tablas.evaluation) == 0
     with pytest.raises(ValueError, match="vacío"):
         Producto(UUID(int=1), T0, marca=" ")
+
+
+def test_una_observacion_sin_su_disponibilidad_da_un_error_del_repositorio(repo):
+    # Datos inconsistentes (TAB-05 sin TAB-06): un error propio, no un assert (que
+    # desaparece con ``python -O``), y sin ids ni valores de la fila en el mensaje.
+    repo.guardar_observacion(_nueva(1, primera=True))
+    if isinstance(repo, RepositorioMemoria):
+        tabla = repo._tablas[tablas.availability_observation.name]
+        tabla.filas.clear()
+        for indice in tabla.indices.values():
+            indice.clear()
+    else:
+        with repo._motor_de_pruebas.begin() as c:
+            c.execute(tablas.availability_observation.delete())
+    with pytest.raises(ErrorRepositorio, match="disponibilidad") as error:
+        repo.leer_observacion(UUID(int=1))
+    assert str(UUID(int=1)) not in str(error.value)
+    assert error.value.__context__ is None and error.value.__cause__ is None
+    with pytest.raises(ErrorRepositorio):
+        repo.observaciones_del_producto(ID_PRODUCTO, instante=_t(1))

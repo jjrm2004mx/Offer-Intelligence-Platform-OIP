@@ -279,14 +279,14 @@ class RepositorioPostgres:
                 *_columnas(_F, "f__"),
             )
             .select_from(
-                _P.join(
+                _P.outerjoin(
                     _D,
                     and_(
                         _D.c.observation_id == _P.c.observation_id,
                         _D.c.observed_at == _P.c.observed_at,
                     ),
                 )
-                .join(_L, _L.c.id == _P.c.listing_id)
+                .outerjoin(_L, _L.c.id == _P.c.listing_id)
                 .outerjoin(
                     _F,
                     and_(
@@ -302,15 +302,7 @@ class RepositorioPostgres:
         def tx(c: Connection) -> list[Fila]:
             return [dict(r._mapping) for r in c.execute(consulta)]
 
-        return tuple(
-            _filas.observacion_de_filas(
-                _parte(f, _P, "p__"),
-                _parte(f, _D, "d__"),
-                _parte(f, _L, "l__"),
-                None if f["f__observation_id"] is None else _parte(f, _F, "f__"),
-            )
-            for f in self._correr(tx)
-        )
+        return tuple(_registrada(f) for f in self._correr(tx))
 
     def leer_observacion(self, id_: UUID) -> ObservacionRegistrada | None:
         leidas = self._leer_observaciones(_P.c.observation_id == id_)
@@ -459,6 +451,18 @@ class RepositorioPostgres:
             return self._evaluaciones(c, list(c.execute(consulta).scalars()))
 
         return tuple(self._correr(tx))  # type: ignore[arg-type]
+
+
+def _registrada(f: Mapping[str, Any]) -> ObservacionRegistrada:
+    # Igual que la memoria: una fila de TAB-05 sin su TAB-06 o su TAB-04 es inconsistente.
+    if f["d__observation_id"] is None or f["l__id"] is None:
+        raise ErrorRepositorio(_filas.OBSERVACION_INCOMPLETA)
+    return _filas.observacion_de_filas(
+        _parte(f, _P, "p__"),
+        _parte(f, _D, "d__"),
+        _parte(f, _L, "l__"),
+        None if f["f__observation_id"] is None else _parte(f, _F, "f__"),
+    )
 
 
 def _filas_para_actualizar(c: Connection, tabla: Table, *condiciones: Any) -> list[Fila]:
