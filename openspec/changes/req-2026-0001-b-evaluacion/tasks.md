@@ -92,8 +92,10 @@ Tareas de la parte B del REQ-2026-0001 v2.9 (`req-2026-0001-b-evaluacion`). **1 
 - **Depende de:** T04. **Estimación:** 7 h.
 - **DoD:** común; evidencia en el PR de las pruebas de integración corridas en local.
 
-- [ ] 5.1 Definir las tablas de §4 en SQLAlchemy Core y la migración `0001_esquema` y verificar `upgrade` / `downgrade` en una prueba de integración
-- [ ] 5.2 Escribir `0002_hypertables` y verificar en integración que TAB-05 a TAB-07 son hypertables
+- [x] 5.1 Definir las tablas de §4 en SQLAlchemy Core y la migración `0001_esquema` y verificar `upgrade` / `downgrade` en una prueba de integración
+  - Evidencia de integración (T05): Jesús la corrió el 2026-11-19 en Rocky Linux 10.2 contra `docker.io/timescale/timescaledb:latest-pg16` (digest `sha256:62a5323a3c2e35f16b8e0a9fb8f15ac4bb7d95d57f5a95ab7767d4fcb51b9e8d`): 84 passed y 1 skipped (la esperada, `test_sin_timescaledb_la_0002_falla_y_no_deja_nada_a_medias`), 0 fallidas.
+- [x] 5.2 Escribir `0002_hypertables` y verificar en integración que TAB-05 a TAB-07 son hypertables
+  - Evidencia de integración (T05): Jesús la corrió el 2026-11-19 en Rocky Linux 10.2 contra `docker.io/timescale/timescaledb:latest-pg16` (digest `sha256:62a5323a3c2e35f16b8e0a9fb8f15ac4bb7d95d57f5a95ab7767d4fcb51b9e8d`): 84 passed y 1 skipped (la esperada, `test_sin_timescaledb_la_0002_falla_y_no_deja_nada_a_medias`), 0 fallidas.
 
 ## 6. T06 — Repositorios en memoria y PostgreSQL (cimientos)
 
