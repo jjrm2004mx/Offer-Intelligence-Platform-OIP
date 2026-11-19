@@ -1,0 +1,18 @@
+{
+  "_nota": "B18 (REQ-2026-0001 v2.9): publicación sintética de un particular en San Diego, capturada por Jesús. Base de B20 (d) a (h). Dominio solo como texto: ninguna prueba abre la URL.",
+  "schemaVersion": "3.1",
+  "retailerCode": "particular",
+  "productUrl": "https://offerup.com/item/detail/b18-sintetico",
+  "brand": "DEWALT",
+  "model": "DCF840",
+  "content": "atornillador, batería y cargador",
+  "category": "tools",
+  "price": {"current": "70.00", "currency": "USD"},
+  "seller": "particular",
+  "condition": "used",
+  "availability": {"state": "listed"},
+  "purchaseMode": "particular",
+  "pickupLocation": "san_diego",
+  "extractedAt": "2026-11-16T10:00:00-08:00",
+  "blocked": false
+}

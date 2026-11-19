@@ -18,6 +18,7 @@ from uuid import UUID
 import pytest
 
 import oip.evaluacion
+from config_tienda_prueba import TIENDA_PRUEBA, configuracion_con_tienda_prueba
 from oip.catalogos import (
     CalidadPrecio,
     Canal,
@@ -30,7 +31,6 @@ from oip.catalogos import (
     ReferenciaPrecio,
     Resultado,
 )
-from oip.configuracion import cargar_configuracion
 from oip.entradas.capturas import leer_captura
 from oip.entradas.contrato import leer_observacion
 from oip.evaluacion.contexto import (
@@ -45,7 +45,8 @@ from oip.evaluacion.contexto import (
 )
 
 RAIZ = Path(__file__).parent
-CONFIG = cargar_configuracion(RAIZ / "fixtures" / "config" / "base.yaml")
+# Desde T07 el paso 1 valida el dominio de la oferta: comercio sintético de example.com.
+CONFIG = configuracion_con_tienda_prueba()
 ZONA = "America/Tijuana"
 
 
@@ -55,7 +56,7 @@ def _uuid(n: int) -> UUID:
 
 def _observacion(**cambios):
     datos = {
-        "retailerCode": "homedepot",
+        "retailerCode": TIENDA_PRUEBA,
         "storeCode": "hd-chula-vista",
         "productUrl": "https://tienda.example.com/p/123",
         "title": "Taladro de prueba",
