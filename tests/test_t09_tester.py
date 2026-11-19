@@ -762,3 +762,47 @@ def test_franja_con_los_cortes_de_par_10_sin_redondear(precio, franja):
     registro = motor.evaluar(_contexto(h, oferta, _local(0, 13)))
     assert registro.descuento_real == _real_esperado("100", precio)
     assert _franja(registro) is franja
+
+
+# --- Interacción con el paso 1 (T07) --------------------------------------------------------
+
+
+def _con(registrada: ObservacionRegistrada, **campos) -> ObservacionRegistrada:
+    datos = registrada.observacion.model_dump(by_alias=True, mode="json")
+    datos.update(campos)
+    return ObservacionRegistrada(
+        leer_observacion(datos), registrada.id, registrada.id_publicacion, PRODUCTO
+    )
+
+
+@pytest.mark.parametrize(
+    ("campos", "motivo"),
+    [
+        ({"retailerCode": "homedepot"}, "DOMINIO NO AUTORIZADO"),  # example.com no es suyo
+        ({"price": {"current": "0", "currency": "USD"}}, "PRECIO INVÁLIDO"),
+    ],
+)
+def test_una_oferta_rechazada_en_el_paso_1_no_calcula_referencias(campos, motivo):
+    """REQ §3.2 paso 1: un rechazo termina la evaluación. Con el historial completo de B30,
+    la oferta de hoy rechazada no llega al precio habitual ni al descuento real."""
+    por_dia, todas = _historial_b30(_precios_b30())
+    oferta = _con(por_dia[0], **campos)
+    registro = motor.evaluar(
+        _contexto(todas, oferta, oferta.observacion.extracted_at + dt.timedelta(minutes=1))
+    )
+    assert registro.resultado.value == "RECHAZADA_VALIDACION"
+    assert registro.motivo_rechazo == motivo
+    assert registro.referencias is None
+    assert registro.descuento_real is None
+    assert registro.motivos == ()
+
+
+def test_con_el_paso_1_activo_la_oferta_valida_de_b30_sigue_dando_sus_numeros():
+    """La misma oferta de hoy sin cambios pasa la validación y da 72.9% contra $129."""
+    por_dia, todas = _historial_b30(_precios_b30())
+    oferta = _con(por_dia[0])  # ida y vuelta por el contrato, sin cambios
+    registro = motor.evaluar(
+        _contexto(todas, oferta, oferta.observacion.extracted_at + dt.timedelta(minutes=1))
+    )
+    assert registro.motivo_rechazo is None
+    _verificar(registro, habitual="129", precio="35.00", mostrado="72.9", episodio_inicio=-14)
