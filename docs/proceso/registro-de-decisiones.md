@@ -109,6 +109,7 @@
 | DEC-086 | GitHub Action **"Requiere reinspección"** cuando cambia la versión de una RN | PROPUESTA | Etapa 2 |
 | DEC-087 | **GitHub Project "OIP"** (tablero de etapas) para aprender la herramienta; el inspector conserva el control de "proyecto asociado" | VIGENTE (Jesús lo crea) | GitHub |
 | DEC-088 | Trazabilidad de punta a punta: Requerimiento → Análisis → Diseño → Tareas → Rama/PR → Código → Documentación | VIGENTE | Todas |
+| DEC-249 | **Ritmo de la Etapa 4.** (1) Una **observación** de `oip-tester` que no es defecto (una lectura discutible, un hueco del diseño o una mejora) **no detiene el PR**: va al issue de pendientes del cambio (#34 para la parte B), con el PR, la fuente y la recomendación, y el PR sigue hacia los gates. Jesús las decide **por lote al cerrar cada hito**; lo aprobado entra en una tarea o PR propio, con su DEC. Un defecto sigue siendo `IMPLEMENTATION DEFECT` en el mismo PR, y una contradicción entre fuentes se reporta sin resolverla. (2) Las tareas que `tasks.md` permite en paralelo se implementan **hasta 2 o 3 a la vez**, cada una en su propia rama y su PR (sigue "1 tarea = 1 rama = 1 PR"). (3) Jesús revisa los PR en READY FOR GATES **por lotes**. (4) El orquestador le pasa a `oip-developer` las comprobaciones de `oip-tester` como revisión previa. (5) Los agentes reciben **extractos** de las fuentes de su tarea; `oip-tester` conserva el REQ completo | VIGENTE (decisión de Jesús, 2026-11-18) | Etapa 4; `flujo-general.md`; issue #34 |
 
 ## 7. Publicación para el experto
 
