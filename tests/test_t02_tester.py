@@ -1009,21 +1009,10 @@ def test_d3_separador_de_linea_al_inicio_de_version_rechaza(separador):
     assert any(e.startswith("version:") for e in errores), errores
 
 
-_D4 = pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "D-4: un separador de línea de str.splitlines al final de version (FS, GS, RS) carga; "
-        "LF, CR, NEL, LS y PS al final sí rechazan"
-    ),
-)
-
-
+# D-4 corregido (developer, tercera corrección): se quitó el marcador xfail estricto de
+# FS, GS y RS; la aserción no cambia.
 @pytest.mark.parametrize(
-    "separador",
-    [
-        pytest.param(s, id=n, marks=_D4 if n in {"FS", "GS", "RS"} else ())
-        for n, s in _SEPARADORES_DE_LINEA.items()
-    ],
+    "separador", _SEPARADORES_DE_LINEA.values(), ids=_SEPARADORES_DE_LINEA.keys()
 )
 def test_d3_separador_de_linea_al_final_de_version_rechaza(separador):
     """Una versión que termina en un separador de línea no está "en una línea, sin espacios

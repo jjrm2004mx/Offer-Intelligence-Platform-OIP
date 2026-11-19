@@ -30,6 +30,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import unicodedata
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
@@ -134,17 +135,26 @@ Texto = Annotated[str, Strict(), Field(min_length=1)]
 
 
 def _una_linea(valor: str) -> str:
-    # Cualquier separador que ``str.splitlines`` trate como salto (\r, \v, \f, \x1c-\x1e,
-    # NEL, U+2028, U+2029), no solo \n, parte el texto en dos líneas.
+    # D-4 y O-3: ningún carácter de control Unicode (categoría Cc: \x00-\x1f y \x7f-\x9f,
+    # que incluye FS, GS, RS, NEL, BEL y el ESC de las secuencias ANSI), en ninguna posición.
+    control = next((c for c in valor if unicodedata.category(c) == "Cc"), None)
+    if control is not None:
+        raise ValueError(f"version no admite caracteres de control (U+{ord(control):04X})")
+    # Cualquier separador que ``str.splitlines`` trate como salto, también los que no son Cc
+    # (U+2028, U+2029), parte el texto en dos líneas.
     if len(valor.splitlines()) != 1:
-        raise ValueError("se esperaba un texto en una sola línea")
+        raise ValueError("version debe ser un texto en una sola línea")
+    # Sin nada que ``strip()`` quite en los extremos (el ``\S`` del patrón no lo garantiza).
+    if valor.strip() != valor:
+        raise ValueError("version no admite espacios ni separadores al inicio o al final")
     return valor
 
 
 TextoRecortado = Annotated[
     str, Strict(), Field(pattern=r"^\S(?:.*\S)?$"), AfterValidator(_una_linea)
 ]
-"""Texto no vacío, en una línea, sin espacios al inicio ni al final (``version``)."""
+"""Texto no vacío, en una línea, sin caracteres de control ni espacios en los extremos
+(``version``)."""
 Bandera = Annotated[bool, Strict()]
 Fecha = Annotated[date, Strict()]
 Codigo = Annotated[str, Strict(), Field(pattern=r"^[a-z0-9]+(?:[_-][a-z0-9]+)*$")]

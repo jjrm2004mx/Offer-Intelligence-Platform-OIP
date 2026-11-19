@@ -2,6 +2,8 @@
 
 import copy
 import dataclasses
+import json
+import unicodedata
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
@@ -566,6 +568,66 @@ def test_zona_canonica_de_zone_tab_carga(zona):
     assert cargada.contenido.general.timezone == zona
 
 
+# D-4 y O-3 (Jesús, 2026-11-18): ningún carácter de control Unicode (Cc) en version, en
+# ninguna posición, y nada que strip() quite en los extremos.
+_CONTROLES = [
+    "\x00",
+    "\x07",
+    "\x09",
+    "\x1b",
+    "\x1c",
+    "\x1d",
+    "\x1e",
+    "\x1f",
+    "\x7f",
+    "\x85",
+    "\x9f",
+]
+
+
+def test_la_lista_de_controles_es_de_categoria_cc():
+    assert all(unicodedata.category(c) == "Cc" for c in _CONTROLES)
+
+
+@pytest.mark.parametrize("posicion", ["inicio", "medio", "final"])
+@pytest.mark.parametrize("control", _CONTROLES, ids=[f"U+{ord(c):04X}" for c in _CONTROLES])
+def test_version_con_caracter_de_control_rechaza(control, posicion):
+    valor = {
+        "inicio": f"{control}escenarios-base-1",
+        "medio": f"escenarios{control}base-1",
+        "final": f"escenarios-base-1{control}",
+    }[posicion]
+    # Escapado (JSON es YAML entre comillas dobles): el volcador de PyYAML pliega NEL.
+    escapado = json.dumps(valor, ensure_ascii=True)
+    texto = _texto(_datos_base()).replace("version: escenarios-base-1", f"version: {escapado}")
+    assert f"version: {escapado}" in texto
+    with pytest.raises(ErrorConfiguracion) as info:
+        cargar_configuracion_texto(texto)
+    assert any(e.startswith("version:") for e in info.value.errores), info.value.errores
+
+
+@pytest.mark.parametrize("valor", ["\x1b[31mescenarios-base-1\x1b[0m", "escenarios-base-1\x1b[2K"])
+def test_version_con_secuencia_ansi_rechaza(valor):
+    errores = _errores(_poner(_datos_base(), "version", valor))
+    assert any(e.startswith("version:") and "control" in e for e in errores), errores
+
+
+@pytest.mark.parametrize("control", _CONTROLES, ids=[f"U+{ord(c):04X}" for c in _CONTROLES])
+def test_texto_recortado_rechaza_todo_control(control):
+    adaptador = TypeAdapter(TextoRecortado)
+    for valor in (f"{control}ab", f"a{control}b", f"ab{control}"):
+        with pytest.raises(ValidationError):
+            adaptador.validate_python(valor)
+
+
+@pytest.mark.parametrize("separador", [" ", " "])
+def test_texto_recortado_rechaza_ls_y_ps_que_no_son_cc(separador):
+    adaptador = TypeAdapter(TextoRecortado)
+    for valor in (f"{separador}ab", f"a{separador}b", f"ab{separador}"):
+        with pytest.raises(ValidationError):
+            adaptador.validate_python(valor)
+
+
 @pytest.mark.parametrize("version", ["escenarios-base-1", "2026-11-18.1", "prueba 2"])
 def test_version_sin_espacios_en_los_extremos_carga(version):
     cargada = cargar_configuracion_texto(_texto(_poner(_datos_base(), "version", version)))
@@ -654,3 +716,13 @@ def test_errores_cruzados_salen_con_su_ruta_real():
     assert "categories.toys.return_rate.from_category: watches no tiene tasa propia" in (
         _errores(datos)
     )
+
+
+# O-4 (Jesús, 2026-11-18): tzdata con cota mínima, para que zone.tab traiga las zonas vigentes.
+def test_tzdata_declarada_con_cota_minima_2024_1():
+    from importlib import metadata
+
+    requeridas = metadata.distribution("oip-core").requires or []
+    assert "tzdata>=2024.1" in requeridas, requeridas
+    instalada = tuple(int(p) for p in metadata.version("tzdata").split(".")[:2])
+    assert instalada >= (2024, 1), instalada
