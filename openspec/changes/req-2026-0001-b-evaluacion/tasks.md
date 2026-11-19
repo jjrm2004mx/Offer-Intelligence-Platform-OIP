@@ -92,8 +92,10 @@ Tareas de la parte B del REQ-2026-0001 v2.9 (`req-2026-0001-b-evaluacion`). **1 
 - **Depende de:** T04. **Estimación:** 7 h.
 - **DoD:** común; evidencia en el PR de las pruebas de integración corridas en local.
 
-- [ ] 5.1 Definir las tablas de §4 en SQLAlchemy Core y la migración `0001_esquema` y verificar `upgrade` / `downgrade` en una prueba de integración
+- [x] 5.1 Definir las tablas de §4 en SQLAlchemy Core y la migración `0001_esquema` y verificar `upgrade` / `downgrade` en una prueba de integración
+  - Nota (T05): la integración de `0001_esquema` corrió contra PostgreSQL 16 sin TimescaleDB (subir, bajar, `CHECK`, únicos y vista); falta la corrida contra un contenedor TimescaleDB, que hace Jesús en local (DEC-233).
 - [ ] 5.2 Escribir `0002_hypertables` y verificar en integración que TAB-05 a TAB-07 son hypertables
+  - Nota (T05): migración y pruebas escritas; el SQL sin conexión está probado. La verificación de integración (hypertables, chunks de 7 días, subir y bajar con `head`) queda **pendiente** de que Jesús la corra contra TimescaleDB (DEC-233); hasta entonces esta subtarea no se marca.
 
 ## 6. T06 — Repositorios en memoria y PostgreSQL (cimientos)
 
