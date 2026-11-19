@@ -100,6 +100,7 @@ Gates (Actions)                  pruebas, cobertura, calidad, seguridad (incl. r
 
 - **Modo completo:** para un REQ nuevo.
 - **Modo ligero:** para ajustes (developer → tester → seguridad).
+- **Ritmo (DEC-249):** las observaciones del tester que no son defectos van al issue de pendientes del cambio y Jesús las decide por lote al cerrar cada hito, sin detener el PR. Las tareas que `tasks.md` permite en paralelo van hasta 2 o 3 a la vez, cada una con su rama y su PR, y Jesús revisa los PR por lotes.
 - **Regla clave:** cada criterio de aceptación del REQ se convierte en un escenario de OpenSpec, y cada escenario en una prueba.
 
 ### Etapa 5 — Cierre
