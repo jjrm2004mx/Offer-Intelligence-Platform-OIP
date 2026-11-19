@@ -350,6 +350,14 @@ Origen: preguntas 1 a 6 y pendientes 1 a 10 del PR #30 (`proposal.md` de `oip-an
 | DEC-247 | **Zona horaria inválida** (O-8). No se cambia: `ZoneInfoNotFoundError` es un error de configuración, no del registro, y la configuración ya valida `general.timezone`. El cargador (T08) pasa siempre la zona ya validada de la configuración | VIGENTE (Jesús, 2026-11-18) | Un registro no elige la zona: la pone la configuración (DEC-240) | `tasks.md` T08 |
 | DEC-248 | **Enteros escritos como `3.0`** (O-9). Se rechazan, coherente con DEC-238 (enteros estrictos). El contrato con el Worker emite enteros JSON sin parte decimal: queda en §10 para la parte A | VIGENTE (Jesús, 2026-11-18) | Aceptar `3.0` sería una conversión implícita que DEC-238 descarta | `src/oip/entradas/_comun.py` (sin cambio); §10 "Pendientes abiertos"; parte A |
 
+## 9.12 Etapa 4 de la parte B: decisiones de Jesús (2026-11-19)
+
+Origen: contradicción que reportaron `oip-developer` de T07 (PR #37) y de T05 (PR #39, T05-3) en el issue de pendientes #34. Jesús aceptó la propuesta del orquestador el 2026-11-19. El REQ (v2.9), las specs y las RN no cambian.
+
+| ID | Decisión | Estado | Motivo | Dónde aplica |
+|---|---|---|---|---|
+| DEC-250 | **Registro de un rechazo de validación sin el contenido del renglón.** (1) Una observación que falla el paso 1 (`RECHAZADA_VALIDACION`, B20) **sí** deja un registro en TAB-10 (`evaluation`), porque es un resultado del catálogo (REQ §3.2.2) y §7 pide un registro por evaluación. (2) Ese registro **no guarda nada del renglón**: `input_snapshot` = NULL y `offer_observation_id` = NULL; lleva el resultado, el motivo de rechazo con su campo, el instante, `config_version_id`, las versiones de las RN y el origen (en una carga por archivo, `load_run_id` y número de renglón, que lo ligan a `load_rejection` de TAB-02). Puede llevar además la huella `sha256` del renglón normalizado si T08 la necesita para reconocer el mismo rechazo; una huella no revela el contenido. Si hace falta una columna o un `CHECK` nuevo (por ejemplo, rechazo ⇒ `input_snapshot` nulo), va en una migración `0003`; la `0001` no se edita (DEC-179). (3) El registro lo arma el cargador o el ensamblador con lo que devuelve `validar()` (CMP-07), **no el motor**: así cubre también los rechazos por campo faltante (B20 c, f, h), donde no se puede construir el `ContextoEvaluacion`. (4) **RNF-3 no aplica a un rechazo**: no se recalcula desde su registro; se reproduce volviendo a cargar el archivo | VIGENTE (Jesús, 2026-11-19) | `design.md` §2 pedía el registro `RECHAZADA_VALIDACION` y CTR-06 le daba el contexto completo, lo que chocaba con RNF-7, §16, TAB-02 y R-20 ("ninguna tabla guarda el contenido de un renglón rechazado"); además, sin un obligatorio no existe contexto | `design.md` §2 y CTR-06; TAB-10; `tasks.md` T06, T08 y T21; issue #34 (T07 y T05-3) |
+
 ## 10. Pendientes abiertos
 
 | Pendiente | Dueño | Bloquea |
