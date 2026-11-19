@@ -228,7 +228,7 @@ class Observacion(Esquema):
 
 def _version(datos: Mapping[str, Any]) -> str:
     version = datos.get("schemaVersion")
-    if version is None:
+    if ausente(version):
         return VERSIONES_ACEPTADAS[0]
     if not isinstance(version, str) or version.strip() not in VERSIONES_ACEPTADAS:
         raise RegistroInvalido.campo_faltante("schemaVersion")

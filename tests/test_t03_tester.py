@@ -233,7 +233,6 @@ def test_schema_version_null_se_toma_31():
 # D-1 (defecto del tester): CTR-01 dice "ausente (se toma 3.1)" y CTR-03 "celda vacía =
 # campo ausente"; el propio módulo trata el texto vacío como ausente en todos los demás
 # campos (``_comun.ausente``). Un schemaVersion vacío se rechaza en lugar de tomarse 3.1.
-@pytest.mark.xfail(strict=True, reason="D-1: schemaVersion vacío se rechaza, no se toma 3.1")
 @pytest.mark.parametrize("vacio", ["", "  "], ids=["vacio", "espacios"])
 def test_d1_schema_version_vacia_es_ausente_y_se_toma_31(vacio):
     datos = _comercio()

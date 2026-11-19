@@ -320,6 +320,9 @@ def test_versiones_aceptadas():
 def test_schema_version_ausente_se_toma_31():
     assert leer_observacion(_sin(COMERCIO, "schemaVersion")).schema_version == "3.1"
     assert leer_observacion(_con(COMERCIO, "schemaVersion", None)).schema_version == "3.1"
+    # CTR-03: celda vacía = campo ausente (D-1).
+    assert leer_observacion(_con(COMERCIO, "schemaVersion", "")).schema_version == "3.1"
+    assert leer_observacion(_con(COMERCIO, "schemaVersion", "  ")).schema_version == "3.1"
 
 
 @pytest.mark.parametrize("version", ["3.1", "3.0"])
@@ -327,7 +330,7 @@ def test_schema_version_31_y_30_se_aceptan(version):
     assert leer_observacion(_con(COMERCIO, "schemaVersion", version)).schema_version == version
 
 
-@pytest.mark.parametrize("version", ["2.0", "4.0", "3.2", "3", "", Decimal("3.1"), 3])
+@pytest.mark.parametrize("version", ["2.0", "4.0", "3.2", "3", Decimal("3.1"), 3])
 def test_otra_schema_version_se_rechaza(version):
     assert _motivo(_con(COMERCIO, "schemaVersion", version)) == (
         "CAMPO OBLIGATORIO FALTANTE (schemaVersion)"
