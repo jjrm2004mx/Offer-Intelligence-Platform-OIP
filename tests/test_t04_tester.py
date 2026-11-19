@@ -31,6 +31,7 @@ from uuid import UUID
 
 import pytest
 
+from config_tienda_prueba import configuracion_con_tienda_prueba
 from oip.catalogos import (
     CalidadPrecio,
     Canal,
@@ -43,7 +44,6 @@ from oip.catalogos import (
     ReferenciaPrecio,
     Resultado,
 )
-from oip.configuracion import cargar_configuracion
 from oip.entradas.capturas import leer_captura
 from oip.entradas.contrato import leer_observacion
 from oip.evaluacion import motor
@@ -61,7 +61,8 @@ from oip.evaluacion.resultado import decidir, reunir_motivos
 
 RAIZ = Path(__file__).resolve().parent
 SRC_EVALUACION = RAIZ.parent / "src" / "oip" / "evaluacion"
-CONFIG = cargar_configuracion(RAIZ / "fixtures" / "config" / "base.yaml")
+# Desde T07 el paso 1 valida el dominio de la oferta: comercio sintético de example.com.
+CONFIG = configuracion_con_tienda_prueba()
 
 # --- Oráculos copiados del REQ ------------------------------------------------------------
 

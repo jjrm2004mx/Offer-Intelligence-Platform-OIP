@@ -122,7 +122,7 @@ Tareas de la parte B del REQ-2026-0001 v2.9 (`req-2026-0001-b-evaluacion`). **1 
 - **Depende de:** T02, T03, T04. **Estimación:** 6 h.
 - **DoD:** común.
 
-- [ ] 7.1 Implementar la validación del paso 1 y verificar los 8 escenarios de B20 marcados con `@pytest.mark.scenario`
+- [x] 7.1 Implementar la validación del paso 1 y verificar los 8 escenarios de B20 marcados con `@pytest.mark.scenario`
 
 ## 8. T08 — Cargador de archivos JSON Lines y CSV con reporte (B34 b y c)
 
