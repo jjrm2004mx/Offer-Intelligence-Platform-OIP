@@ -10,8 +10,9 @@ cada canal → nivel → unidades, días y rendimiento → elección y nivel del
 precedencia → registro. Cada paso recibe el contexto y el ``Avance`` acumulado y devuelve
 un ``Avance`` nuevo.
 
-En T04 los pasos 1 a 10 son **funciones vacías** (devuelven el avance sin cambios): las
-llenan las tareas siguientes, cada una con sus reglas. Los motivos y la precedencia
+En T04 los pasos 1 a 10 eran **funciones vacías** (devuelven el avance sin cambios): las
+llenan las tareas siguientes, cada una con sus reglas (T09: pasos 3 y 4, precio habitual,
+episodio de liquidación, descuento real y franja). Los motivos y la precedencia
 (``resultado``, CMP-16) y el armado del registro ya están completos.
 """
 
@@ -31,6 +32,7 @@ from oip.catalogos import (
     Nivel,
     Resultado,
 )
+from oip.evaluacion import descuento, referencias
 from oip.evaluacion.contexto import (
     ContextoEvaluacion,
     EvaluacionCanal,
@@ -89,13 +91,28 @@ def identificar(contexto: ContextoEvaluacion, avance: Avance) -> Avance:
 
 def calcular_referencias(contexto: ContextoEvaluacion, avance: Avance) -> Avance:
     """Paso 3 (RN-002; CMP-11): precio habitual y episodio, mercado hoy, MSRP, mínimo de 60
-    días y venta esperada en Amazon. Lo llena su tarea."""
-    return avance
+    días y venta esperada en Amazon. T09: el precio habitual con su fuente y su episodio de
+    liquidación (``referencias``); las demás referencias las agregan sus tareas."""
+    return dataclasses.replace(avance, referencias=referencias.calcular_referencias(contexto))
 
 
 def calcular_descuento(contexto: ContextoEvaluacion, avance: Avance) -> Avance:
-    """Paso 4 (RN-003; CMP-12): descuento anunciado y real, franja y marcas."""
-    return avance
+    """Paso 4 (RN-003; CMP-12): descuento anunciado y real, franja y marcas. T09: el
+    descuento real contra el precio habitual que aplica y el motivo de su franja.
+
+    Solo en una oferta **nueva** (S-13): la de un usado se mide contra el valor de
+    referencia de RN-014 (REQ §3.2 paso 3), que agrega su tarea. Sin precio habitual no hay
+    descuento real.
+    """
+    habitual = avance.referencias.precio_habitual if avance.referencias else None
+    oferta = contexto.oferta.observacion
+    precio = oferta.price.current
+    if habitual is None or precio is None or not referencias.es_nuevo(oferta):
+        return avance
+    real = descuento.descuento_real(habitual, precio)
+    motivo = descuento.franja(real, contexto.configuracion.contenido.discount_quality)
+    motivos = avance.motivos if motivo is None else (*avance.motivos, motivo)
+    return dataclasses.replace(avance, descuento_real=real, motivos=motivos)
 
 
 def calcular_calidad(contexto: ContextoEvaluacion, avance: Avance) -> Avance:

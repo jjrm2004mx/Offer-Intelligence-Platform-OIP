@@ -151,8 +151,8 @@ Tareas de la parte B del REQ-2026-0001 v2.9 (`req-2026-0001-b-evaluacion`). **1 
 - **Depende de:** T04. **Estimación:** 8 h.
 - **DoD:** común.
 
-- [ ] 9.1 Implementar la observación diaria, la mediana y el historial suficiente y verificar B30 (base) y la prueba de mediana par
-- [ ] 9.2 Implementar el episodio con su límite y su fin y verificar B30 (b) a B30 (e)
+- [x] 9.1 Implementar la observación diaria, la mediana y el historial suficiente y verificar B30 (base) y la prueba de mediana par
+- [x] 9.2 Implementar el episodio con su límite y su fin y verificar B30 (b) a B30 (e)
 
 ## 10. T10 — Descuento, franja, mercado hoy y calidad del precio (B6, B7)
 
