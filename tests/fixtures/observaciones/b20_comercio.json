@@ -1,0 +1,20 @@
+{
+  "_nota": "Observación sintética de Home Depot, válida contra tests/fixtures/config/base.yaml. Base de B20 (a) a (c). Dominio solo como texto: ninguna prueba abre la URL.",
+  "schemaVersion": "3.1",
+  "retailerCode": "homedepot",
+  "storeCode": "hd-chula-vista",
+  "productUrl": "https://www.homedepot.com/p/sintetico-b20/100000001",
+  "title": "Taladro sintético B20",
+  "brand": "MarcaSintetica",
+  "model": "MS-20",
+  "category": "tools",
+  "price": {"current": "29.00", "was": "129.00", "currency": "USD"},
+  "seller": "comercio",
+  "condition": "new",
+  "availability": {"state": "in_stock", "quantity": 3, "scope": "store"},
+  "isClearance": true,
+  "purchaseMode": "tienda",
+  "taxLocation": "chula_vista",
+  "extractedAt": "2026-11-16T10:00:00-08:00",
+  "blocked": false
+}

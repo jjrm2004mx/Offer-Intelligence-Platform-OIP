@@ -28,7 +28,7 @@ descarta como cualquier campo desconocido. Este módulo no valida contra la conf
 from __future__ import annotations
 
 import datetime as dt
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from decimal import Decimal
 from typing import Annotated, Any, Literal
 
@@ -260,7 +260,7 @@ def _version(datos: Mapping[str, Any]) -> str:
     return version.strip()
 
 
-def leer_observacion(datos: Mapping[str, Any]) -> Observacion:
+def leer_observacion(datos: Mapping[str, Any], *, no_validos: Iterable[str] = ()) -> Observacion:
     """Lee una observación del contrato 3.1 desde un registro ya decodificado.
 
     Levanta ``RegistroInvalido`` con ``CAMPO OBLIGATORIO FALTANTE (<campo>)`` y el nombre
@@ -270,6 +270,10 @@ def leer_observacion(datos: Mapping[str, Any]) -> Observacion:
     opcional con un valor no válido, cuenta como faltante (DEC-234 punto 2, DEC-244). Los
     campos desconocidos se descartan.
 
+    ``no_validos`` son campos que el llamador ya sabe que no traen un valor válido (la
+    validación del paso 1, CMP-07: ``availability.state`` distinto de ``listed`` en un
+    particular, DEC-242); se ordenan con los demás problemas en el mismo orden.
+
     El precio inválido no levanta: queda en ``Observacion.precio_invalido``.
     """
     if not isinstance(datos, Mapping):
@@ -278,7 +282,7 @@ def leer_observacion(datos: Mapping[str, Any]) -> Observacion:
     registro = dict(datos)
     registro["schemaVersion"] = version
     orden: list[str] = list(OBLIGATORIOS_CONTRATO)
-    faltan: list[str] = []
+    faltan: list[str] = list(no_validos)
     ignorar: list[str] = []
 
     if version == "3.0":

@@ -11,9 +11,9 @@ precedencia → registro. Cada paso recibe el contexto y el ``Avance`` acumulado
 un ``Avance`` nuevo.
 
 En T04 los pasos 1 a 10 eran **funciones vacías** (devuelven el avance sin cambios): las
-llenan las tareas siguientes, cada una con sus reglas (T09: pasos 3 y 4, precio habitual,
-episodio de liquidación, descuento real y franja). Los motivos y la precedencia
-(``resultado``, CMP-16) y el armado del registro ya están completos.
+llenan las tareas siguientes, cada una con sus reglas. T07 llena el paso 1 (validar); T09,
+los pasos 3 y 4 (precio habitual, episodio de liquidación, descuento real y franja). Los
+motivos y la precedencia (``resultado``, CMP-16) y el armado del registro ya están completos.
 """
 
 from __future__ import annotations
@@ -32,6 +32,7 @@ from oip.catalogos import (
     Nivel,
     Resultado,
 )
+from oip.entradas.validacion import motivo_de_rechazo
 from oip.evaluacion import descuento, referencias
 from oip.evaluacion.contexto import (
     ContextoEvaluacion,
@@ -79,8 +80,17 @@ Paso = Callable[[ContextoEvaluacion, Avance], Avance]
 
 
 def validar(contexto: ContextoEvaluacion, avance: Avance) -> Avance:
-    """Paso 1 (REQ §3.2, §6; CMP-07): primer motivo de rechazo o nada. Lo llena T07."""
-    return avance
+    """Paso 1 (REQ §3.2, §6; CMP-07): primer motivo de rechazo de la oferta o nada.
+
+    La oferta del contexto ya pasó la forma del contrato (``leer_observacion``); aquí se
+    comprueba lo que depende de la configuración, en el orden de design.md §6: ``listed``
+    del particular (DEC-242), precio, dominio o plataforma (DEC-212) y ciudad. Con un
+    motivo, la evaluación termina con ``RECHAZADA_VALIDACION`` (``evaluar``).
+    """
+    motivo = motivo_de_rechazo(contexto.oferta.observacion, contexto.configuracion.contenido)
+    if motivo is None:
+        return avance
+    return dataclasses.replace(avance, motivo_rechazo=motivo)
 
 
 def identificar(contexto: ContextoEvaluacion, avance: Avance) -> Avance:
