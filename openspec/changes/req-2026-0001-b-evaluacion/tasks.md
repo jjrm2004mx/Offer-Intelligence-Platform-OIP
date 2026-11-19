@@ -47,8 +47,8 @@ Tareas de la parte B del REQ-2026-0001 v2.9 (`req-2026-0001-b-evaluacion`). **1 
 - **Depende de:** T01. **Estimación:** 7 h.
 - **DoD:** común; Jesús revisa los valores de `config/oip-config.yaml` en el PR.
 
-- [ ] 2.1 Definir el esquema de PAR-01 a PAR-13 y la carga con huella y verificar las pruebas unitarias de archivo válido, faltante, tipo inválido y sección desconocida
-- [ ] 2.2 Escribir `tests/fixtures/config/base.yaml` y `config/oip-config.yaml` y verificar que los dos cargan y que `check-egress.sh src` sigue en verde
+- [x] 2.1 Definir el esquema de PAR-01 a PAR-13 y la carga con huella y verificar las pruebas unitarias de archivo válido, faltante, tipo inválido y sección desconocida
+- [x] 2.2 Escribir `tests/fixtures/config/base.yaml` y `config/oip-config.yaml` y verificar que los dos cargan y que `check-egress.sh src` sigue en verde
 
 ## 3. T03 — Contrato de ingesta 3.1 y esquemas de capturas (cimientos)
 

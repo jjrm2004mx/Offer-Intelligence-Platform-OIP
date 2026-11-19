@@ -11,7 +11,9 @@ dependencies = [
     "SQLAlchemy>=2.0",
     "psycopg[binary]>=3.2",
     "alembic>=1.14",
-    "tzdata",
+    # O-4 (Jesús, 2026-11-18): zone.tab con las zonas vigentes. Europe/Kyiv entra en 2022b y
+    # America/Ciudad_Juarez en 2022g (tzdata 2022.7); 2024.1 (IANA 2024a) trae las dos.
+    "tzdata>=2024.1",
 ]
 
 [project.optional-dependencies]

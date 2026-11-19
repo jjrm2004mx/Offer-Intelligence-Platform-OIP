@@ -1,0 +1,240 @@
+# Configuración base de los escenarios de la parte B (REQ-2026-0001 v2.9 §5).
+# design.md §7 y §13: REQ §5 tal cual; cada "—" de la tabla de categorías es una CLAVE AUSENTE.
+# Lo que REQ §5 no fija sale de las RN en la versión que cita el REQ §4 (los mismos valores que
+# config/oip-config.yaml). Archivo SINTÉTICO de pruebas: no es la configuración de producción.
+# Porcentajes en puntos (15 = 15%); montos en USD.
+
+version: "escenarios-base-1"
+schemaVersion: "1"
+
+general:
+  timezone: America/Tijuana          # DEC-234 (5)
+  currency: USD                      # REQ §10
+  amazon_account: new                # REQ §5: pago de Amazon 30 días (cuenta nueva)
+  rn_versions:                       # REQ §4 (versiones congeladas, DEC-209)
+    RN-001: 2
+    RN-002: 2
+    RN-003: 2
+    RN-004: 2
+    RN-005: 2
+    RN-006: 2
+    RN-007: 2
+    RN-008: 2
+    RN-009: 2
+    RN-010: 2
+    RN-011: 2
+    RN-012: 1
+    RN-013: 1
+    RN-014: 1
+    RN-015: 1
+    RN-016: 1
+    RN-017: 1
+    RN-018: 1
+
+# Dominios solo como texto: ninguna prueba abre una URL (CLAUDE.md §2.1).
+retailers:
+  homedepot: {chain: homedepot, domains: [homedepot.com], amazon_listing: false}
+  walmart: {chain: walmart, domains: [walmart.com], amazon_listing: false}
+  target: {chain: target, domains: [target.com], amazon_listing: false}
+  bestbuy: {chain: bestbuy, domains: [bestbuy.com], amazon_listing: false}
+  gamestop: {chain: gamestop, domains: [gamestop.com], amazon_listing: false}
+  nintendo: {chain: nintendo, domains: [nintendo.com], amazon_listing: false}
+  amazon: {chain: amazon, domains: [amazon.com], amazon_listing: true}
+
+stores:
+  hd-chula-vista: {retailer: homedepot}
+  hd-national-city: {retailer: homedepot}
+  wm-chula-vista: {retailer: walmart}
+  wm-national-city: {retailer: walmart}
+
+categories:
+  tools:
+    commission: {type: flat, rate_pct: 15, min_per_unit: 0.30}
+    return_rate: {source: own, rate_pct: 7}
+    return_loss_pct: 50
+    amazon_restricted: false
+    main_category_size: 33688021     # umbral 0.5% = 168,440 (REQ §5; RN-004 §4; DEC-225)
+    subcategory_rank_required: false
+    initial_local_demand: medium
+    provenance_risk: true            # RN-015 §4
+  home_lighting:
+    commission: {type: flat, rate_pct: 15, min_per_unit: 0.30}
+    return_rate: {source: own, rate_pct: 8}
+    return_loss_pct: 50
+    amazon_restricted: false
+    main_category_size: 33688021
+    subcategory_rank_required: false
+    initial_local_demand: medium
+    provenance_risk: false
+  home_kitchen:                      # comisión y umbral "—"
+    return_rate: {source: own, rate_pct: 8}
+    return_loss_pct: 50
+    amazon_restricted: false
+    subcategory_rank_required: false
+    initial_local_demand: medium
+    provenance_risk: false
+  beauty:                            # umbral "—"
+    commission: {type: total_threshold, threshold: 10.00, rate_pct_at_or_below: 8, rate_pct_above: 15, min_per_unit: 0.30}
+    return_rate: {source: own, rate_pct: 6}
+    return_loss_pct: 75
+    amazon_restricted: true          # RN-006 §4.3 (B4)
+    subcategory_rank_required: false
+    initial_local_demand: medium
+    provenance_risk: false
+  electronics:                       # comisión y umbral "—"
+    return_rate: {source: own, rate_pct: 11}
+    return_loss_pct: 50
+    amazon_restricted: false
+    subcategory_rank_required: false
+    initial_local_demand: medium
+    provenance_risk: false
+  video_game_consoles:               # umbral "—"; tasa asignada (S-27)
+    commission: {type: flat, rate_pct: 8, min_per_unit: 0.30}
+    return_rate: {source: assigned, from_category: electronics}
+    return_loss_pct: 50
+    amazon_restricted: false
+    subcategory_rank_required: false
+    initial_local_demand: medium
+    provenance_risk: false
+  video_games:                       # comisión y umbral "—"; tasa asignada (S-27)
+    return_rate: {source: assigned, from_category: electronics}
+    return_loss_pct: 50
+    amazon_restricted: false
+    subcategory_rank_required: false
+    initial_local_demand: medium
+    provenance_risk: false
+  watches:                           # devolución y umbral "—"
+    commission:
+      type: tiers
+      tiers: [{up_to: 1500.00, rate_pct: 16}, {up_to: null, rate_pct: 3}]
+      min_per_unit: 0.30
+    return_loss_pct: 50
+    amazon_restricted: true          # RN-006 §4.3
+    subcategory_rank_required: true  # RN-004 §4
+    initial_local_demand: medium
+    provenance_risk: true            # RN-015 §4
+  jewelry:                           # devolución y umbral "—"
+    commission:
+      type: tiers
+      tiers: [{up_to: 250.00, rate_pct: 20}, {up_to: null, rate_pct: 5}]
+      min_per_unit: 0.30
+    return_loss_pct: 75
+    amazon_restricted: true          # RN-006 §4.3
+    subcategory_rank_required: true
+    initial_local_demand: medium
+    provenance_risk: false
+  toys:                              # comisión, devolución y umbral "—"
+    return_loss_pct: 50
+    amazon_restricted: false         # solo en temporada (lists.toy_season)
+    subcategory_rank_required: false
+    initial_local_demand: medium
+    provenance_risk: false
+
+lists:                               # los escenarios agregan sus productos y marcas
+  amazon_restricted_brands: []
+  amazon_restricted_products: []
+  avoid_always: []
+  luxury_brands: []
+  hazmat_brands: []
+  hazmat_products: []
+  provenance_risk_brands: []
+  provenance_risk_products: []
+  toy_season: {start: "11-01", end: "12-31"}   # S-10
+
+shipping:                            # REQ §5 y S-06
+  weight_bands:
+    - {max_kg: 1, shipping: 8.00, packaging: 1.00}
+    - {max_kg: 3, shipping: 12.00, packaging: 2.00}
+    - {max_kg: 6, shipping: 14.00, packaging: 2.00}
+  unknown_weight: {shipping: 14.00, packaging: 2.00}
+  quote_above_kg: 6
+  quotes: []
+  shipping_to_me_default: 0.00
+
+taxes:                               # REQ §5: la tienda de prueba a 7.75%; Chula Vista y National City 8.75% (B31)
+  locations:
+    tienda_prueba: {rate_pct: 7.75, source: valor de prueba REQ §5, effective_date: 2026-01-01}
+    chula_vista: {rate_pct: 8.75, source: CDTFA (sintético), effective_date: 2026-01-01}
+    national_city: {rate_pct: 8.75, source: CDTFA (sintético), effective_date: 2026-01-01}
+  fallback_rate_pct: 7.75
+  private_sellers_exempt: true
+
+price_reference:
+  usual_window_days: 60
+  sufficient_history_observations: 5
+  sufficient_history_days: 3
+  clearance_episode_max_days: 30
+  market_today_max_age_hours: 48
+  store_typical_window_days: 60
+  amazon_min_window_days: 60
+
+private_sellers:
+  platforms:
+    offerup: {domains: [offerup.com]}
+    facebook_marketplace: {domains: [facebook.com], path_prefix: /marketplace}
+  cities:                            # recogida B18: 10 km y 0.5 h = $9.50
+    san_diego: {pickup_km: 10, pickup_hours: 0.5, in_local_sale_zone: true}
+    tijuana: {pickup_km: 10, pickup_hours: 0.5, in_local_sale_zone: true}
+
+discount_quality:
+  discard_below_pct: 20
+  reference_only_below_pct: 25
+  inflated_factor: 1.5
+  quality:
+    good_offer_min_discount_pct: 15
+    cheapest_tolerance_pct: 2
+    exceptional_min_history_days: 90
+    min_other_retailers: 2
+
+amazon:
+  demand:
+    category_rank_pct: 0.5
+    subcategory_max_rank: 100
+    max_new_sellers: 20
+    worsening_pct: 50
+    rank_window_days: 7
+    trend_lookback_days: 30
+  sale_days_by_rank:
+    fast_below_rank: 10000
+    fast_days: 7
+    medium_up_to_rank: 50000
+    medium_days: 21
+    slow_days: 45
+  payment_days: {new: 30, established: 21}
+  drop_penalty: {drop_weight_pct: 50, without_minimum_pct: 10}
+  first_purchase_cap:
+    units: 3
+    boosted_units: 5
+    boosted_below_rank: 10000
+    boosted_levels: [COMPRAR_YA, MUY_RECOMENDABLE]
+  max_units_without_monthly_sales: 2
+  other_selling_costs: 0.00
+
+local_sale:
+  market_today_pct: 85
+  negotiation_pct: 10
+  used_reference_value_pct: 100
+  used: {min_comparables: 3, asking_price_factor_pct: 85}
+  demand: {days_per_unit_high: 7, days_per_unit_medium: 14, competition_threshold: 10}
+  return_rate_pct: 0
+  payment_days: 0
+  transport:
+    cost_per_km: 0.20
+    hour_value: 15.00
+    fixed_costs: 0.00
+    default_delivery_km: 10
+    default_delivery_hours: 0.5
+
+levels:
+  thresholds:
+    COMPRAR_YA: {min_real_discount_pct: 80, min_adjusted_margin_pct: 50, alert: immediate}
+    MUY_RECOMENDABLE: {min_real_discount_pct: 70, min_adjusted_margin_pct: 40, alert: immediate}
+    RECOMENDABLE: {min_real_discount_pct: 50, min_adjusted_margin_pct: 30, alert: digest}
+    VIGILAR: {min_real_discount_pct: 25, min_adjusted_margin_pct: 25, alert: dashboard}
+  min_per_unit: {amount: 10.00, pct_of_purchase_cost: 10}
+  cheaper_competition_pct: 15
+  confidence:
+    normal: {exact_high_max_hours: 6, no_number_medium_max_hours: 12, max_age_hours: 24}
+    clearance: {exact_high_max_hours: 3, no_number_medium_max_hours: 6, max_age_hours: 12}
+    few_units_medium_max_hours: 2
+  channel_tiebreak_pct: 10

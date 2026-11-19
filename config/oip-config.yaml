@@ -1,0 +1,280 @@
+# Configuración inicial de PRODUCCIÓN de OIP, parte B (REQ-2026-0001 v2.9; design.md §7, PAR-01 a PAR-13).
+#
+# Cómo leer los comentarios (DEC-234 punto 7; valores revisados por Jesús el 2026-11-18 en el PR #32, G4):
+#   [REQ §5]      valor de la "Configuración base" del REQ §5.
+#   [REQ §x/S-nn] valor de otra sección o de un supuesto del REQ.
+#   [RN-nnn §x]   valor de la RN, en la versión que cita el REQ §4 (porque REQ §5 no lo fija).
+#   [RN ← "—"]    REQ §5 tiene "—" en ese dato y el valor sale de la RN indicada (DEC-234 punto 7).
+#   [AUSENTE]     REQ §5 tiene "—" y la RN tampoco da un valor: la clave se omite a propósito.
+#   [DEC-nnn]     decisión del registro de decisiones.
+#   [JESÚS aaaa-mm-dd]  decisión de Jesús en esa fecha (revisión G4 del PR #32): acepta, confirma o fija el valor.
+#   [PROVISIONAL aaaa-mm-dd]  valor provisional por decisión de Jesús en esa fecha: se usa así y se cambia
+#                 aquí, sin tocar el código (sube "version" y carga con `oip config cargar`).
+#
+# Porcentajes en puntos (15 = 15%); montos en USD. Un número con punto se lee como Decimal (nunca float).
+# Cambiar un valor = editar este archivo, subir "version" y cargarlo con `oip config cargar` (RNF-2).
+# Los dominios de comercios solo viven aquí y en tests/fixtures/ (gate de egress, DEC-173).
+
+version: "2026-11-18.2"               # [design.md §7] formato AAAA-MM-DD.n
+schemaVersion: "1"                    # [design.md §7] esquema de la parte B
+
+general:                              # PAR-01
+  timezone: America/Tijuana           # [DEC-234 (5)] día calendario de las ventanas
+  currency: USD                       # [REQ §10; RN-001 §4] todo en dólares
+  amazon_account: new                 # [REQ §5; RN-005 §4] cuenta nueva: pago a 30 días
+  rn_versions:                        # [REQ §4] versiones congeladas (DEC-209); se copian a cada evaluación
+    RN-001: 2
+    RN-002: 2
+    RN-003: 2
+    RN-004: 2
+    RN-005: 2
+    RN-006: 2
+    RN-007: 2
+    RN-008: 2
+    RN-009: 2
+    RN-010: 2
+    RN-011: 2
+    RN-012: 1
+    RN-013: 1
+    RN-014: 1
+    RN-015: 1
+    RN-016: 1
+    RN-017: 1
+    RN-018: 1
+
+retailers:                            # PAR-02 [arquitectura v2.2 C-30; DEC-132] comercios del Inc. 1
+  # chain = código de la cadena (comercio = cadena, DEC-216). domains = dominios autorizados para la
+  # validación sintáctica de productUrl (REQ §3.2 paso 1); nunca se abren. [PROVISIONAL 2026-11-18] dominios sin cambios, configurables (decisión de Jesús).
+  homedepot: {chain: homedepot, domains: [homedepot.com], amazon_listing: false}
+  walmart: {chain: walmart, domains: [walmart.com], amazon_listing: false}
+  target: {chain: target, domains: [target.com], amazon_listing: false}
+  bestbuy: {chain: bestbuy, domains: [bestbuy.com], amazon_listing: false}
+  gamestop: {chain: gamestop, domains: [gamestop.com], amazon_listing: false}
+  nintendo: {chain: nintendo, domains: [nintendo.com], amazon_listing: false}       # Nintendo Store
+  amazon: {chain: amazon, domains: [amazon.com], amazon_listing: true}              # ficha de Amazon (DEC-203)
+
+stores: {}                            # PAR-03 [PROVISIONAL 2026-11-18] sin cambios, configurable (decisión de Jesús); sin sucursales todavía: las da de alta la parte A
+                                      # (storeCode del Worker). Límite por cliente: RN-008 §4.4, si lo hay.
+
+categories:                           # PAR-04 [REQ §5 tabla por category; RN-004, RN-005, RN-006, RN-015, RN-017]
+  # min_per_unit: $0.30 por unidad [REQ §5; RN-006 §4.1]. initial_local_demand: media [REQ §5; RN-017 §4].
+  # main_category_size: umbral de demanda = tamaño × amazon.demand.category_rank_pct (DEC-225).
+  tools:
+    commission: {type: flat, rate_pct: 15, min_per_unit: 0.30}       # [REQ §5]
+    return_rate: {source: own, rate_pct: 7}                          # [REQ §5]
+    return_loss_pct: 50                                              # [REQ §5]
+    amazon_restricted: false                                         # [RN-006 §4.3] no está en la lista de categorías
+    main_category_size: 33688021                                     # [REQ §5 umbral 168,440; RN-004 §4, oct-2025]
+    subcategory_rank_required: false                                 # [RN-004 §4] solo relojes y joyería
+    initial_local_demand: medium
+    provenance_risk: true                                            # [RN-015 §4] herramientas
+  home_lighting:
+    commission: {type: flat, rate_pct: 15, min_per_unit: 0.30}       # [REQ §5]
+    return_rate: {source: own, rate_pct: 8}                          # [REQ §5]
+    return_loss_pct: 50                                              # [REQ §5]
+    amazon_restricted: false                                         # [RN-006 §4.3]
+    main_category_size: 33688021                                     # [REQ §5 umbral 168,440; RN-004 §4 incluye iluminación]
+    subcategory_rank_required: false
+    initial_local_demand: medium
+    provenance_risk: false                                           # [RN-015 §4]
+  home_kitchen:
+    commission: {type: flat, rate_pct: 15, min_per_unit: 0.30}       # [JESÚS 2026-11-18] decisión de Jesús: REQ §5 tiene "—" y RN-006 §4.1 no tiene fila "Hogar y cocina" (su "Hogar e iluminación" es home_lighting, arquitectura §8)
+    return_rate: {source: own, rate_pct: 8}                          # [REQ §5]
+    return_loss_pct: 50                                              # [REQ §5]
+    amazon_restricted: false                                         # [RN-006 §4.3]
+    # main_category_size                                             # [AUSENTE] RN-004 §4 "Por cargar" → DEMANDA DESCONOCIDA (DEC-225)
+    subcategory_rank_required: false
+    initial_local_demand: medium
+    provenance_risk: false
+  beauty:
+    commission: {type: total_threshold, threshold: 10.00, rate_pct_at_or_below: 8, rate_pct_above: 15, min_per_unit: 0.30}  # [REQ §5; DEC-217]
+    return_rate: {source: own, rate_pct: 6}                          # [REQ §5]
+    return_loss_pct: 75                                              # [REQ §5]
+    amazon_restricted: true                                          # [RN-006 §4.3] belleza y salud (incluye perfumes)
+    # main_category_size                                             # [AUSENTE] RN-004 §4 "Por cargar"
+    subcategory_rank_required: false
+    initial_local_demand: medium
+    provenance_risk: false                                           # [RN-015 §4] perfumes no es category: va por marca o producto en lists (design.md Pendiente 7)
+  electronics:
+    commission: {type: flat, rate_pct: 8, min_per_unit: 0.30}        # [RN ← "—"] RN-006 §4.1 tecnología (electrónica de consumo) 8%
+    return_rate: {source: own, rate_pct: 11}                         # [REQ §5]
+    return_loss_pct: 50                                              # [REQ §5]
+    amazon_restricted: false                                         # [RN-006 §4.3]
+    # main_category_size                                             # [AUSENTE] RN-004 §4 "Por cargar"
+    subcategory_rank_required: false
+    initial_local_demand: medium
+    provenance_risk: false
+  video_game_consoles:
+    commission: {type: flat, rate_pct: 8, min_per_unit: 0.30}        # [REQ §5]
+    return_rate: {source: assigned, from_category: electronics}      # [REQ §5; S-27] 11% de tecnología, ESTIMADO (devolución)
+    return_loss_pct: 50                                              # [REQ §5]
+    amazon_restricted: false                                         # [RN-006 §4.3]
+    # main_category_size                                             # [AUSENTE] RN-004 §4 "Por cargar"
+    subcategory_rank_required: false
+    initial_local_demand: medium
+    provenance_risk: false
+  video_games:
+    commission: {type: flat, rate_pct: 15, min_per_unit: 0.30}       # [RN ← "—"] RN-006 §4.1 videojuegos y accesorios 15%
+    return_rate: {source: assigned, from_category: electronics}      # [REQ §5; S-27]
+    return_loss_pct: 50                                              # [REQ §5]
+    amazon_restricted: false                                         # [RN-006 §4.3]
+    # main_category_size                                             # [AUSENTE] RN-004 §4 "Por cargar"
+    subcategory_rank_required: false
+    initial_local_demand: medium
+    provenance_risk: false
+  watches:
+    commission:                                                      # [REQ §5; DEC-217] 16% hasta $1,500 + 3% del excedente
+      type: tiers
+      tiers: [{up_to: 1500.00, rate_pct: 16}, {up_to: null, rate_pct: 3}]
+      min_per_unit: 0.30
+    return_rate: {source: own, rate_pct: 12}                         # [RN ← "—"] RN-005 §4 relojes 12%
+    return_loss_pct: 50                                              # [REQ §5]
+    amazon_restricted: true                                          # [RN-006 §4.3] relojes
+    main_category_size: 248469279                                    # [RN ← "—"] RN-004 §4 "Ropa, zapatos y joyería" (oct-2025), umbral 1,242,346; [JESÚS 2026-11-18] confirmado
+    subcategory_rank_required: true                                  # [RN-004 §4] primeros 100 de la subcategoría
+    initial_local_demand: medium
+    provenance_risk: true                                            # [RN-015 §4] relojes
+  jewelry:
+    commission:                                                      # [REQ §5; DEC-217] 20% hasta $250 + 5% del excedente
+      type: tiers
+      tiers: [{up_to: 250.00, rate_pct: 20}, {up_to: null, rate_pct: 5}]
+      min_per_unit: 0.30
+    return_rate: {source: own, rate_pct: 11}                         # [RN ← "—"] RN-005 §4 joyería 11%
+    return_loss_pct: 75                                              # [REQ §5]
+    amazon_restricted: true                                          # [RN-006 §4.3] joyería fina
+    main_category_size: 248469279                                    # [RN ← "—"] RN-004 §4 (oct-2025), umbral 1,242,346; [JESÚS 2026-11-18] confirmado
+    subcategory_rank_required: true                                  # [RN-004 §4]
+    initial_local_demand: medium
+    provenance_risk: false                                           # [RN-015 §4] no está en la lista
+  toys:
+    commission: {type: flat, rate_pct: 15, min_per_unit: 0.30}       # [RN ← "—"] RN-006 §4.1 juguetes 15%
+    return_rate: {source: own, rate_pct: 5}                          # [RN ← "—"] RN-005 §4 juguetes 5% (propuesta nueva en la RN); [JESÚS 2026-11-18] aceptado
+    return_loss_pct: 50                                              # [REQ §5]
+    amazon_restricted: false                                         # [RN-006 §4.3; S-10] solo en temporada (lists.toy_season)
+    # main_category_size                                             # [AUSENTE] RN-004 §4 "Por cargar"
+    subcategory_rank_required: false
+    initial_local_demand: medium
+    provenance_risk: false
+
+lists:                                # PAR-05 [REQ §6 "Listas"; RN-006 §4.3; RN-015 §4] listas que mantiene Jesús
+  amazon_restricted_brands: []        # [RN-006 §4.3] "lista que crece con cada caso"; empieza vacía. [PROVISIONAL 2026-11-18] sin cambios, configurable
+  amazon_restricted_products: []      # [RN-006 §4.3] por producto; empieza vacía
+  avoid_always: []                    # [RN-015 §4] por identificador de producto (recalls, regulados, seguridad infantil); empieza vacía. [PROVISIONAL 2026-11-18] sin cambios, configurable
+  luxury_brands: []                   # [RN-015 §4; S-21] lista que mantiene Jesús; empieza vacía. [PROVISIONAL 2026-11-18] sin cambios, configurable
+  hazmat_brands: []                   # [RN-006 §4.3; S-07] perfumes, aerosoles, baterías de litio: por marca o producto (design.md Pendiente 7). [PROVISIONAL 2026-11-18] sin cambios, configurable
+  hazmat_products: []
+  provenance_risk_brands: []          # [RN-015 §4] baterías y perfumes no son category: por marca o producto. [PROVISIONAL 2026-11-18] sin cambios, configurable
+  provenance_risk_products: []
+  toy_season: {start: "11-01", end: "12-31"}   # [REQ S-10] juguetes en temporada navideña
+
+shipping:                             # PAR-06 [REQ §5; RN-006 §4.2; RN-001 §4]
+  weight_bands:
+    - {max_kg: 1, shipping: 8.00, packaging: 1.00}    # [REQ §5] envío ≤ 1 kg $8; empaque ≤ 1 kg $1
+    - {max_kg: 3, shipping: 12.00, packaging: 2.00}   # [REQ §5] > 1 y ≤ 3 kg $12; empaque > 1 kg $2
+    - {max_kg: 6, shipping: 14.00, packaging: 2.00}   # [REQ §5] > 3 y ≤ 6 kg $14
+  unknown_weight: {shipping: 14.00, packaging: 2.00}  # [REQ S-06] sin peso: $14 y $2, ESTIMADO (peso)
+  quote_above_kg: 6                   # [REQ S-06; RN-006 §4.2] más de 6 kg: cotización capturada
+  quotes: []                          # [REQ §6] cotizaciones capturadas por producto; empieza vacía
+  shipping_to_me_default: 0.00        # [REQ §5] envío hacia mí $0 (PO Box: RN-001 §4, dirección pendiente)
+
+taxes:                                # PAR-07 [REQ §5, §6; DEC-220]
+  # [PROVISIONAL 2026-11-18] Decisión de Jesús: Chula Vista y National City (8.75%) siguen pendientes, sin
+  # ubicaciones cargadas; el REQ §9 pide confirmarlas en el buscador oficial de la CDTFA ANTES de cargarlas,
+  # con su fecha de vigencia. Mientras, todas usan el respaldo de 7.75% (provisional y configurable).
+  # Para cargar una ubicación: agrégala en "locations" con este formato, sube "version" y carga el archivo:
+  #   chula_vista: {rate_pct: 8.75, source: CDTFA, effective_date: AAAA-MM-DD}
+  locations: {}
+  fallback_rate_pct: 7.75             # [REQ §5; DEC-220] respaldo y PO Box de San Diego; [PROVISIONAL 2026-11-18] configurable
+  private_sellers_exempt: true        # [REQ §5; S-14] particulares sin impuesto
+
+price_reference:                      # PAR-08 [REQ §5; RN-002 §4]
+  usual_window_days: 60               # [REQ §5; RN-002 §4.1] ventana del precio habitual
+  sufficient_history_observations: 5  # [REQ §5; DEC-130] 5 observaciones…
+  sufficient_history_days: 3          # [REQ §5; DEC-130] …en 3 días distintos
+  clearance_episode_max_days: 30      # [REQ §5; DEC-201] límite del episodio de liquidación
+  market_today_max_age_hours: 48      # [RN-002 §4.1] antigüedad del precio de mercado hoy
+  store_typical_window_days: 60       # [RN-003 §4] precio típico de la tienda
+  amazon_min_window_days: 60          # [REQ S-01; RN-002 §4.2] mínimo de 60 días en Amazon
+
+private_sellers:                      # PAR-09 [REQ §6; DEC-212; DEC-223]
+  platforms:                          # enlace https de una plataforma permitida (DEC-212). [PROVISIONAL 2026-11-18] dominios y prefijo sin cambios, configurables
+    offerup: {domains: [offerup.com]}
+    facebook_marketplace: {domains: [facebook.com], path_prefix: /marketplace}
+  cities:                             # [REQ §6] ciudad de recogida (solo la ciudad); zona de venta local: Tijuana y el condado de San Diego [RN-016 §4; DEC-171]
+    # [PROVISIONAL 2026-11-18] Decisión de Jesús: km y horas de recogida provisionales pero configurables, con la
+    # entrega por defecto de S-24 (10 km y 0.5 h = $9.50, el valor de la recogida de B18). Se ajustan por ciudad
+    # aquí (km desde la garita, DEC-223).
+    tijuana: {pickup_km: 10, pickup_hours: 0.5, in_local_sale_zone: true}
+    san_diego: {pickup_km: 10, pickup_hours: 0.5, in_local_sale_zone: true}
+    chula_vista: {pickup_km: 10, pickup_hours: 0.5, in_local_sale_zone: true}
+    national_city: {pickup_km: 10, pickup_hours: 0.5, in_local_sale_zone: true}
+
+discount_quality:                     # PAR-10 [RN-003 §4; RN-012 §4]
+  discard_below_pct: 20               # [RN-003 §4] menos de 20% → MERCADO YA BARATO
+  reference_only_below_pct: 25        # [RN-003 §4] 20% a menos de 25% → SOLO REFERENCIA
+  inflated_factor: 1.5                # [RN-003 §4] PRECIO ANTES INFLADO
+  quality:
+    good_offer_min_discount_pct: 15   # [RN-012 §4] Buena oferta (propuesta por aceptar en la RN)
+    cheapest_tolerance_pct: 2         # [RN-012 §4] "entre los más baratos"
+    exceptional_min_history_days: 90  # [RN-012 §4] Oferta excepcional
+    min_other_retailers: 2            # [RN-012 §4] comercios además del evaluado
+
+amazon:                               # PAR-11
+  demand:
+    category_rank_pct: 0.5            # [RN-004 §4] ranking ≤ 0.5% de la categoría principal
+    subcategory_max_rank: 100         # [RN-004 §4] relojes y joyería
+    max_new_sellers: 20               # [REQ §5; RN-004 §4]
+    worsening_pct: 50                 # [RN-004 §4] DEMANDA A LA BAJA
+    rank_window_days: 7               # [REQ §5; DEC-206] promedio de 7 días
+    trend_lookback_days: 30           # [RN-004 §4] contra el promedio de hace 30 días
+  sale_days_by_rank:                  # [REQ §5; RN-005 §4]
+    fast_below_rank: 10000            # ranking < 10,000 → 7 días
+    fast_days: 7
+    medium_up_to_rank: 50000          # 10,000 a 50,000 → 21 días
+    medium_days: 21
+    slow_days: 45                     # > 50,000 → 45 días
+  payment_days: {new: 30, established: 21}   # [REQ §5; RN-005 §4]
+  drop_penalty:
+    drop_weight_pct: 50               # [REQ §5; RN-005 §4] castigo por baja
+    without_minimum_pct: 10           # [RN-005 §4; S-05] sin mínimo de 60 días: 10% del precio de venta
+  first_purchase_cap:                 # [REQ §5; RN-005 §4]
+    units: 3
+    boosted_units: 5
+    boosted_below_rank: 10000
+    boosted_levels: [COMPRAR_YA, MUY_RECOMENDABLE]
+  max_units_without_monthly_sales: 2  # [REQ §11; B12] sin ventas al mes: máximo 2 unidades, ESTIMADO (unidades)
+  other_selling_costs: 0.00           # [RN-001 §4] otros costos de venta
+
+local_sale:                           # PAR-12
+  market_today_pct: 85                # [REQ §5; RN-016 §4] sin estimado de Jesús
+  negotiation_pct: 10                 # [REQ §5; RN-016 §4]
+  used_reference_value_pct: 100       # [RN-016 §4] usados: 100% del valor de referencia
+  used:
+    min_comparables: 3                # [RN-014 §4]
+    asking_price_factor_pct: 85       # [RN-014 §4] solo precios pedidos
+  demand:
+    days_per_unit_high: 7             # [RN-017 §4]
+    days_per_unit_medium: 14          # [REQ §5; RN-017 §4]
+    competition_threshold: 10         # [RN-017 §4] más de 10 comparables activos baja un nivel
+  return_rate_pct: 0                  # [RN-005 §4] devolución local (propuesta por aceptar en la RN)
+  payment_days: 0                     # [REQ §5; RN-005 §4] pago al entregar
+  transport:                          # [RN-008 §4]
+    cost_per_km: 0.20                 # [RN-008 §4; DEC-142, DEC-148]
+    hour_value: 15.00                 # [RN-008 §4]
+    fixed_costs: 0.00                 # [RN-008 §4] por confirmar en la RN
+    default_delivery_km: 10           # [REQ §5; S-24] entrega por defecto 10 km…
+    default_delivery_hours: 0.5       # [REQ §5; S-24] …y 0.5 h = $9.50
+
+levels:                               # PAR-13
+  thresholds:                         # [RN-009 §4.3] descuento real y margen ajustado mínimos; tipo de aviso
+    COMPRAR_YA: {min_real_discount_pct: 80, min_adjusted_margin_pct: 50, alert: immediate}
+    MUY_RECOMENDABLE: {min_real_discount_pct: 70, min_adjusted_margin_pct: 40, alert: immediate}
+    RECOMENDABLE: {min_real_discount_pct: 50, min_adjusted_margin_pct: 30, alert: digest}
+    VIGILAR: {min_real_discount_pct: 25, min_adjusted_margin_pct: 25, alert: dashboard}
+  min_per_unit: {amount: 10.00, pct_of_purchase_cost: 10}   # [RN-009 §4.2] el mayor entre $10 y 10% del costo
+  cheaper_competition_pct: 15         # [REQ §5; RN-002 §4.3] competencia más barata
+  confidence:                         # [RN-007 §4.1]
+    normal: {exact_high_max_hours: 6, no_number_medium_max_hours: 12, max_age_hours: 24}
+    clearance: {exact_high_max_hours: 3, no_number_medium_max_hours: 6, max_age_hours: 12}
+    few_units_medium_max_hours: 2
+  channel_tiebreak_pct: 10            # [RN-018 §4] desempate por rendimiento
