@@ -62,8 +62,8 @@ Tareas de la parte B del REQ-2026-0001 v2.9 (`req-2026-0001-b-evaluacion`). **1 
 - **Depende de:** T01. **Estimación:** 6 h.
 - **DoD:** común.
 
-- [ ] 3.1 Implementar el modelo del contrato 3.1 con las reglas del particular y verificar las pruebas unitarias de obligatorios, `schemaVersion`, `title` y GTIN
-- [ ] 3.2 Implementar los 7 esquemas de capturas y verificar las pruebas unitarias de obligatorios, conversión de MXN y campos desconocidos descartados
+- [x] 3.1 Implementar el modelo del contrato 3.1 con las reglas del particular y verificar las pruebas unitarias de obligatorios, `schemaVersion`, `title` y GTIN
+- [x] 3.2 Implementar los 7 esquemas de capturas y verificar las pruebas unitarias de obligatorios, conversión de MXN y campos desconocidos descartados
 
 ## 4. T04 — Contexto, registro de evaluación y esqueleto del motor (cimientos)
 
@@ -117,8 +117,8 @@ Tareas de la parte B del REQ-2026-0001 v2.9 (`req-2026-0001-b-evaluacion`). **1 
 - **Alcance:** `entradas/validacion.py` (precio, dominio autorizado, enlace `https` de plataforma permitida, obligatorios del contrato y del particular, ciudad); el paso 1 del motor y el registro de rechazo.
 - **Fuera de alcance:** lectura de archivos (T08).
 - **Construye (design.md):** CMP-07, CMP-17, RNF-7, RNF-4
-- **Comportamientos esperados:** los 8 escenarios de B20; además, el orden de comprobaciones de `design.md` §6 cuando fallan dos a la vez (prueba unitaria).
-- **Guía de implementación:** validación sintáctica de la URL (host igual o subdominio de un dominio autorizado; prefijo de ruta de la plataforma si lo configura PAR-09); nunca se abre una URL; el rechazo no guarda la observación en el historial.
+- **Comportamientos esperados:** los 8 escenarios de B20; además, el orden de comprobaciones de `design.md` §6 cuando fallan dos a la vez (prueba unitaria); la publicación de un particular con `availability.state` distinto de `listed` se rechaza (REQ §6 punto 1; DEC-242).
+- **Guía de implementación:** validación sintáctica de la URL (host igual o subdominio de un dominio autorizado; prefijo de ruta de la plataforma si lo configura PAR-09); nunca se abre una URL; el rechazo no guarda la observación en el historial; T07 valida `availability.state = listed` en la publicación de un particular (REQ §6 punto 1; DEC-242), que T03 no comprueba.
 - **Depende de:** T02, T03, T04. **Estimación:** 6 h.
 - **DoD:** común.
 
@@ -132,7 +132,7 @@ Tareas de la parte B del REQ-2026-0001 v2.9 (`req-2026-0001-b-evaluacion`). **1 
 - **Fuera de alcance:** disparar evaluaciones (T21).
 - **Construye (design.md):** CMP-08, CMP-22, CTR-02, CTR-03, CTR-05, CTR-07, RNF-5, RNF-4
 - **Comportamientos esperados:** B34 (b) y B34 (c), con los motivos de `design.md` §6 (`CAMPO OBLIGATORIO FALTANTE (condition)` en B34 b); más las pruebas unitarias de §12 (archivo vacío, renglón que no es JSON, CSV sin tipo en el nombre, listas con `|`, duplicados contados en `duplicates`).
-- **Guía de implementación:** JSON con `parse_float=Decimal`; `recordType` se quita antes de validar la observación; una transacción por registro; el reporte no guarda contenido; `citiesToRegister` con las ciudades de `CIUDAD NO CONFIGURADA`.
+- **Guía de implementación:** JSON con `parse_float=Decimal`; `recordType` se quita antes de validar la observación; una transacción por registro; el reporte no guarda contenido; `citiesToRegister` con las ciudades de `CIUDAD NO CONFIGURADA`. Los esquemas de T03 tienen enteros y booleanos estrictos (DEC-238): el cargador convierte el texto de CSV (`"true"`/`"false"`, `"3"`) al tipo del campo antes de validar; un texto que no se convierte llega como está y el esquema lo rechaza. El cargador pasa a `leer_captura` la zona de `general.timezone` (DEC-240), siempre la zona ya validada de la configuración: una zona inválida es un error de configuración, no del registro (DEC-247).
 - **Depende de:** T06, T07. **Estimación:** 7 h.
 - **DoD:** común.
 
