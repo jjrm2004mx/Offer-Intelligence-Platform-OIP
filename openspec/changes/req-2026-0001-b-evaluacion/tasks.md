@@ -109,8 +109,10 @@ Tareas de la parte B del REQ-2026-0001 v2.9 (`req-2026-0001-b-evaluacion`). **1 
 - **Depende de:** T05. **Estimación:** 8 h.
 - **DoD:** común; evidencia de la batería contra PostgreSQL en local.
 
-- [ ] 6.1 Implementar `Repositorio` y `RepositorioMemoria` y verificar la batería de contrato en CI
-- [ ] 6.2 Implementar `RepositorioPostgres` con la conexión por secreto y verificar la misma batería en integración
+- [x] 6.1 Implementar `Repositorio` y `RepositorioMemoria` y verificar la batería de contrato en CI
+- [x] 6.2 Implementar `RepositorioPostgres` con la conexión por secreto y verificar la misma batería en integración
+  - Implementado en el PR de T06 (con la migración `0003_registro_de_rechazo`, DEC-250).
+  - Evidencia de integración (T06): Jesús la corrió el 2026-11-21 en Rocky Linux 10.2 contra `docker.io/timescale/timescaledb:latest-pg16` (digest `sha256:2f190aac33a7ee3913e104082e7ec953d3183b3e228331a11de359b00e413843`) sobre 0bb6da4: integración 159 passed y 1 skipped (la esperada, `test_sin_timescaledb_la_0002_falla_y_no_deja_nada_a_medias`), 0 fallidas; suite completa 3890 passed, 1 skipped.
 
 ## 7. T07 — Validación de cada observación (B20)
 

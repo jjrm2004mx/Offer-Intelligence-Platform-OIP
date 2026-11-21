@@ -36,6 +36,8 @@ RAIZ = Path(__file__).resolve().parent.parent
 _VARIABLE = "OIP_TEST_DATABASE_URL"
 _INSTANTE = dt.datetime(2026, 11, 16, 18, 0, tzinfo=dt.UTC)
 _HUELLA = "0" * 64
+#: Revisión vigente (``head``).
+_HEAD = "0003_registro_de_rechazo"
 
 
 def _url():
@@ -116,7 +118,7 @@ def test_0001_coincide_con_el_modelo(motor):
 
     _alembic(motor, command.upgrade, "0001_esquema")
     with motor.connect() as conexion:
-        diferencias = compare_metadata(MigrationContext.configure(conexion), tablas.metadata)
+        diferencias = compare_metadata(MigrationContext.configure(conexion), tablas.metadata_0001)
     # El índice con expresión (coalesce) no se compara por reflexión; lo cubre la prueba
     # sin base que compara el SQL de 0001 con el del modelo.
     diferencias = [
@@ -443,7 +445,7 @@ def test_la_vista_da_la_evaluacion_mas_reciente_con_nivel_asignado(motor):
 def test_upgrade_head_y_downgrade_base(motor):
     _con_timescale(motor)
     _alembic(motor, command.upgrade, "head")
-    assert _revision(motor) == "0002_hypertables"
+    assert _revision(motor) == _HEAD
     assert set(tablas.metadata.tables) <= _tablas(motor)
 
     _alembic(motor, command.downgrade, "base")
@@ -453,7 +455,7 @@ def test_upgrade_head_y_downgrade_base(motor):
 
     # Volver a subir después de bajar (la PoC de T23 hace lo mismo).
     _alembic(motor, command.upgrade, "head")
-    assert _revision(motor) == "0002_hypertables"
+    assert _revision(motor) == _HEAD
 
 
 def test_tab05_a_tab07_son_hypertables_con_chunks_de_7_dias(motor):
@@ -492,7 +494,7 @@ def test_0002_no_se_revierte_con_datos(motor):
         _observacion(conexion, producto, publicacion)
     with pytest.raises(Exception, match="solo se revierte sin datos"):
         _alembic(motor, command.downgrade, "0001_esquema")
-    assert _revision(motor) == "0002_hypertables"
+    assert _revision(motor) == _HEAD
     with motor.connect() as conexion:
         assert conexion.execute(text("SELECT count(*) FROM price_observation")).scalar_one() == 1
 
@@ -523,3 +525,89 @@ def test_sin_timescaledb_la_0002_falla_y_no_deja_nada_a_medias(motor):
     with pytest.raises(DBAPIError, match="timescaledb"):
         _alembic(motor, command.upgrade, "head")
     assert _revision(motor) == "0001_esquema"
+
+
+# --- 0003_registro_de_rechazo (DEC-250; T06) --------------------------------------------
+
+_RECHAZO = text(
+    "INSERT INTO evaluation (id, evaluated_at, config_version_id, rn_versions, result,"
+    " reasons, rejection_reason, marks, observations_used, input_snapshot,"
+    " changed_references, no_longer_recommended, load_run_id, line_number)"
+    " VALUES (:id, :t, :c, '{}', :r, '{}', :motivo, '{}', '[]', CAST(:entrada AS jsonb),"
+    " '{}', false, :carga, :renglon)"
+)
+
+
+def _con_rechazo_de_carga(conexion) -> dict[str, object]:
+    config_id = _config_version(conexion)
+    carga = _carga(conexion, config_id)
+    conexion.execute(
+        text(
+            "INSERT INTO load_rejection (load_run_id, line_number, record_type, reason, field)"
+            " VALUES (:c, 3, 'observation', 'CAMPO OBLIGATORIO FALTANTE (model)', 'model')"
+        ),
+        {"c": carga},
+    )
+    return {
+        "id": uuid.uuid4(),
+        "t": _INSTANTE,
+        "c": config_id,
+        "r": "RECHAZADA_VALIDACION",
+        "motivo": "CAMPO OBLIGATORIO FALTANTE (model)",
+        "entrada": None,
+        "carga": carga,
+        "renglon": 3,
+    }
+
+
+@pytest.mark.parametrize(
+    ("cambios", "restriccion"),
+    [
+        ({"entrada": "{}"}, "ck_evaluation_rechazo_sin_entrada"),
+        ({"renglon": None}, "ck_evaluation_renglon_del_rechazo"),
+        ({"renglon": 0}, "ck_evaluation_line_number_positivo"),
+        ({"renglon": 4}, "fk_evaluation_load_run_id_line_number_load_rejection"),
+        (
+            {"r": "SIN_NIVEL", "motivo": None, "entrada": "{}"},
+            "ck_evaluation_renglon_del_rechazo",
+        ),
+    ],
+)
+def test_0003_el_rechazo_no_guarda_el_renglon_y_se_liga_a_load_rejection(
+    motor, cambios, restriccion
+):
+    _con_timescale(motor)
+    _alembic(motor, command.upgrade, "head")
+    with motor.begin() as conexion:
+        valores = _con_rechazo_de_carga(conexion)
+        conexion.execute(_RECHAZO, valores)  # el registro de DEC-250 entra
+    with pytest.raises(IntegrityError, match=restriccion), motor.begin() as conexion:
+        conexion.execute(_RECHAZO, valores | {"id": uuid.uuid4()} | cambios)
+
+
+def test_0003_una_evaluacion_sin_input_snapshot_sigue_entrando(motor):
+    # DEC-250 pide "rechazo ⇒ input_snapshot nulo", no lo contrario: las filas que ya
+    # escriben las pruebas de T05 (sin input_snapshot) siguen siendo válidas.
+    _con_timescale(motor)
+    _alembic(motor, command.upgrade, "head")
+    with motor.begin() as conexion:
+        valores = _con_rechazo_de_carga(conexion)
+        valores |= {"r": "SIN_NIVEL", "motivo": None, "renglon": None}
+        conexion.execute(_RECHAZO, valores)
+
+
+def test_0003_baja_y_sube_y_la_vista_lleva_la_columna_nueva(motor):
+    _con_timescale(motor)
+    _alembic(motor, command.upgrade, "head")
+
+    def columnas() -> list[str]:
+        return [c["name"] for c in inspect(motor).get_columns("open_opportunity")]
+
+    assert columnas()[-1] == "line_number"
+    _alembic(motor, command.downgrade, "0002_hypertables")
+    assert _revision(motor) == "0002_hypertables"
+    assert "line_number" not in columnas()
+    assert "line_number" not in [c["name"] for c in inspect(motor).get_columns("evaluation")]
+    _alembic(motor, command.upgrade, "head")
+    assert _revision(motor) == _HEAD
+    assert columnas()[-1] == "line_number"

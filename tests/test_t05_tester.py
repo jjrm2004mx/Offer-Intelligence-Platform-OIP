@@ -219,6 +219,8 @@ COLUMNAS = {
         "changed_references",
         "no_longer_recommended",
         "load_run_id",
+        # 0003_registro_de_rechazo (DEC-250): renglón del rechazo de una carga por archivo.
+        "line_number",
     },
     "evaluation_channel": {
         "evaluation_id",
@@ -691,7 +693,8 @@ def test_0001_y_el_modelo_dan_el_mismo_catalogo_de_postgresql(motor):
     migracion = _catalogo(motor)
     _alembic(motor, "downgrade", "base")
     with motor.begin() as conexion:
-        tablas.metadata.create_all(conexion)
+        # El modelo tal como lo deja 0001 (sin lo que agrega 0003_registro_de_rechazo).
+        tablas.metadata_0001.create_all(conexion)
         conexion.execute(text(f"CREATE VIEW open_opportunity AS {tablas.SQL_OPEN_OPPORTUNITY}"))
     modelo = _catalogo(motor)
     for parte in migracion:

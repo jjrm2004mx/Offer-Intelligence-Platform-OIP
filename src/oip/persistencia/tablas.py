@@ -2,8 +2,10 @@
 
 Esquema de PostgreSQL + TimescaleDB: TAB-01 a TAB-12. Las migraciones versionadas viven en
 ``migrations/`` (Alembic, en la raíz del repo): ``0001_esquema`` crea estas tablas como
-tablas normales y ``0002_hypertables`` convierte TAB-05 a TAB-07 en hypertables
-(ADR-013, ADR-028, DEC-179). Este módulo es la **fuente** de los metadatos; las
+tablas normales, ``0002_hypertables`` convierte TAB-05 a TAB-07 en hypertables
+(ADR-013, ADR-028, DEC-179) y ``0003_registro_de_rechazo`` agrega a TAB-10 el renglón del
+rechazo de validación (DEC-250). ``metadata`` es el modelo de ``head``; ``metadata_0001``,
+el de ``0001_esquema``. Este módulo es la **fuente** de los metadatos; las
 migraciones guardan su copia congelada (nunca se edita una migración aplicada) y una
 prueba comprueba que coinciden.
 
@@ -41,6 +43,7 @@ from sqlalchemy import (
     Date,
     DateTime,
     ForeignKey,
+    ForeignKeyConstraint,
     Index,
     Integer,
     MetaData,
@@ -79,10 +82,12 @@ from oip.entradas.contrato import VERSIONES_ACEPTADAS
 
 __all__ = [
     "CLASES_IDENTIFICADOR",
+    "COLUMNAS_0003",
     "FORMATOS_CARGA",
     "HYPERTABLES",
     "INTERVALO_CHUNK",
     "ORIGENES_RECIBO",
+    "RESTRICCIONES_0003",
     "SQL_OPEN_OPPORTUNITY",
     "amazon_listing_observation",
     "availability_observation",
@@ -98,6 +103,7 @@ __all__ = [
     "local_demand",
     "local_estimate",
     "metadata",
+    "metadata_0001",
     "metadata_vistas",
     "msrp_capture",
     "open_opportunity",
@@ -198,10 +204,10 @@ def _motivo_rechazo(columna: str) -> CheckConstraint:
     )
 
 
-def _tabla(nombre: str, *elementos: object) -> Table:
+def _tabla(nombre: str, *elementos: object, md: MetaData | None = None) -> Table:
     """``Table`` con un ``CHECK`` de "vacío = ausente" en cada columna ``text`` libre (las de
     un catálogo ya excluyen el texto vacío con su propio ``CHECK``)."""
-    tabla = Table(nombre, metadata, *elementos)
+    tabla = Table(nombre, metadata if md is None else md, *elementos)
     con_catalogo = {
         str(r.name).removeprefix(f"ck_{nombre}_").removesuffix("_catalogo")
         for r in tabla.constraints
@@ -558,75 +564,116 @@ client_request = _tabla(
 _RECHAZADA = Resultado.RECHAZADA_VALIDACION.value
 _ASIGNADO = Resultado.NIVEL_ASIGNADO.value
 
-evaluation = _tabla(
-    "evaluation",
-    Column("id", ID, primary_key=True),
-    Column("evaluated_at", TIEMPO, nullable=False),
-    Column("offer_observation_id", ID),
-    Column("listing_id", ID, ForeignKey("listing.id")),
-    Column("product_id", ID, ForeignKey("product.id")),
-    Column("config_version_id", BigInteger, ForeignKey("config_version.id"), nullable=False),
-    Column("rn_versions", JSONB, nullable=False),
-    Column("result", Text, nullable=False),
-    Column("main_reason", Text),
-    Column("reasons", TEXTOS, nullable=False),
-    Column("rejection_reason", Text),
-    Column("marks", TEXTOS, nullable=False),
-    Column("price_quality", Text),
-    Column("confidence", Text),
-    Column("identification", Text),
-    Column("references", JSONB),
-    Column("advertised_discount", SIN_REDONDEAR),
-    Column("real_discount", SIN_REDONDEAR),
-    Column("purchase_cost", MONTO),
-    Column("chosen_channel", Text),
-    Column("alert_level", Text),
-    Column("alert_channel", Text),
-    Column("observations_used", JSONB, nullable=False),
-    Column("input_snapshot", JSONB),
-    Column("previous_evaluation_id", ID, ForeignKey("evaluation.id")),
-    Column("changed_references", TEXTOS, nullable=False),
-    Column("no_longer_recommended", Boolean, nullable=False),
-    Column("load_run_id", ID, ForeignKey("load_run.id")),
-    _objeto("rn_versions"),
-    _en("result", Resultado),
-    _en("main_reason", Motivo),
-    _todos_en("reasons", Motivo),
-    _motivo_rechazo("rejection_reason"),
-    _en("price_quality", CalidadPrecio),
-    _en("confidence", Confianza),
-    _en("identification", Identificacion),
-    _en("chosen_channel", Canal),
-    _en("alert_level", Nivel),
-    _en("alert_channel", Canal),
-    _todos_en("changed_references", ReferenciaPrecio),
-    CheckConstraint("jsonb_typeof(observations_used) = 'array'", name="observations_used_arreglo"),
-    # Invariantes del registro (REQ §3.2.2 a §3.2.4; RegistroEvaluacion de T04).
-    CheckConstraint("main_reason IS NOT DISTINCT FROM reasons[1]", name="motivo_principal"),
-    CheckConstraint(
-        f"(result = '{_RECHAZADA}') = (rejection_reason IS NOT NULL)", name="rechazo_con_motivo"
-    ),
-    CheckConstraint(
-        f"result <> '{_RECHAZADA}' OR offer_observation_id IS NULL", name="rechazo_sin_oferta"
-    ),
-    CheckConstraint(
-        f"(result = '{_ASIGNADO}') = (alert_level IS NOT NULL)"
-        f" AND (result = '{_ASIGNADO}') = (alert_channel IS NOT NULL)"
-        f" AND (result <> '{_ASIGNADO}' OR chosen_channel IS NOT NULL)",
-        name="aviso_solo_con_nivel",
-    ),
-    CheckConstraint(
-        "previous_evaluation_id IS NOT NULL"
-        " OR (cardinality(changed_references) = 0 AND NOT no_longer_recommended)",
-        name="reevaluacion",
-    ),
-)
-Index(
-    "ix_evaluation_listing_id_evaluated_at",
-    evaluation.c.listing_id,
-    evaluation.c.evaluated_at.desc(),
-)
-Index("ix_evaluation_product_id_result", evaluation.c.product_id, evaluation.c.result)
+#: Lo que agrega ``0003_registro_de_rechazo`` a TAB-10 (DEC-250): el número de renglón del
+#: rechazo de una carga por archivo, que con ``load_run_id`` lo liga a ``load_rejection``
+#: (TAB-02), y que un rechazo no guarde ``input_snapshot`` (ni nada del renglón).
+COLUMNAS_0003 = {"evaluation": ("line_number",)}
+RESTRICCIONES_0003 = {
+    "evaluation": (
+        "ck_evaluation_line_number_positivo",
+        "ck_evaluation_renglon_del_rechazo",
+        "ck_evaluation_rechazo_sin_entrada",
+        "fk_evaluation_load_run_id_line_number_load_rejection",
+    )
+}
+
+
+def _evaluation(md: MetaData, *, con_0003: bool) -> Table:
+    """TAB-10 en ``md``; ``con_0003`` agrega lo de ``0003_registro_de_rechazo``."""
+    agregados_0003: tuple[object, ...] = (
+        Column("line_number", Integer),
+        CheckConstraint("line_number >= 1", name="line_number_positivo"),
+        # Renglón solo y siempre en el rechazo de una carga por archivo (DEC-250).
+        CheckConstraint(
+            f"(result = '{_RECHAZADA}' AND load_run_id IS NOT NULL) = (line_number IS NOT NULL)",
+            name="renglon_del_rechazo",
+        ),
+        # Un rechazo no guarda nada del renglón: sin ``input_snapshot`` (DEC-250, CTR-06).
+        CheckConstraint(
+            f"result <> '{_RECHAZADA}' OR input_snapshot IS NULL", name="rechazo_sin_entrada"
+        ),
+        ForeignKeyConstraint(
+            ["load_run_id", "line_number"],
+            ["load_rejection.load_run_id", "load_rejection.line_number"],
+        ),
+    )
+    tabla = _tabla(
+        "evaluation",
+        Column("id", ID, primary_key=True),
+        Column("evaluated_at", TIEMPO, nullable=False),
+        Column("offer_observation_id", ID),
+        Column("listing_id", ID, ForeignKey("listing.id")),
+        Column("product_id", ID, ForeignKey("product.id")),
+        Column("config_version_id", BigInteger, ForeignKey("config_version.id"), nullable=False),
+        Column("rn_versions", JSONB, nullable=False),
+        Column("result", Text, nullable=False),
+        Column("main_reason", Text),
+        Column("reasons", TEXTOS, nullable=False),
+        Column("rejection_reason", Text),
+        Column("marks", TEXTOS, nullable=False),
+        Column("price_quality", Text),
+        Column("confidence", Text),
+        Column("identification", Text),
+        Column("references", JSONB),
+        Column("advertised_discount", SIN_REDONDEAR),
+        Column("real_discount", SIN_REDONDEAR),
+        Column("purchase_cost", MONTO),
+        Column("chosen_channel", Text),
+        Column("alert_level", Text),
+        Column("alert_channel", Text),
+        Column("observations_used", JSONB, nullable=False),
+        Column("input_snapshot", JSONB),
+        Column("previous_evaluation_id", ID, ForeignKey("evaluation.id")),
+        Column("changed_references", TEXTOS, nullable=False),
+        Column("no_longer_recommended", Boolean, nullable=False),
+        Column("load_run_id", ID, ForeignKey("load_run.id")),
+        _objeto("rn_versions"),
+        _en("result", Resultado),
+        _en("main_reason", Motivo),
+        _todos_en("reasons", Motivo),
+        _motivo_rechazo("rejection_reason"),
+        _en("price_quality", CalidadPrecio),
+        _en("confidence", Confianza),
+        _en("identification", Identificacion),
+        _en("chosen_channel", Canal),
+        _en("alert_level", Nivel),
+        _en("alert_channel", Canal),
+        _todos_en("changed_references", ReferenciaPrecio),
+        CheckConstraint(
+            "jsonb_typeof(observations_used) = 'array'", name="observations_used_arreglo"
+        ),
+        # Invariantes del registro (REQ §3.2.2 a §3.2.4; RegistroEvaluacion de T04).
+        CheckConstraint("main_reason IS NOT DISTINCT FROM reasons[1]", name="motivo_principal"),
+        CheckConstraint(
+            f"(result = '{_RECHAZADA}') = (rejection_reason IS NOT NULL)", name="rechazo_con_motivo"
+        ),
+        CheckConstraint(
+            f"result <> '{_RECHAZADA}' OR offer_observation_id IS NULL", name="rechazo_sin_oferta"
+        ),
+        CheckConstraint(
+            f"(result = '{_ASIGNADO}') = (alert_level IS NOT NULL)"
+            f" AND (result = '{_ASIGNADO}') = (alert_channel IS NOT NULL)"
+            f" AND (result <> '{_ASIGNADO}' OR chosen_channel IS NOT NULL)",
+            name="aviso_solo_con_nivel",
+        ),
+        CheckConstraint(
+            "previous_evaluation_id IS NOT NULL"
+            " OR (cardinality(changed_references) = 0 AND NOT no_longer_recommended)",
+            name="reevaluacion",
+        ),
+        *(agregados_0003 if con_0003 else ()),
+        md=md,
+    )
+    Index(
+        "ix_evaluation_listing_id_evaluated_at",
+        tabla.c.listing_id,
+        tabla.c.evaluated_at.desc(),
+    )
+    Index("ix_evaluation_product_id_result", tabla.c.product_id, tabla.c.result)
+    return tabla
+
+
+evaluation = _evaluation(metadata, con_0003=True)
 
 # --- TAB-11 evaluation_channel ---------------------------------------------------------
 
@@ -680,3 +727,20 @@ open_opportunity = Table(
     metadata_vistas,
     *(Column(c.name, c.type, nullable=c.nullable) for c in evaluation.columns),
 )
+
+# --- El modelo de 0001_esquema ----------------------------------------------------------
+
+
+def _modelo_0001() -> MetaData:
+    """Metadatos de TAB-01 a TAB-11 como los deja ``0001_esquema`` (sin lo de 0003). Las
+    pruebas comparan con ellos la copia congelada de esa migración (DEC-179)."""
+    md = MetaData(naming_convention=CONVENCION_NOMBRES)
+    for tabla in metadata.sorted_tables:
+        if tabla.name != "evaluation":
+            tabla.to_metadata(md)
+    _evaluation(md, con_0003=False)
+    return md
+
+
+#: TAB-01 a TAB-11 en ``0001_esquema``. ``metadata`` es el modelo vigente (``head``).
+metadata_0001 = _modelo_0001()
