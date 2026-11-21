@@ -24,6 +24,8 @@ import datetime as dt
 import itertools
 import logging
 import re
+import sys
+import tokenize
 from decimal import Decimal
 from pathlib import Path
 from uuid import UUID
@@ -1539,13 +1541,46 @@ def test_desempate_sale_de_la_configuracion():
 # =========================================================================================
 
 
-_MODULOS_T11 = ("identificacion.py", "canales.py", "rentabilidad.py", "eleccion.py")
+# ``canales`` es un subpaquete desde la implementación (mismas firmas públicas).
+_MODULOS_T11 = (
+    "identificacion.py",
+    "canales",
+    "rentabilidad.py",
+    "eleccion.py",
+)
+
+
+def _codigo(archivo: str) -> str:
+    """El código de un módulo o subpaquete de ``evaluacion/``, con los comentarios y los
+    textos en blanco (un docstring o un comentario que nombra ``total_seconds`` no es un
+    uso). Conserva la disposición del código, para que las expresiones regulares valgan."""
+    ruta = SRC_EVALUACION / archivo
+    rutas = sorted(ruta.glob("*.py")) if ruta.is_dir() else [ruta]
+    partes = []
+    for fichero in rutas:
+        lineas = fichero.read_text(encoding="utf-8").splitlines(keepends=True)
+        with fichero.open("rb") as f:
+            tokens = list(tokenize.tokenize(f.readline))
+        for token in reversed(tokens):
+            if token.type not in (tokenize.COMMENT, tokenize.STRING):
+                continue
+            (fila_i, col_i), (fila_f, col_f) = token.start, token.end
+            if fila_i == fila_f:
+                linea = lineas[fila_i - 1]
+                lineas[fila_i - 1] = linea[:col_i] + " " * (col_f - col_i) + linea[col_f:]
+            else:
+                lineas[fila_i - 1] = lineas[fila_i - 1][:col_i] + "\n"
+                for fila in range(fila_i, fila_f - 1):
+                    lineas[fila] = "\n"
+                lineas[fila_f - 1] = " " * col_f + lineas[fila_f - 1][col_f:]
+        partes.append("".join(lineas))
+    return "\n".join(partes)
 
 
 @pytest.mark.parametrize("archivo", _MODULOS_T11)
 def test_ningun_modulo_redondea_por_su_cuenta_ni_usa_float(archivo):
     """design.md §8: ``dinero.redondear`` es la única que redondea; nunca ``float``."""
-    fuente = (SRC_EVALUACION / archivo).read_text(encoding="utf-8")
+    fuente = _codigo(archivo)
     assert not re.search(r"\.quantize\(|\bround\(|\bfloat\(|ROUND_", fuente)
     assert not re.search(r"\.total_seconds\(", fuente)  # da float
 
@@ -1553,7 +1588,7 @@ def test_ningun_modulo_redondea_por_su_cuenta_ni_usa_float(archivo):
 @pytest.mark.parametrize("archivo", _MODULOS_T11)
 def test_modulos_puros_sin_reloj_ni_red(archivo):
     """design.md §14: sin reloj, sin I/O, sin red, sin aleatoriedad."""
-    fuente = (SRC_EVALUACION / archivo).read_text(encoding="utf-8")
+    fuente = _codigo(archivo)
     for patron in (
         r"\.now\(",
         r"\.today\(",
@@ -1582,8 +1617,11 @@ def espia_redondeo(monkeypatch):
         return original(tipo, valor)
 
     monkeypatch.setattr(oip.dinero, "redondear", espia)
-    for modulo in (canales, rentabilidad, eleccion, identificacion, referencias, motor):
-        for nombre, valor in vars(modulo).items():
+    # También en los submódulos (``canales`` es un subpaquete): todo módulo de ``oip``.
+    for nombre_modulo, modulo in list(sys.modules.items()):
+        if modulo is None or not nombre_modulo.startswith("oip."):
+            continue
+        for nombre, valor in list(vars(modulo).items()):
             if valor is original:
                 monkeypatch.setattr(modulo, nombre, espia)
     return llamadas
