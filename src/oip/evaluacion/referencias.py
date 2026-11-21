@@ -45,14 +45,20 @@ Reglas (todas sus cifras salen de PAR-08, ``price_reference``; ninguna está en 
   habitual del producto (mediana, sin el día evaluado, con historial suficiente), pero solo
   con las publicaciones de la cadena de la oferta (PAR-02, ``retailers.<código>.chain``) y
   en la ventana ``store_typical_window_days``.
-- **Precio de mercado hoy** (RN-002 v2 §4.1, S-03; design.md §10.4): de cada publicación del
-  producto, sin la de la oferta evaluada, la observación más reciente con antigüedad
-  (``instante − extractedAt``) de ``market_today_max_age_hours`` horas o menos, nueva,
-  vendida por el comercio y disponible; el precio de mercado hoy es el más bajo de esas
-  observaciones. "Disponible" (S-03): en línea, ``in_stock_confirmed``; en tienda física,
-  confianza Alta o Media de RN-007 §4.1 al instante; en la ficha de Amazon, un botón de
-  compra (``buyBoxPrice``) no nulo (design.md §10.3). La exclusión de la misma cadena y su
-  excepción en liquidación en sucursal son de T16 (DEC-216).
+- **Precio de mercado hoy** (RN-002 v2 §4.1, S-03; design.md §10.4; DEC-261): de cada
+  publicación del producto, sin la de la oferta evaluada, se toma **primero** la observación
+  más reciente con antigüedad (``instante − extractedAt``) de ``market_today_max_age_hours``
+  horas o menos y **después** se exige que sea nueva, vendida por el comercio y disponible:
+  si la más reciente no cumple (un agotado reciente, un usado, un vendedor externo, una ficha
+  sin botón de compra), la publicación no da precio aunque una anterior sí cumpliera. Una
+  consulta bloqueada o con precio inválido no es una observación (REQ §3.1 punto 5) y no
+  cuenta como la más reciente. El precio de mercado hoy es el más bajo de las publicaciones
+  que quedan. El mismo cálculo da la competencia más barata (RN-002 §4.3, que lo recibe en
+  ``Referencias.precio_mercado_hoy``) y la reevaluación. "Disponible" (S-03): en línea,
+  ``in_stock_confirmed``; en tienda física, confianza Alta o Media de RN-007 §4.1 al
+  instante; en la ficha de Amazon, un botón de compra (``buyBoxPrice``) no nulo (design.md
+  §10.3). La exclusión de la misma cadena y su excepción en liquidación en sucursal son de
+  T16 (DEC-216).
 - **Cadenas del mercado hoy** (RN-012 §4, "comercios"): las cadenas distintas de la evaluada
   entre las publicaciones que dan el precio de mercado hoy (design.md §10.4).
 - **Mínimo registrado** (S-22): el precio diario más bajo del producto en todos los
@@ -457,13 +463,16 @@ def _cuenta_para_el_mercado_hoy(
 
 
 def mercado_hoy(contexto: ContextoEvaluacion) -> MercadoHoy | None:
-    """Precio de mercado hoy básico (RN-002 v2 §4.1; design.md §10.4) y sus cadenas.
+    """Precio de mercado hoy básico (RN-002 v2 §4.1; design.md §10.4; DEC-261) y sus cadenas.
 
-    De cada publicación del producto, sin la publicación de la oferta evaluada, la
-    observación más reciente que cumple: antigüedad de ``market_today_max_age_hours`` o
-    menos, nueva, vendida por el comercio, disponible (S-03) y con precio. El precio es el
-    más bajo de esas observaciones, sin redondear. ``None`` si ninguna publicación tiene un
-    dato así (RN-002 §11: no hay precio de mercado hoy).
+    De cada publicación del producto, sin la publicación de la oferta evaluada, se toma
+    primero la observación más reciente con antigüedad de ``market_today_max_age_hours`` o
+    menos (de 0 a ese límite, incluido; con el mismo ``extractedAt``, desempata el id) y
+    después se exige que sea nueva, vendida por el comercio y disponible (S-03). Si no
+    cumple, la publicación sale: una observación anterior no la sustituye. Las consultas
+    bloqueadas y las de precio inválido no son observaciones y no entran en la elección. El
+    precio es el más bajo de las publicaciones que quedan, sin redondear. ``None`` si
+    ninguna publicación tiene un dato así (RN-002 §11: no hay precio de mercado hoy).
     """
     oferta = contexto.oferta
     limite = dt.timedelta(hours=_parametros(contexto).market_today_max_age_hours)
