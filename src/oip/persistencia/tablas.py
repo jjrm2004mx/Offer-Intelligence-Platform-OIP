@@ -81,6 +81,7 @@ from oip.entradas.capturas import Modalidad, Moneda, ResultadoVisita
 from oip.entradas.contrato import VERSIONES_ACEPTADAS
 
 __all__ = [
+    "CAMBIOS_0004",
     "CLASES_IDENTIFICADOR",
     "COLUMNAS_0003",
     "FORMATOS_CARGA",
@@ -576,6 +577,11 @@ RESTRICCIONES_0003 = {
         "fk_evaluation_load_run_id_line_number_load_rejection",
     )
 }
+
+
+#: Columnas cuyo tipo cambia ``0004_price_usd_sin_escala`` (DEC-258): ``price_usd`` de
+#: ``local_comparable`` pasa de ``numeric(14,4)`` a ``numeric`` sin escala.
+CAMBIOS_0004 = {"local_comparable": ("price_usd",)}
 
 
 def _evaluation(md: MetaData, *, con_0003: bool) -> Table:

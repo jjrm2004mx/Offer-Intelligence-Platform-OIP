@@ -42,6 +42,10 @@ ARCHIVO_SECRETO = Path("/run/secrets/oip_db_password")
 
 _DRIVER = "postgresql+psycopg"
 
+#: Claves de la query de la URL que llevarían la contraseña o su archivo: se rechazan, sin
+#: distinguir mayúsculas (decisión 18 del #34; RNF-8). La contraseña va en el secreto.
+CLAVES_PROHIBIDAS_EN_QUERY = frozenset({"password", "passfile"})
+
 
 # --- Conexión (RNF-8) ---------------------------------------------------------------------
 

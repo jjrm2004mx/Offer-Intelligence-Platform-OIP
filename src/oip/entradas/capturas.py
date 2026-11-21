@@ -66,6 +66,7 @@ __all__ = [
     "SolicitudCliente",
     "VisitaTienda",
     "leer_captura",
+    "motivo_de_rechazo",
 ]
 
 _PRODUCTO = ("gtin", "brand", "model")
@@ -109,10 +110,23 @@ class _Captura(Esquema):
         """Obligatorios que dependen de otros campos (producto, tipo de cambio)."""
         return []
 
+    @property
+    def precio_invalido(self) -> bool:
+        """Algún precio de la captura es ≤ 0 o tiene más de 2 decimales: ``PRECIO INVÁLIDO``
+        (DEC-257). Las capturas sin precio nunca lo son."""
+        raise NotImplementedError
+
     @classmethod
-    def leer(cls, datos: Mapping[str, Any], zona: dt.tzinfo | None = None) -> _Captura:
+    def leer(
+        cls,
+        datos: Mapping[str, Any],
+        zona: dt.tzinfo | None = None,
+        dia_de_carga: dt.date | None = None,
+    ) -> _Captura:
         if not isinstance(datos, Mapping):
             raise TypeError("la captura debe ser un mapa de campos")
+        if dia_de_carga is not None:
+            raise NotImplementedError
         orden = cls._orden()
         obligatorios = tuple(c for c in orden if c not in _CONDICIONALES)
         return validar_esquema(
@@ -337,7 +351,11 @@ ESQUEMAS_CAPTURA: MappingProxyType[TipoRegistro, type[_Captura]] = MappingProxyT
 
 
 def leer_captura(
-    tipo: str, datos: Mapping[str, Any], *, zona: str | dt.tzinfo | None = None
+    tipo: str,
+    datos: Mapping[str, Any],
+    *,
+    zona: str | dt.tzinfo | None = None,
+    dia_de_carga: dt.date | None = None,
 ) -> Captura:
     """Lee una captura de ``tipo`` (``recordType`` ya quitado del registro).
 
@@ -347,9 +365,27 @@ def leer_captura(
     ``zona`` es la de ``general.timezone`` de la configuración (PAR-01; nombre IANA o
     ``tzinfo``): una fecha y hora sin desfase se toma en ella (DEC-240). El cargador (T08)
     la pasa siempre; sin ella, una fecha y hora sin desfase se rechaza.
+
+    ``dia_de_carga`` es el día de la carga en esa zona (DEC-257): una fecha de la captura
+    (``date``, ``visitedAt``, ``purchasedOn``, ``soldOn``) posterior a él da ``CAMPO
+    OBLIGATORIO FALTANTE (<campo>)``. Llega como dato (el cargador lo saca del instante de
+    la carga), nunca del reloj; sin él, no se comprueba.
+
+    Un precio ≤ 0 o con más de 2 decimales no levanta aquí: queda en
+    ``precio_invalido`` y ``motivo_de_rechazo`` da ``PRECIO INVÁLIDO``, después de los
+    campos faltantes (design.md §6), como en la observación.
     """
     esquema = ESQUEMAS_CAPTURA.get(tipo) if isinstance(tipo, str) else None
     if esquema is None:
         raise RegistroInvalido.tipo_desconocido()
     zona_info = ZoneInfo(zona) if isinstance(zona, str) else zona
-    return esquema.leer(datos, zona_info)  # type: ignore[return-value]
+    return esquema.leer(datos, zona_info, dia_de_carga)  # type: ignore[return-value]
+
+
+def motivo_de_rechazo(captura: Captura) -> str | None:
+    """``PRECIO INVÁLIDO`` si la captura ya leída tiene un precio ≤ 0 o con más de 2
+    decimales (DEC-257: ``askingPrice``, ``local_estimate.price``, ``msrp.value``,
+    ``actual_result.purchasePrice`` y ``salePrice``); si no, ``None``. Sin el valor ni el
+    campo en el motivo (R-20). La ciudad (``CIUDAD NO CONFIGURADA``) la comprueba el cargador
+    con la configuración, después de esto."""
+    raise NotImplementedError

@@ -42,17 +42,20 @@ from oip.catalogos import MotivoRechazo, motivo_campo_faltante
 from oip.dinero import leer_monto
 
 __all__ = [
+    "CONTEXTO_DIA_DE_CARGA",
     "CONTEXTO_ZONA",
     "Booleano",
     "Dec",
     "Entero",
     "Esquema",
     "FechaHoraCaptura",
+    "Monto",
     "RegistroInvalido",
     "a_decimal",
     "ausente",
     "decimal_o_none",
     "faltantes_de_producto",
+    "mas_de_2_decimales",
     "obtener",
     "validar_esquema",
 ]
@@ -127,6 +130,17 @@ def decimal_o_none(valor: object) -> Decimal | None:
 Dec = Annotated[Decimal, BeforeValidator(a_decimal)]
 """``Decimal`` leído sin ``float``."""
 
+
+def mas_de_2_decimales(valor: Decimal) -> bool:
+    """``True`` si ``valor`` no es un número entero de centavos (``29.001``); ``29.000`` y
+    ``29.5`` no lo son (se compara el valor, no los ceros finales). DEC-257."""
+    raise NotImplementedError
+
+
+Monto = Annotated[Decimal, BeforeValidator(a_decimal)]
+"""Monto en USD leído sin ``float`` y con 2 decimales como máximo: si tiene más, el campo
+no es válido y da ``CAMPO OBLIGATORIO FALTANTE (<campo>)`` (DEC-257, DEC-244)."""
+
 Entero = StrictInt
 """Entero estricto: ni ``bool`` ni texto ni ``Decimal`` (DEC-238)."""
 
@@ -135,6 +149,10 @@ Booleano = StrictBool
 
 #: Clave del contexto de validación con la zona de las capturas (``tzinfo`` o ``None``).
 CONTEXTO_ZONA = "zona"
+
+#: Clave del contexto de validación con el día de la carga (``datetime.date`` o ``None``):
+#: ninguna fecha de una captura puede ser posterior a él (DEC-257). Llega como dato.
+CONTEXTO_DIA_DE_CARGA = "dia_de_carga"
 
 
 def _localizar(valor: object, info: ValidationInfo) -> object:

@@ -129,6 +129,20 @@ def _valor(columna: Any, valor: Any, ruta: str) -> Any:
     raise TypeError(f"{ruta}: tipo de columna no admitido")  # pragma: no cover
 
 
+def exigir_tipo(valor: Any, tipo: type, nombre: str) -> None:
+    """``TypeError`` (con ``nombre``, sin el valor) si ``valor`` no es exactamente de ``tipo``:
+    ``int`` sin ``bool``, ``UUID`` o ``str`` (DEC-238 por analogía; decisión 17 del #34).
+    Lo usan las lecturas por id de las dos implementaciones."""
+    raise NotImplementedError
+
+
+def tienda_de_busqueda(tienda: Any) -> str | None:
+    """La tienda de ``buscar_publicacion``: ``None`` (sin tienda) o un texto no vacío.
+    Vacío o solo espacios levanta ``ValueError``; otro tipo, ``TypeError`` (decisión 16 del
+    #34: sin tienda se pasa ``None``)."""
+    raise NotImplementedError
+
+
 def normalizar(tabla: Table, fila: Mapping[str, Any]) -> Fila:
     """La fila completa de ``tabla`` (las columnas que faltan, en ``None``) con cada valor
     como lo guarda y lo devuelve PostgreSQL. Levanta ``TypeError`` o ``ValueError`` (con la

@@ -19,6 +19,10 @@ Reglas comunes (design.md §5):
   de la restricción; un valor que no cabe en su columna sin cambiarlo, ``ValueError`` o
   ``TypeError``, antes de escribir. Ningún mensaje lleva la URL, la contraseña, el SQL ni
   los valores de un registro (RNF-8, DEC-181).
+- **Parámetros de lectura** (decisiones 16 y 17 del #34): las lecturas por id verifican el
+  tipo exacto (``int`` sin ``bool``, ``UUID``, ``str``) y levantan ``TypeError`` sin el
+  valor; ``buscar_publicacion`` recibe ``None`` sin tienda y rechaza con ``ValueError`` una
+  tienda vacía o solo espacios.
 - El repositorio **no decide**: no identifica productos, no canoniza URL, no calcula claves
   ni evalúa (el motor no lo ve, design.md §5).
 """
@@ -91,7 +95,8 @@ class Repositorio(Protocol):
     def buscar_publicacion(
         self, comercio: str, url_canonica: str, tienda: str | None
     ) -> Publicacion | None:
-        """La publicación por su clave única (comercio, URL canónica, tienda)."""
+        """La publicación por su clave única (comercio, URL canónica, tienda). Sin tienda
+        se pasa ``None``; una tienda vacía o solo espacios levanta ``ValueError``."""
         ...
 
     # --- TAB-05 a TAB-08 observaciones ------------------------------------------------
