@@ -75,8 +75,7 @@ from typing import Protocol
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
-from oip.catalogos import Condicion, EstadoDisponibilidad, ModoCompra, Vendedor
-from oip.configuracion import Confianza as ParametrosConfianza
+from oip.catalogos import Condicion, Confianza, EstadoDisponibilidad, ModoCompra, Vendedor
 from oip.configuracion import ReferenciaPrecio as ParametrosReferencia
 from oip.entradas.contrato import Observacion
 from oip.evaluacion.contexto import (
@@ -85,6 +84,7 @@ from oip.evaluacion.contexto import (
     ObservacionRegistrada,
     Referencias,
 )
+from oip.evaluacion.identificacion import confianza_disponibilidad
 
 __all__ = [
     "FUENTE_HISTORIAL_PROPIO",
@@ -425,41 +425,6 @@ class MercadoHoy:
     otras_cadenas: frozenset[str]
 
 
-_MICROSEGUNDO = dt.timedelta(microseconds=1)
-_MICROSEGUNDOS_POR_HORA = Decimal(3_600_000_000)
-
-
-def _horas(edad: dt.timedelta) -> Decimal:
-    """Antigüedad en horas, exacta y sin ``float`` (``timedelta.total_seconds`` es float)."""
-    return Decimal(edad // _MICROSEGUNDO) / _MICROSEGUNDOS_POR_HORA
-
-
-def _confianza_alta_o_media_en_tienda(
-    observacion: Observacion, edad_horas: Decimal, parametros: ParametrosConfianza
-) -> bool:
-    """Confianza Alta o Media de RN-007 §4.1 para un dato de tienda física (S-03), con las
-    ventanas de PAR-13 (``levels.confidence``; las de liquidación si ``isClearance``).
-
-    - Cantidad exacta: Alta hasta ``exact_high_max_hours`` y Media hasta ``max_age_hours``.
-    - "En existencia" sin número: Media hasta ``no_number_medium_max_hours``.
-    - "Pocas unidades" o existencia limitada (``limited_stock``): Media hasta
-      ``few_units_medium_max_hours``.
-    - Agotado, no confirmada o cualquier dato más viejo: Baja o sin existencia.
-
-    El ajuste por el historial de visitas de la tienda (RN-007 §4.1) no se aplica: el
-    contexto no trae visitas (lo completa la tarea de la confianza, T11).
-    """
-    ventanas = parametros.clearance if observacion.is_clearance else parametros.normal
-    estado = observacion.availability.state
-    if estado is EstadoDisponibilidad.LIMITED_STOCK:
-        return edad_horas <= parametros.few_units_medium_max_hours
-    if estado not in (EstadoDisponibilidad.IN_STOCK, EstadoDisponibilidad.IN_STOCK_CONFIRMED):
-        return False
-    if observacion.availability.quantity is not None:
-        return edad_horas <= ventanas.max_age_hours
-    return edad_horas <= ventanas.no_number_medium_max_hours
-
-
 def disponible_para_mercado_hoy(observacion: Observacion, contexto: ContextoEvaluacion) -> bool:
     """Qué es "disponible" para el precio de mercado hoy (S-03; design.md §10.3 y §10.4).
 
@@ -471,9 +436,10 @@ def disponible_para_mercado_hoy(observacion: Observacion, contexto: ContextoEval
     if observacion.amazon_listing is not None:
         return observacion.amazon_listing.buy_box_price is not None
     if observacion.purchase_mode is ModoCompra.TIENDA:
-        edad = _horas(contexto.instante - observacion.extracted_at)
-        confianza = contexto.configuracion.contenido.levels.confidence
-        return _confianza_alta_o_media_en_tienda(observacion, edad, confianza)
+        # La confianza de RN-007 §4.1 es la de CMP-10 (T11), con las ventanas de PAR-13.
+        parametros = contexto.configuracion.contenido.levels.confidence
+        confianza = confianza_disponibilidad(observacion, contexto.instante, parametros)
+        return confianza in (Confianza.ALTA, Confianza.MEDIA)
     return observacion.availability.state is EstadoDisponibilidad.IN_STOCK_CONFIRMED
 
 
