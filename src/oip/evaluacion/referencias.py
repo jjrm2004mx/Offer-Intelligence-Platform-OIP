@@ -103,11 +103,13 @@ __all__ = [
     "historial_suficiente",
     "mediana",
     "mercado_hoy",
+    "minimo_60_dias_amazon",
     "minimo_registrado",
     "msrp",
     "observaciones_diarias",
     "precio_habitual_del_producto",
     "precio_tipico_de_la_tienda",
+    "precio_venta_amazon",
     "serie_de_la_publicacion",
 ]
 
@@ -563,6 +565,25 @@ def msrp(contexto: ContextoEvaluacion) -> Decimal | None:
         return ultima.value
     propio = contexto.oferta.observacion.msrp
     return None if propio is None else propio.value
+
+
+# --- Amazon: mínimo de 60 días y precio de venta esperado (T11) ---------------------------
+
+
+def minimo_60_dias_amazon(contexto: ContextoEvaluacion) -> Decimal | None:
+    """Mínimo de 60 días en Amazon (RN-002 v2; S-01): el precio diario más bajo del botón de
+    compra (``buyBoxPrice``) de las fichas de Amazon en los ``amazon_min_window_days`` días que
+    terminan el día evaluado, **incluido** (una ficha de hoy lo puede bajar, B2 b y B9 b). Sin
+    redondear; ``None`` sin observaciones del botón de compra en la ventana."""
+    raise NotImplementedError
+
+
+def precio_venta_amazon(contexto: ContextoEvaluacion) -> Decimal | None:
+    """Precio de venta esperado en Amazon (REQ §3.2 paso 3; design.md §10.3): el botón de
+    compra de la "oferta nueva hoy", la ficha más reciente con antigüedad de
+    ``market_today_max_age_hours`` o menos y ``buyBoxPrice`` no nulo. Sin oferta nueva hoy,
+    ``None``: el precio habitual en Amazon (S-02) y ``SIN OFERTA HOY`` los agrega T16."""
+    raise NotImplementedError
 
 
 def calcular_referencias(
