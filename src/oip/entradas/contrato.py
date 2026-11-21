@@ -19,6 +19,11 @@ son los de la arquitectura §8. Este módulo agrega solo las reglas de la parte 
 - ``price.current`` > 0 y con 2 decimales como máximo: si no, la observación queda
   marcada (``precio_invalido``) para que la validación (CMP-07, T07) dé ``PRECIO INVÁLIDO``
   en su lugar del orden de design.md §6.
+- Los demás montos (``price.was``, ``shipping.toMeCost``, ``msrp.value``,
+  ``amazonListing.buyBoxPrice``) con más de 2 decimales no son válidos: ``CAMPO OBLIGATORIO
+  FALTANTE (<campo>)`` al leer (DEC-257, DEC-244). El repositorio queda como última barrera.
+- En la observación de un **comercio**, ``pickupLocation`` se descarta al leer: ni se valida
+  ni se guarda (design.md §6; decisión 37 del #34).
 
 ``recordType`` no es parte del contrato: lo quita el cargador (DEC-227 a); si llega, se
 descarta como cualquier campo desconocido. Este módulo no valida contra la configuración
@@ -46,9 +51,11 @@ from oip.entradas._comun import (
     Dec,
     Entero,
     Esquema,
+    Monto,
     RegistroInvalido,
     ausente,
     decimal_o_none,
+    mas_de_2_decimales,
     validar_esquema,
 )
 
@@ -145,7 +152,7 @@ class Precio(Esquema):
     para ``PRECIO INVÁLIDO`` (no es un campo faltante)."""
 
     current: Annotated[Decimal | None, BeforeValidator(decimal_o_none)] = None
-    was: Dec | None = None
+    was: Monto | None = None
     currency: str | None = None
 
 
@@ -162,7 +169,7 @@ class Disponibilidad(Esquema):
 class Envio(Esquema):
     """``shipping``."""
 
-    to_me_cost: Dec | None = None
+    to_me_cost: Monto | None = None
     days: Entero | None = None
     mode: str | None = None
 
@@ -170,7 +177,7 @@ class Envio(Esquema):
 class MsrpObservado(Esquema):
     """``msrp`` de la observación (solo se muestra, DEC-218)."""
 
-    value: Dec | None = None
+    value: Monto | None = None
     source: str | None = None
     date: dt.date | None = None
 
@@ -179,7 +186,7 @@ class FichaAmazon(Esquema):
     """``amazonListing``: solo en la ficha de Amazon. ``buyBoxPrice`` ``null`` = sin oferta
     hoy (S-02); las referencias usan este precio y no ``price.current`` (DEC-234 punto 3)."""
 
-    buy_box_price: Dec | None = None
+    buy_box_price: Monto | None = None
     sellers_new: Entero | None = None
     rank_main: Entero | None = None
     rank_sub: Entero | None = None
@@ -245,10 +252,7 @@ class Observacion(Esquema):
         """``price.current`` no es un número, es ≤ 0 o tiene más de 2 decimales: la
         validación lo rechaza con ``PRECIO INVÁLIDO`` (REQ §3.2 paso 1; design.md §6)."""
         actual = self.price.current
-        if actual is None or actual <= 0:
-            return True
-        centavos = actual * 100
-        return centavos != centavos.to_integral_value()
+        return actual is None or actual <= 0 or mas_de_2_decimales(actual)
 
 
 def _version(datos: Mapping[str, Any]) -> str:
@@ -294,7 +298,11 @@ def leer_observacion(datos: Mapping[str, Any], *, no_validos: Iterable[str] = ()
             if isinstance(estado, str) and estado.strip() == EstadoDisponibilidad.LISTED:
                 faltan.append("availability.state")
 
-    if es_publicacion_de_particular(registro):
+    if not es_publicacion_de_particular(registro):
+        # Decisión 37 del #34: pickupLocation solo existe en la publicación de un particular
+        # (arquitectura §8); en la de un comercio se descarta al leer, sin validarlo.
+        registro.pop("pickupLocation", None)
+    else:
         # DEC-239: retailerCode, seller y purchaseMode valen particular los tres.
         incoherente = _incoherente_de_particular(registro)
         if incoherente is not None:

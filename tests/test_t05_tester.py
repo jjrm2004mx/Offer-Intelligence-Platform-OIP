@@ -472,9 +472,19 @@ def test_montos_numeric_12_2(tabla, columna):
     assert _numeric(tabla, columna) == (12, 2)
 
 
-@pytest.mark.parametrize(("tabla", "columna"), sorted(CONVERSIONES))
+#: ``0004_price_usd_sin_escala`` deja ``price_usd`` en ``numeric`` sin escala (DEC-258, T08a):
+#: en ``head`` ya no es (14,4); en ``0001_esquema`` sí (lo comprueba la prueba de integración).
+CAMBIADAS_0004 = {("local_comparable", "price_usd")}
+
+
+@pytest.mark.parametrize(("tabla", "columna"), sorted(CONVERSIONES - CAMBIADAS_0004))
 def test_conversiones_y_medianas_numeric_14_4(tabla, columna):
     assert _numeric(tabla, columna) == (14, 4)
+
+
+@pytest.mark.parametrize(("tabla", "columna"), sorted(CAMBIADAS_0004))
+def test_price_usd_sin_escala_en_head(tabla, columna):
+    assert _numeric(tabla, columna) == (None, None)
 
 
 @pytest.mark.parametrize(("tabla", "columna"), sorted(SIN_ESCALA))

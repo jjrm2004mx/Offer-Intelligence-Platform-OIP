@@ -146,7 +146,7 @@ Tareas de la parte B del REQ-2026-0001 v2.9 (`req-2026-0001-b-evaluacion`). **1 
 - **Depende de:** T06, T07. **Estimación:** 6 h.
 - **DoD:** común; evidencia de las pruebas de integración de `0004` (Jesús en Rocky o el job de CI de DEC-251).
 
-- [ ] 8.1 Implementar los decimales y rangos de entrada y el descarte de `pickupLocation` en un comercio, y verificar sus pruebas unitarias
+- [x] 8.1 Implementar los decimales y rangos de entrada y el descarte de `pickupLocation` en un comercio, y verificar sus pruebas unitarias
 - [ ] 8.2 Escribir `0004`, endurecer el repositorio, la conexión y los `CHECK` de memoria, y verificar la batería de contrato en memoria y en integración
 
 ## 8b. T08b — Cargador de archivos JSON Lines y CSV con reporte (B34 b y c)

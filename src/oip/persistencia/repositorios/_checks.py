@@ -12,6 +12,17 @@ Entiende el subconjunto de SQL que usan los ``CHECK`` del esquema: ``AND``, ``OR
 subíndices (``reasons[1]``, desde 1) y las funciones ``btrim``, ``cardinality`` y
 ``jsonb_typeof``. Un ``CHECK`` con otra forma levanta ``NotImplementedError`` al importar el
 módulo: así una regla nueva del esquema no queda sin aplicar en memoria sin que nadie lo note.
+En particular (decisión 19 del #34), al importar:
+
+- el único cast admitido es ``::text[]``; cualquier otro (``::integer``, ``::text``) cambia
+  la semántica y no se ignora;
+- cada identificador debe ser una columna de la tabla del ``CHECK``; ``TRUE`` y ``FALSE``
+  no se admiten (no son columnas y no se tratan como literales);
+- el patrón de ``~`` debe ser un literal y estar en el subconjunto común de ``re`` y de las
+  ARE de PostgreSQL: se rechazan las clases POSIX y sus parientes (``[:``, ``[.``, ``[=``),
+  las opciones incrustadas (``(?``), el director ``***`` y los escapes alfabéticos
+  (``\\y``, ``\\m``, ``\\b``, ``\\d``…), que significan otra cosa en cada motor. Los
+  patrones se validan y se traducen al importar, no en la primera fila.
 """
 
 from __future__ import annotations
@@ -76,19 +87,31 @@ def _o(a: Any, b: Any) -> Any:
     return None if a is None or b is None else False
 
 
+#: Formas de una ARE que ``re`` no entiende igual (decisión 19 del #34).
+_FORMAS_SIN_EQUIVALENTE = ("[:", "[.", "[=", "(?", "***")
+
+
 def _patron_are(patron: str) -> str:
     """Una expresión regular de PostgreSQL (ARE, modo por defecto) como patrón de ``re``.
+
+    Levanta ``NotImplementedError`` ante una forma fuera del subconjunto común de los dos
+    motores: ``[:``, ``[.``, ``[=``, ``(?``, ``***`` o un escape alfabético (``\\y``).
 
     En una ARE ``$`` solo coincide al final del texto; en ``re`` también antes de un salto de
     línea final (``'a\\n'`` cumpliría ``'^a$'``). Por eso cada ``$`` sin escapar y fuera de
     ``[...]`` pasa a ``\\Z``. La otra diferencia del modo por defecto, que ``.`` coincide con
     un salto de línea, la cubre ``re.DOTALL`` en ``_comparar``."""
+    for forma in _FORMAS_SIN_EQUIVALENTE:
+        if forma in patron:
+            raise NotImplementedError(f"expresión regular no admitida en memoria: {forma!r}")
     salida: list[str] = []
     i = 0
     en_clase = False
     while i < len(patron):
         c = patron[i]
         if c == "\\" and i + 1 < len(patron):
+            if patron[i + 1].isalpha():
+                raise NotImplementedError(f"escape no admitido en memoria: {patron[i : i + 2]!r}")
             salida.append(patron[i : i + 2])
             i += 2
             continue
@@ -161,10 +184,16 @@ _FUNCIONES: Mapping[str, Callable[[Any], Any]] = {
 
 
 class _Analizador:
-    def __init__(self, texto: str) -> None:
+    def __init__(self, texto: str, columnas: frozenset[str] | None = None) -> None:
+        """``columnas``: las de la tabla del ``CHECK``; con ``None`` no se comprueban los
+        identificadores (solo para analizar un texto suelto; ``_compilar`` siempre las da)."""
         self.texto = texto
+        self.columnas = columnas
         self.t = _tokens(texto)
         self.i = 0
+
+    def _no_admitido(self, detalle: str) -> NotImplementedError:
+        return NotImplementedError(f"CHECK no admitido en memoria ({detalle}): {self.texto!r}")
 
     def _ver(self) -> tuple[str, Any] | None:
         return self.t[self.i] if self.i < len(self.t) else None
@@ -211,7 +240,16 @@ class _Analizador:
 
     def _comparacion(self) -> Expr:
         izq = self._valor()
-        if self._es("op") and self._ver()[1] in ("=", "<>", "<", "<=", ">", ">=", "~"):  # type: ignore[index]
+        if self._es("op", "~"):
+            self.i += 1
+            if not (self._es("lit") and isinstance(self._ver()[1], str)):  # type: ignore[index]
+                raise self._no_admitido("el patrón de ~ debe ser un texto literal")
+            # Se valida y se traduce al importar (decisión 19 del #34), no en la primera fila.
+            patron = _patron_are(self._tomar("lit"))
+            return lambda f: (
+                None if (v := izq(f)) is None else re.search(patron, v, re.DOTALL) is not None
+            )
+        if self._es("op") and self._ver()[1] in ("=", "<>", "<", "<=", ">", ">="):  # type: ignore[index]
             op = self._tomar("op")
             der = self._valor()
             return lambda f: _comparar(op, izq(f), der(f))
@@ -265,12 +303,13 @@ class _Analizador:
                         lambda f: None if (v := b(f)) is None or not 1 <= k <= len(v) else v[k - 1]
                     )
                 )(base, n)
-            else:  # ::text[]: los valores de memoria ya son texto
+            else:  # ::text[]: los valores de memoria ya son listas de texto
                 self.i += 1
-                self._tomar("id")
-                if self._es("op", "["):
-                    self.i += 1
-                    self._tomar("op", "]")
+                tipo = self._tomar("id")
+                if str(tipo).lower() != "text" or not self._es("op", "["):
+                    raise self._no_admitido("solo se admite el cast ::text[]")
+                self.i += 1
+                self._tomar("op", "]")
         return expr
 
     def _primario(self) -> Expr:
@@ -303,12 +342,17 @@ class _Analizador:
             self._tomar("op", ")")
             funcion = _FUNCIONES[nombre]
             return lambda f: funcion(argumento(f))
+        if nombre.upper() in ("TRUE", "FALSE"):
+            raise self._no_admitido("TRUE y FALSE no se admiten")
+        if self.columnas is not None and nombre not in self.columnas:
+            raise self._no_admitido(f"{nombre} no es una columna de la tabla")
         return lambda f: f[nombre]
 
 
 def _compilar(tabla: Table) -> tuple[tuple[str, Expr], ...]:
+    columnas = frozenset(tabla.c.keys())
     return tuple(
-        (str(r.name), _Analizador(str(r.sqltext)).todo())
+        (str(r.name), _Analizador(str(r.sqltext), columnas).todo())
         for r in sorted(tabla.constraints, key=lambda r: str(r.name))
         if isinstance(r, CheckConstraint)
     )

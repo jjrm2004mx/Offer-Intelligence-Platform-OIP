@@ -72,7 +72,9 @@ def url_de_conexion(
     archivo del secreto, si existe. ``postgresql://`` usa psycopg 3.
 
     Levanta ``ErrorDeConexion`` sin la URL si falta la variable, si no es una URL de
-    PostgreSQL, si trae la contraseña (va en el secreto, RNF-8) o si el secreto está vacío.
+    PostgreSQL, si trae la contraseña (va en el secreto, RNF-8), también como ``password`` o
+    ``passfile`` en la query sin distinguir mayúsculas (decisión 18 del #34), o si el secreto
+    está vacío.
     """
     valores = os.environ if entorno is None else entorno
     texto = (valores.get(VARIABLE_URL) or "").strip()
@@ -90,6 +92,11 @@ def url_de_conexion(
     if url.password is not None:
         raise ErrorDeConexion(
             f"{VARIABLE_URL} no debe llevar la contraseña: va en el podman secret (RNF-8)"
+        )
+    if any(clave.strip().lower() in CLAVES_PROHIBIDAS_EN_QUERY for clave in url.query):
+        raise ErrorDeConexion(
+            f"{VARIABLE_URL} no debe llevar la contraseña ni su archivo en la query:"
+            " va en el podman secret (RNF-8)"
         )
     url = url.set(drivername=_DRIVER)
     if archivo_secreto is not None and archivo_secreto.is_file():

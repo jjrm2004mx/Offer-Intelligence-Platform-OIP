@@ -3,18 +3,19 @@
 Esquema de PostgreSQL + TimescaleDB: TAB-01 a TAB-12. Las migraciones versionadas viven en
 ``migrations/`` (Alembic, en la raíz del repo): ``0001_esquema`` crea estas tablas como
 tablas normales, ``0002_hypertables`` convierte TAB-05 a TAB-07 en hypertables
-(ADR-013, ADR-028, DEC-179) y ``0003_registro_de_rechazo`` agrega a TAB-10 el renglón del
-rechazo de validación (DEC-250). ``metadata`` es el modelo de ``head``; ``metadata_0001``,
-el de ``0001_esquema``. Este módulo es la **fuente** de los metadatos; las
-migraciones guardan su copia congelada (nunca se edita una migración aplicada) y una
-prueba comprueba que coinciden.
+(ADR-013, ADR-028, DEC-179), ``0003_registro_de_rechazo`` agrega a TAB-10 el renglón del
+rechazo de validación (DEC-250) y ``0004_price_usd_sin_escala`` deja
+``local_comparable.price_usd`` en ``numeric`` sin escala (DEC-258). ``metadata`` es el
+modelo de ``head``; ``metadata_0001``, el de ``0001_esquema``. Este módulo es la **fuente**
+de los metadatos; las migraciones guardan su copia congelada (nunca se edita una migración
+aplicada) y una prueba comprueba que coinciden.
 
 Reglas (design.md §4, §5, §11, §16):
 
 - Nombres de tablas y columnas en inglés (arquitectura §7.1); tiempos ``timestamptz``.
-- **Montos** ``numeric(12,2)``; precios convertidos de MXN y medianas, sin redondear,
-  ``numeric(14,4)``; porcentajes y descuentos, ``numeric`` sin escala (sin redondear,
-  DEC-207). Ningún monto es ``float``: las columnas devuelven ``Decimal``.
+- **Montos** ``numeric(12,2)``; medianas, sin redondear, ``numeric(14,4)``; precios
+  convertidos de MXN (``price_usd``, DEC-258), porcentajes y descuentos, ``numeric`` sin
+  escala (sin redondear, DEC-207). Ningún monto es ``float``: las columnas devuelven ``Decimal``.
 - **Códigos cerrados** como ``text`` con ``CHECK`` contra el catálogo de ``oip.catalogos``
   y de ``oip.entradas`` (CMP-03; design.md §9): los valores se derivan de los enums, no se
   copian a mano.
@@ -133,8 +134,10 @@ metadata_vistas = MetaData()
 
 #: Montos en USD (design.md §4): los de la lista cerrada ya redondeados y los precios leídos.
 MONTO = Numeric(12, 2)
-#: Precios convertidos de MXN y medianas, sin redondear (design.md §4; S-23, DEC-226 b).
+#: Medianas, sin redondear (design.md §4; DEC-226 b). Hasta ``0004`` también ``price_usd``.
 CONVERSION = Numeric(14, 4)
+#: Precios convertidos de MXN, sin redondear ni escala (design.md §4; S-23, DEC-258).
+CONVERTIDO_MXN = Numeric()
 #: Porcentajes, descuentos y cantidades no monetarias sin redondear (DEC-207).
 SIN_REDONDEAR = Numeric()
 TIEMPO = DateTime(timezone=True)
@@ -469,7 +472,7 @@ local_comparable = _tabla(
     Column("asking_price", MONTO, nullable=False),
     Column("currency", Text, nullable=False),
     Column("exchange_rate", SIN_REDONDEAR),
-    Column("price_usd", CONVERSION, nullable=False),
+    Column("price_usd", CONVERTIDO_MXN, nullable=False),
     Column("city", Text, nullable=False),
     Column("date", Date, nullable=False),
     Column("sold", Boolean, nullable=False),
@@ -738,13 +741,17 @@ open_opportunity = Table(
 
 
 def _modelo_0001() -> MetaData:
-    """Metadatos de TAB-01 a TAB-11 como los deja ``0001_esquema`` (sin lo de 0003). Las
-    pruebas comparan con ellos la copia congelada de esa migración (DEC-179)."""
+    """Metadatos de TAB-01 a TAB-11 como los deja ``0001_esquema`` (sin lo de 0003 ni el
+    tipo de 0004). Las pruebas comparan con ellos la copia congelada de esa migración
+    (DEC-179)."""
     md = MetaData(naming_convention=CONVENCION_NOMBRES)
     for tabla in metadata.sorted_tables:
         if tabla.name != "evaluation":
             tabla.to_metadata(md)
     _evaluation(md, con_0003=False)
+    for nombre, columnas in CAMBIOS_0004.items():
+        for columna in columnas:
+            md.tables[nombre].c[columna].type = CONVERSION
     return md
 
 

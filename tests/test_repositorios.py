@@ -437,7 +437,11 @@ def test_una_observacion_es_una_transaccion(repo):
 
 
 def test_un_monto_con_mas_decimales_que_su_columna_no_se_redondea_ni_se_guarda(repo):
-    nueva = _nueva(1, _observacion(shipping={"toMeCost": "1.005"}), primera=True)
+    # Desde DEC-257 el esquema de entrada ya rechaza 1.005 al leer; el repositorio queda como
+    # última barrera, así que la observación se arma sin pasar por la lectura.
+    observacion = _observacion()
+    envio = observacion.shipping.model_copy(update={"to_me_cost": Decimal("1.005")})
+    nueva = _nueva(1, observacion.model_copy(update={"shipping": envio}), primera=True)
     with pytest.raises(ValueError, match="no redondea") as error:
         repo.guardar_observacion(nueva)
     assert "1.005" not in str(error.value)
@@ -1075,3 +1079,104 @@ def test_una_huella_con_salto_de_linea_final_se_rechaza_al_construir():
 def test_un_rechazo_con_salto_de_linea_final_no_se_construye(motivo, campo):
     with pytest.raises(ValueError):
         RechazoCarga(UUID(int=1), 2, motivo, None, campo)
+
+
+# --- T08a: parámetros de lectura y price_usd sin escala (decisiones 3, 16 y 17 del #34) ----
+
+
+@pytest.mark.parametrize("tienda", ["", " ", "  \t "])
+def test_buscar_publicacion_con_tienda_vacia_levanta_value_error(repo, tienda):
+    _con_config(repo)
+    repo.guardar_observacion(_nueva(1, primera=True))
+    with pytest.raises(ValueError, match="sin tienda se pasa None"):
+        repo.buscar_publicacion(TIENDA_PRUEBA, "https://tienda.example.com/p/123", tienda)
+
+
+@pytest.mark.parametrize("tienda", [1, b"tp-01", ["tp-01"]])
+def test_buscar_publicacion_con_tienda_que_no_es_texto_levanta_type_error(repo, tienda):
+    with pytest.raises(TypeError):
+        repo.buscar_publicacion(TIENDA_PRUEBA, "https://tienda.example.com/p/123", tienda)
+
+
+def test_sin_tienda_se_pasa_none_y_no_encuentra_la_de_tienda(repo):
+    _con_config(repo)
+    repo.guardar_observacion(_nueva(1, primera=True))
+    assert repo.buscar_publicacion(TIENDA_PRUEBA, "https://tienda.example.com/p/123", None) is None
+    assert repo.buscar_publicacion(TIENDA_PRUEBA, "https://tienda.example.com/p/123", "tp-01")
+
+
+_UUID_TEXTO = str(UUID(int=1))
+
+#: Lecturas por id con valores del tipo equivocado (DEC-238 por analogía, decisión 17).
+_LECTURAS_CON_TIPO_EQUIVOCADO = [
+    ("version_configuracion", True),
+    ("version_configuracion", False),
+    ("version_configuracion", "1"),
+    ("version_configuracion", Decimal("1")),
+    ("version_configuracion", 1.0),
+    ("version_configuracion", None),
+    ("leer_producto", _UUID_TEXTO),
+    ("leer_producto", 1),
+    ("leer_producto", None),
+    ("leer_observacion", _UUID_TEXTO),
+    ("leer_observacion", 1),
+    ("leer_carga", _UUID_TEXTO),
+    ("leer_carga", UUID(int=1).bytes),
+    ("leer_evaluacion", _UUID_TEXTO),
+    ("leer_evaluacion", True),
+    ("observacion_por_clave", 1),
+    ("observacion_por_clave", b"clave"),
+    ("observacion_por_clave", None),
+    ("observacion_por_clave", UUID(int=1)),
+]
+
+
+@pytest.mark.parametrize(("metodo", "valor"), _LECTURAS_CON_TIPO_EQUIVOCADO)
+def test_una_lectura_por_id_verifica_el_tipo_exacto(repo, metodo, valor):
+    with pytest.raises(TypeError) as error:
+        getattr(repo, metodo)(valor)
+    assert repr(valor) not in str(error.value)
+
+
+@pytest.mark.parametrize("valor", [_UUID_TEXTO, 1, True, None])
+def test_terminar_carga_verifica_el_tipo_del_id(repo, valor):
+    reporte = ReporteCarga(T0, 0, 0, 0, {})
+    with pytest.raises(TypeError):
+        repo.terminar_carga(valor, reporte)
+
+
+def test_con_el_tipo_correcto_una_lectura_sin_datos_devuelve_none(repo):
+    assert repo.version_configuracion(1) is None
+    assert repo.leer_producto(UUID(int=1)) is None
+    assert repo.leer_observacion(UUID(int=1)) is None
+    assert repo.leer_carga(UUID(int=1)) is None
+    assert repo.leer_evaluacion(UUID(int=1)) is None
+    assert repo.observacion_por_clave("no-existe") is None
+
+
+def test_version_configuracion_con_true_no_devuelve_la_1(repo):
+    id_ = _con_config(repo)
+    assert repo.version_configuracion(id_) is not None
+    with pytest.raises(TypeError):
+        repo.version_configuracion(True)
+
+
+@pytest.mark.parametrize(
+    ("precio", "tasa"),
+    [("1500.00", "17.3"), ("999.99", "17.1234"), ("100.00", "3"), ("7.00", "17.30")],
+)
+def test_price_usd_se_guarda_sin_redondear_y_igual_en_memoria_y_en_postgresql(repo, precio, tasa):
+    """DEC-258: ``numeric`` sin escala; la fila guardada lleva el valor exacto del dominio."""
+    _con_carga(repo)
+    repo.guardar_producto(_producto())
+    nueva = _captura_nueva(
+        TipoRegistro.LOCAL_COMPARABLE, 1, askingPrice=precio, currency="MXN", exchangeRate=tasa
+    )
+    esperado = Decimal(precio) / Decimal(tasa)
+    assert nueva.captura.price_usd == esperado
+    assert repo.guardar_captura(nueva)
+    fila = _fila_cruda(repo, tablas.local_comparable, "id", UUID(int=1))
+    assert fila is not None
+    assert type(fila["price_usd"]) is Decimal
+    assert fila["price_usd"] == esperado
+    assert str(fila["price_usd"]) == str(esperado)

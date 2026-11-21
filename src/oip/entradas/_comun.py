@@ -9,6 +9,10 @@
   ``CAMPO OBLIGATORIO FALTANTE (<campo>)`` (design.md §6; DEC-234 punto 2).
 - Los campos desconocidos se descartan sin guardarlos (design.md §6, RNF-7, RNF-11).
 - Los montos se leen como ``Decimal`` sin pasar por ``float`` (DEC-060, design.md §8).
+  ``Monto`` además rechaza más de 2 decimales al leer (DEC-257): el rechazo del repositorio
+  (``numeric(12,2)``, T06) queda como última barrera.
+- ``CONTEXTO_DIA_DE_CARGA``: el día de la carga, que llega como dato (nunca el reloj), para
+  rechazar una fecha de captura posterior (DEC-257).
 - Enteros y booleanos **estrictos** (``Entero``, ``Booleano``; DEC-238): ``true`` no se lee
   como 1, ni ``"false"`` o ``0`` como ``False``. Convertir el texto de un CSV es del cargador
   (T08).
@@ -27,6 +31,7 @@ from decimal import Decimal
 from typing import Annotated, Any
 
 from pydantic import (
+    AfterValidator,
     AwareDatetime,
     BaseModel,
     BeforeValidator,
@@ -133,11 +138,23 @@ Dec = Annotated[Decimal, BeforeValidator(a_decimal)]
 
 def mas_de_2_decimales(valor: Decimal) -> bool:
     """``True`` si ``valor`` no es un número entero de centavos (``29.001``); ``29.000`` y
-    ``29.5`` no lo son (se compara el valor, no los ceros finales). DEC-257."""
-    raise NotImplementedError
+    ``29.5`` no lo son (se compara el valor, no los ceros finales). DEC-257.
+
+    No redondea (solo ``dinero.py`` redondea): compara el valor por 100 con su parte
+    entera."""
+    if not isinstance(valor, Decimal) or not valor.is_finite():
+        raise TypeError("se esperaba un Decimal finito")
+    centavos = valor * 100
+    return centavos != centavos.to_integral_value()
 
 
-Monto = Annotated[Decimal, BeforeValidator(a_decimal)]
+def _a_lo_mas_2_decimales(valor: Decimal) -> Decimal:
+    if mas_de_2_decimales(valor):
+        raise ValueError("el monto tiene más de 2 decimales")
+    return valor
+
+
+Monto = Annotated[Decimal, BeforeValidator(a_decimal), AfterValidator(_a_lo_mas_2_decimales)]
 """Monto en USD leído sin ``float`` y con 2 decimales como máximo: si tiene más, el campo
 no es válido y da ``CAMPO OBLIGATORIO FALTANTE (<campo>)`` (DEC-257, DEC-244)."""
 

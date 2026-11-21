@@ -20,6 +20,7 @@ from sqlalchemy import (
     DateTime,
     Integer,
     Numeric,
+    SmallInteger,
     Table,
     Text,
 )
@@ -30,13 +31,15 @@ from oip.evaluacion._canonico import a_json, desde_json
 
 Fila = dict[str, Any]
 
-#: Columnas **derivadas** que el dominio no lee de vuelta: ``price_usd`` de un comparable se
-#: recalcula de ``asking_price`` y ``exchange_rate`` (``ComparableLocal.price_usd``, sin
-#: redondear, S-23). Su escala (numeric(14,4), design.md §4) la aplica la base; ver el
-#: pendiente de T06 en el issue #34.
-_DERIVADAS = frozenset({("local_comparable", "price_usd")})
-
 # --- Normalización (la misma en memoria y en PostgreSQL) ----------------------------------
+
+#: Bits de cada tipo entero de PostgreSQL, del más específico al general (decisión 19 del
+#: #34: ``smallint`` con 16 bits; antes caía en los 32 de ``integer``).
+_BITS: tuple[tuple[type, int, str], ...] = (
+    (SmallInteger, 16, "smallint"),
+    (BigInteger, 64, "bigint"),
+    (Integer, 32, "integer"),
+)
 
 
 def _numeric(valor: Decimal, tipo: Numeric, ruta: str) -> Decimal:
@@ -82,15 +85,13 @@ def _valor(columna: Any, valor: Any, ruta: str) -> Any:
             valor = Decimal(valor)
         if not isinstance(valor, Decimal):
             raise TypeError(f"{ruta}: se esperaba Decimal")
-        if (columna.table.name, columna.name) in _DERIVADAS:
-            return valor
         return _numeric(valor, tipo, ruta)
-    if isinstance(tipo, Integer | BigInteger):
+    if isinstance(tipo, Integer):
         if type(valor) is not int:
             raise TypeError(f"{ruta}: se esperaba un entero")
-        bits = 64 if isinstance(tipo, BigInteger) else 32
+        bits, nombre = next((b, n) for clase, b, n in _BITS if isinstance(tipo, clase))
         if not -(2 ** (bits - 1)) <= valor < 2 ** (bits - 1):
-            raise ValueError(f"{ruta}: no cabe en {'bigint' if bits == 64 else 'integer'}")
+            raise ValueError(f"{ruta}: no cabe en {nombre}")
         return valor
     if isinstance(tipo, Boolean):
         if type(valor) is not bool:
@@ -133,14 +134,21 @@ def exigir_tipo(valor: Any, tipo: type, nombre: str) -> None:
     """``TypeError`` (con ``nombre``, sin el valor) si ``valor`` no es exactamente de ``tipo``:
     ``int`` sin ``bool``, ``UUID`` o ``str`` (DEC-238 por analogía; decisión 17 del #34).
     Lo usan las lecturas por id de las dos implementaciones."""
-    raise NotImplementedError
+    if type(valor) is not tipo:
+        raise TypeError(f"{nombre}: se esperaba {tipo.__name__}")
 
 
 def tienda_de_busqueda(tienda: Any) -> str | None:
     """La tienda de ``buscar_publicacion``: ``None`` (sin tienda) o un texto no vacío.
     Vacío o solo espacios levanta ``ValueError``; otro tipo, ``TypeError`` (decisión 16 del
     #34: sin tienda se pasa ``None``)."""
-    raise NotImplementedError
+    if tienda is None:
+        return None
+    if type(tienda) is not str:
+        raise TypeError("tienda: se esperaba texto o None")
+    if not tienda.strip():
+        raise ValueError("tienda: texto vacío; sin tienda se pasa None (vacío = ausente)")
+    return tienda
 
 
 def normalizar(tabla: Table, fila: Mapping[str, Any]) -> Fila:
