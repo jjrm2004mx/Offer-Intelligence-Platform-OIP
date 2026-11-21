@@ -1367,3 +1367,114 @@ def test_un_booleano_no_entra_en_un_entero():
 
     with pytest.raises(TypeError):
         _columnas._valor(tablas.load_rejection.c.line_number, True, "ruta")
+
+
+# === Tercera pasada: '~' con la semántica de una ARE de PostgreSQL (_patron_are) ==========
+#
+# Fuente: manual de PostgreSQL, §9.7.3 (ARE, modo por defecto, sin modo sensible a saltos de
+# línea): '^' y '$' solo en el inicio y el final del texto, '$' fuera de '[...]' siempre es
+# ancla, '.' y '[^...]' coinciden con '\n', '\' escapa también dentro de '[...]' y un ']'
+# justo tras '[' o '[^' es un carácter de la clase.
+
+
+@pytest.mark.parametrize(
+    ("texto", "patron", "esperado"),
+    [
+        ("a", "^a$", True),
+        ("a\n", "^a$", False),
+        ("", "^$", True),
+        ("\n", "^$", False),
+        # '$' a mitad del patrón: ancla, nunca coincide con algo después.
+        ("ab", "a$b", False),
+        ("a\nb", "a$b", False),
+        # '\$' es un '$' literal; '\\$' es una barra literal y luego el ancla.
+        ("a$", r"^a\$$", True),
+        ("a$\n", r"^a\$$", False),
+        ("a\\", r"^a\\$", True),
+        ("a\\\n", r"^a\\$", False),
+        ("a\\$", r"^a\\\$$", True),
+        # '$' dentro de una clase es literal.
+        ("$", "^[$]$", True),
+        ("\n", "^[$]$", False),
+        ("a", "^[a$]$", True),
+        # ']' justo tras '[' o '[^' es de la clase.
+        ("]", "^[]$]$", True),
+        ("$", "^[]$]$", True),
+        ("\n", "^[]$]$", False),
+        ("x", "^[^]$]$", True),
+        ("$", "^[^]$]$", False),
+        ("]", "^[^]$]$", False),
+        # '\]' dentro de una clase (en una ARE '\' escapa dentro de '[...]').
+        ("]", r"^[\]]$", True),
+        ("]$", r"^[\]]\$$", True),
+        ("]\n", r"^[\]]$", False),
+        # '.' y '[^...]' coinciden con '\n' en el modo por defecto.
+        ("a\nb", "^a.b$", True),
+        ("\n", "^[^a]$", True),
+        # Los patrones reales del esquema.
+        ("a" * 64, "^[0-9a-f]{64}$", True),
+        ("a" * 64 + "\n", "^[0-9a-f]{64}$", False),
+        ("x\n", "^[A-Za-z][A-Za-z0-9_.]*$", False),
+        (
+            "CAMPO OBLIGATORIO FALTANTE (a.b)",
+            r"^CAMPO OBLIGATORIO FALTANTE \([A-Za-z][A-Za-z0-9_.]*\)$",
+            True,
+        ),
+        (
+            "CAMPO OBLIGATORIO FALTANTE (a.b)\n",
+            r"^CAMPO OBLIGATORIO FALTANTE \([A-Za-z][A-Za-z0-9_.]*\)$",
+            False,
+        ),
+    ],
+)
+def test_la_expresion_regular_sigue_la_semantica_are(texto, patron, esperado):
+    from oip.persistencia.repositorios import _checks
+
+    assert _checks._comparar("~", texto, patron) is esperado
+
+
+def test_las_expresiones_regulares_del_esquema_estan_en_el_subconjunto_comun_con_are():
+    """Cada literal de '~' del esquema usa solo lo que significa lo mismo en ``re`` (tras
+    ``_patron_are``) y en una ARE: sin clases POSIX ('[:', '[.', '[='), sin opciones
+    incrustadas ('(?', '***') y con escapes solo de caracteres literales. Si una regla nueva
+    sale de este subconjunto, la equivalencia memoria/PostgreSQL debe revisarse."""
+    import re as re_
+
+    from sqlalchemy import CheckConstraint
+
+    literales = []
+    for tabla in tablas.metadata.tables.values():
+        for restriccion in tabla.constraints:
+            if isinstance(restriccion, CheckConstraint):
+                literales += re_.findall(r"~ '((?:[^']|'')*)'", str(restriccion.sqltext))
+    assert literales
+    for patron in literales:
+        assert not re_.search(r"\[[:.=]|\(\?|\*\*\*", patron), patron
+        assert all(e in "()[].$\\^*+?{}|" for e in re_.findall(r"\\(.)", patron)), patron
+
+
+@pytest.mark.parametrize(
+    ("tabla", "nombre", "valores"),
+    [
+        ("config_version", "sha256_sha256", {"sha256": _h(1) + "\n"}),
+        ("load_run", "file_sha256_sha256", {"file_sha256": _h(1) + "\n"}),
+        ("local_comparable", "idempotency_key_sha256", {"idempotency_key": _h(1) + "\n"}),
+        ("load_rejection", "field_nombre", {"field": "a\nb"}),
+        ("load_rejection", "field_nombre", {"field": "\nprecio"}),
+    ],
+)
+def test_un_salto_de_linea_en_cualquier_posicion_viola_el_check(tabla, nombre, valores):
+    assert _check(tabla, nombre, **valores) is _FALSO
+
+
+@pytest.mark.parametrize(
+    "param", ["memoria", pytest.param("postgres", marks=pytest.mark.integracion)]
+)
+def test_una_carga_con_huella_y_salto_de_linea_no_se_guarda(param):
+    for repositorio in _repo_de(param):
+        id_config = _config(repositorio)
+        with pytest.raises((ValueError, ErrorDeIntegridad)):
+            repositorio.iniciar_carga(
+                Carga(CARGA, "tester.jsonl", _h(7)[:-1] + "\n", "jsonl", T0, id_config)
+            )
+        assert _filas_de(repositorio, tablas.load_run) == []
