@@ -687,7 +687,8 @@ def test_sin_float_y_sin_redondeo_en_referencias_y_descuento():
         assert "round(" not in codigo, nombre
         assert "float" not in codigo, nombre
     registro = _evaluar_b30(_precios_b30(), -14)
-    assert registro.costo_compra is None
+    # T11 calcula el costo de compra (RN-001): $99 + 7.75% = 106.6725 → 106.67, una vez.
+    assert registro.costo_compra == Decimal("106.67")
     assert registro.descuento_real == Decimal(30) / Decimal(129) * 100
     assert registro.descuento_real != Decimal("23.3")
     datos = registro.a_json()

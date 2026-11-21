@@ -4,9 +4,10 @@ Este módulo calcula el **precio habitual** con su **episodio de liquidación** 
 paso 3, DEC-201, DEC-224 b, DEC-226; design.md §10 puntos 1 y 2) y, desde T10, el **precio
 de mercado hoy** básico, el **MSRP** (solo se muestra), el **precio típico de la tienda**
 (RN-003) y los datos que usa la calidad del precio (RN-012): las cadenas del mercado hoy, el
-mínimo registrado y los días de historial. El mínimo de 60 días y la venta esperada en
-Amazon, la regla de comercio = cadena en el mercado hoy (con su excepción en liquidación) y
-el valor de referencia de usados los agregan sus tareas (T11, T16, T20).
+mínimo registrado y los días de historial. Desde T11, el **mínimo de 60 días en Amazon** y el
+**precio de venta esperado en Amazon** con la oferta nueva hoy. El precio habitual en Amazon
+sin oferta hoy (S-02), la regla de comercio = cadena en el mercado hoy (con su excepción en
+liquidación) y el valor de referencia de usados los agregan sus tareas (T16, T20).
 
 Implementa la interfaz ``FuentePrecios`` (``PriceReferenceSource`` de la arquitectura §2.2,
 ADR-007) con la fuente ``historial_propio``: cada referencia guarda la fuente que la dio.
@@ -575,7 +576,21 @@ def minimo_60_dias_amazon(contexto: ContextoEvaluacion) -> Decimal | None:
     compra (``buyBoxPrice``) de las fichas de Amazon en los ``amazon_min_window_days`` días que
     terminan el día evaluado, **incluido** (una ficha de hoy lo puede bajar, B2 b y B9 b). Sin
     redondear; ``None`` sin observaciones del botón de compra en la ventana."""
-    raise NotImplementedError
+    hoy = dia_evaluado(contexto)
+    desde = hoy - dt.timedelta(days=_parametros(contexto).amazon_min_window_days - 1)
+    diarias = _ultimas_del_dia(_fichas_amazon(contexto), _zona(contexto))
+    return min((d.precio for d in diarias if desde <= d.dia <= hoy), default=None)
+
+
+def _fichas_amazon(contexto: ContextoEvaluacion) -> tuple[ObservacionRegistrada, ...]:
+    """Observaciones de la ficha de Amazon del contexto (``amazonListing`` no nulo) hasta el
+    instante. ``_ultimas_del_dia`` quita las repetidas."""
+    return tuple(
+        r
+        for r in _guardadas(contexto)
+        if r.observacion.amazon_listing is not None
+        and r.observacion.extracted_at <= contexto.instante
+    )
 
 
 def precio_venta_amazon(contexto: ContextoEvaluacion) -> Decimal | None:
@@ -583,14 +598,25 @@ def precio_venta_amazon(contexto: ContextoEvaluacion) -> Decimal | None:
     compra de la "oferta nueva hoy", la ficha más reciente con antigüedad de
     ``market_today_max_age_hours`` o menos y ``buyBoxPrice`` no nulo. Sin oferta nueva hoy,
     ``None``: el precio habitual en Amazon (S-02) y ``SIN OFERTA HOY`` los agrega T16."""
-    raise NotImplementedError
+    limite = dt.timedelta(hours=_parametros(contexto).market_today_max_age_hours)
+    con_oferta = [
+        r
+        for r in _fichas_amazon(contexto)
+        if contexto.instante - r.observacion.extracted_at <= limite
+        and _precio_de_referencia(r.observacion) is not None
+    ]
+    if not con_oferta:
+        return None
+    mas_reciente = max(con_oferta, key=lambda r: (r.observacion.extracted_at, str(r.id)))
+    return _precio_de_referencia(mas_reciente.observacion)
 
 
 def calcular_referencias(
     contexto: ContextoEvaluacion, fuente: FuentePrecios | None = None
 ) -> Referencias:
     """Referencias de precio de la oferta (TAB-10 ``references``): el precio habitual con su
-    fuente y, si lo hay, su episodio; el precio de mercado hoy y el MSRP (solo se muestra).
+    fuente y, si lo hay, su episodio; el precio de mercado hoy, el MSRP (solo se muestra), el
+    mínimo de 60 días y el precio de venta esperado en Amazon.
     Una referencia que no se puede calcular queda en ``None`` (vacío = ausente)."""
     fuente = HistorialPropio() if fuente is None else fuente
     habitual = fuente.precio_habitual(contexto)
@@ -601,4 +627,6 @@ def calcular_referencias(
         episodio=None if habitual is None else habitual.episodio,
         precio_mercado_hoy=None if hoy is None else hoy.precio,
         msrp=msrp(contexto),
+        minimo_60_dias_amazon=minimo_60_dias_amazon(contexto),
+        precio_venta_amazon=precio_venta_amazon(contexto),
     )

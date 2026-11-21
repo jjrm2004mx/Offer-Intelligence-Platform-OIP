@@ -183,8 +183,8 @@ Tareas de la parte B del REQ-2026-0001 v2.9 (`req-2026-0001-b-evaluacion`). **1 
 - **Depende de:** T10. **Estimación:** 8 h.
 - **DoD:** común.
 
-- [ ] 11.1 Implementar la confianza, el costo de compra y el canal Amazon y verificar las cuentas de Amazon de B1 en pruebas unitarias
-- [ ] 11.2 Implementar la venta local, la rentabilidad, la elección y el nivel del aviso y verificar B1 completo y RNF-9
+- [x] 11.1 Implementar la confianza, el costo de compra y el canal Amazon y verificar las cuentas de Amazon de B1 en pruebas unitarias
+- [x] 11.2 Implementar la venta local, la rentabilidad, la elección y el nivel del aviso y verificar B1 completo y RNF-9
 
 ## 12. T12 — Venta local con estimado y techo, castigo, peso y comisión (B2 base, B15, B16, B17)
 

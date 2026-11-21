@@ -31,9 +31,12 @@ __all__ = [
     "elemento_de_tupla",
     "es_mapa",
     "es_union",
+    "exigir_decimal",
+    "exigir_entero",
     "ruta_de",
     "sin_annotated",
     "verificar_any",
+    "verificar_dataclass",
     "verificar_escalar",
     "verificar_tipo",
 ]
@@ -162,6 +165,28 @@ def verificar_escalar(valor: Any, tipo: type, ruta: str) -> None:
         ok = isinstance(valor, tipo)
     if not ok:
         raise TypeError(f"{ruta}: se esperaba {tipo.__name__}")
+
+
+def verificar_dataclass(objeto: Any) -> None:
+    """Verifica sin convertir cada campo de una dataclass contra su anotación (DEC-238). Para
+    los tipos del motor que no se serializan (``__post_init__`` de CMP-13 a CMP-15)."""
+    for nombre, tipo in campos_dataclass(type(objeto)):
+        verificar_tipo(getattr(objeto, nombre), tipo, nombre)
+
+
+def exigir_decimal(valor: Any, nombre: str) -> Decimal:
+    """``valor`` si es un ``Decimal`` finito; si no (un ``float``, un entero, un texto),
+    ``TypeError`` con el nombre del dato, sin el valor (DEC-181)."""
+    if not isinstance(valor, Decimal) or not valor.is_finite():
+        raise TypeError(f"{nombre} debe ser un Decimal finito")
+    return valor
+
+
+def exigir_entero(valor: Any, nombre: str, *, minimo: int = 0) -> int:
+    """``valor`` si es un ``int`` (no ``bool``) ≥ ``minimo``; si no, ``TypeError``."""
+    if type(valor) is not int or valor < minimo:
+        raise TypeError(f"{nombre} debe ser un entero ≥ {minimo}")
+    return valor
 
 
 def verificar_any(valor: Any, ruta: str) -> None:
