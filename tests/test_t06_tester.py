@@ -979,3 +979,392 @@ def test_0003_bajar_con_un_rechazo_guardado_impide_volver_a_subir_sin_dejar_nada
             "0002_hypertables"
         )
         assert c.execute(text("SELECT count(*) FROM evaluation")).scalar_one() == 1
+
+
+# === Segunda pasada: el evaluador de CHECK en memoria (_checks) ============================
+#
+# Fuente: tasks.md T06 ("la misma batería de contrato pasa con memoria y con PostgreSQL") y
+# la semántica de PostgreSQL: un CHECK se cumple si da verdadero o nulo (lógica de tres
+# valores), se evalúan en orden alfabético de nombre, ``x[k]`` fuera de rango es NULL,
+# ``btrim(x)`` quita solo espacios, ``IS NOT DISTINCT FROM`` nunca es NULL, un NULL dentro de
+# un arreglo nunca está contenido (``<@``) y, en una expresión regular avanzada (ARE) sin
+# modo sensible a saltos de línea, ``$`` solo coincide al final del texto.
+
+_FALSO, _VERDADERO, _NULO = False, True, None
+
+
+def _check(tabla: str, nombre: str, **valores):
+    """El valor (verdadero, falso o nulo) del CHECK ``ck_<tabla>_<nombre>`` sobre la fila de
+    ``tabla`` con ``valores`` y el resto de columnas en NULL."""
+    from oip.persistencia.repositorios import _checks
+
+    fila = {c.name: None for c in tablas.metadata.tables[tabla].columns} | valores
+    return dict(_checks.CHECKS[tabla])[f"ck_{tabla}_{nombre}"](fila)
+
+
+_T1 = T0 + dt.timedelta(hours=1)
+
+_DEFECTO_FIN_DE_LINEA = (
+    "IMPLEMENTATION DEFECT (T06, oip-tester, 2a pasada): _checks evalúa '~' con re.search, "
+    "donde '$' también coincide antes de un salto de línea final; en PostgreSQL (ARE) '$' "
+    "solo coincide al final del texto, así que PostgreSQL rechaza lo que memoria acepta"
+)
+
+
+@pytest.mark.parametrize(
+    ("tabla", "nombre", "valores", "esperado"),
+    [
+        # Comparación simple y NULL.
+        ("load_rejection", "line_number_positivo", {"line_number": None}, _NULO),
+        ("load_rejection", "line_number_positivo", {"line_number": 0}, _FALSO),
+        ("load_rejection", "line_number_positivo", {"line_number": 1}, _VERDADERO),
+        ("load_run", "finished_at_orden", {"started_at": T0, "finished_at": T0}, _VERDADERO),
+        ("load_run", "finished_at_orden", {"started_at": _T1, "finished_at": T0}, _FALSO),
+        ("load_run", "finished_at_orden", {"started_at": T0}, _NULO),
+        # AND de tres valores: NULL AND FALSO = FALSO; NULL AND VERDADERO = NULL.
+        (
+            "load_run",
+            "conteos_no_negativos",
+            {"loaded": None, "rejected": -1, "duplicates": 0},
+            _FALSO,
+        ),
+        (
+            "load_run",
+            "conteos_no_negativos",
+            {"loaded": None, "rejected": 0, "duplicates": 0},
+            _NULO,
+        ),
+        # OR de tres valores: NULL OR FALSO = NULL; FALSO OR VERDADERO = VERDADERO.
+        ("local_comparable", "mxn_con_tipo_de_cambio", {}, _NULO),
+        ("local_comparable", "mxn_con_tipo_de_cambio", {"currency": "USD"}, _VERDADERO),
+        ("local_comparable", "mxn_con_tipo_de_cambio", {"currency": "MXN"}, _FALSO),
+        (
+            "local_comparable",
+            "mxn_con_tipo_de_cambio",
+            {"currency": "MXN", "exchange_rate": Decimal("17.5")},
+            _VERDADERO,
+        ),
+        ("load_run", "record_type_solo_csv", {"record_type": "msrp"}, _NULO),
+        ("load_run", "record_type_solo_csv", {"format": "jsonl", "record_type": "msrp"}, _FALSO),
+        ("load_run", "record_type_solo_csv", {"format": "jsonl"}, _VERDADERO),
+        # IN: NULL da NULL; fuera del catálogo, FALSO.
+        ("load_run", "format_catalogo", {}, _NULO),
+        ("load_run", "format_catalogo", {"format": "csv"}, _VERDADERO),
+        ("load_run", "format_catalogo", {"format": "CSV"}, _FALSO),
+        # BETWEEN y cardinality.
+        ("client_request", "items_de_1_a_3", {}, _NULO),
+        ("client_request", "items_de_1_a_3", {"items": []}, _FALSO),
+        ("client_request", "items_de_1_a_3", {"items": ["a"]}, _VERDADERO),
+        ("client_request", "items_de_1_a_3", {"items": ["a", "b", "c"]}, _VERDADERO),
+        ("client_request", "items_de_1_a_3", {"items": ["a", "b", "c", "d"]}, _FALSO),
+        # <@: vacío contenido; NULL dentro nunca contenido; arreglo NULL, NULL.
+        ("evaluation", "reasons_catalogo", {"reasons": []}, _VERDADERO),
+        ("evaluation", "reasons_catalogo", {"reasons": ["EVITAR", "EVITAR"]}, _VERDADERO),
+        ("evaluation", "reasons_catalogo", {"reasons": ["EVITAR", None]}, _FALSO),
+        ("evaluation", "reasons_catalogo", {"reasons": ["evitar"]}, _FALSO),
+        ("evaluation", "reasons_catalogo", {}, _NULO),
+        # IS NOT DISTINCT FROM y subíndice desde 1 (fuera de rango = NULL).
+        ("evaluation", "motivo_principal", {"reasons": []}, _VERDADERO),
+        ("evaluation", "motivo_principal", {}, _VERDADERO),
+        ("evaluation", "motivo_principal", {"main_reason": "EVITAR"}, _FALSO),
+        (
+            "evaluation",
+            "motivo_principal",
+            {"main_reason": "PARTICULAR", "reasons": ["EVITAR", "PARTICULAR"]},
+            _FALSO,
+        ),
+        ("evaluation", "motivo_principal", {"main_reason": None, "reasons": ["EVITAR"]}, _FALSO),
+        # NOT y paréntesis: FALSO OR (VERDADERO AND NULL) = NULL; ... AND NOT VERDADERO = FALSO.
+        ("evaluation", "reevaluacion", {"changed_references": []}, _NULO),
+        (
+            "evaluation",
+            "reevaluacion",
+            {"changed_references": [], "no_longer_recommended": True},
+            _FALSO,
+        ),
+        (
+            "evaluation",
+            "reevaluacion",
+            {"changed_references": ["precio_habitual"], "no_longer_recommended": False},
+            _FALSO,
+        ),
+        (
+            "evaluation",
+            "reevaluacion",
+            {"changed_references": [], "no_longer_recommended": False},
+            _VERDADERO,
+        ),
+        (
+            "evaluation",
+            "reevaluacion",
+            {
+                "previous_evaluation_id": UUID(int=1),
+                "changed_references": ["x"],
+                "no_longer_recommended": True,
+            },
+            _VERDADERO,
+        ),
+        # (a = b) = (c IS NOT NULL): igualdad de booleanos; NULL se propaga.
+        ("evaluation", "aviso_solo_con_nivel", {}, _NULO),
+        ("evaluation", "aviso_solo_con_nivel", {"result": "SIN_NIVEL"}, _VERDADERO),
+        (
+            "evaluation",
+            "aviso_solo_con_nivel",
+            {"result": "SIN_NIVEL", "alert_level": "VIGILAR"},
+            _FALSO,
+        ),
+        (
+            "evaluation",
+            "aviso_solo_con_nivel",
+            {"result": "NIVEL_ASIGNADO", "alert_level": "VIGILAR", "alert_channel": "amazon"},
+            _FALSO,  # sin chosen_channel
+        ),
+        (
+            "evaluation",
+            "aviso_solo_con_nivel",
+            {
+                "result": "NIVEL_ASIGNADO",
+                "alert_level": "VIGILAR",
+                "alert_channel": "amazon",
+                "chosen_channel": "amazon",
+            },
+            _VERDADERO,
+        ),
+        (
+            "evaluation",
+            "rechazo_con_motivo",
+            {"result": "RECHAZADA_VALIDACION"},
+            _FALSO,
+        ),
+        # btrim quita solo espacios (no tabuladores).
+        ("product", "brand_no_vacio", {"brand": "   "}, _FALSO),
+        ("product", "brand_no_vacio", {"brand": " a "}, _VERDADERO),
+        ("product", "brand_no_vacio", {"brand": "\t"}, _VERDADERO),
+        ("product", "brand_no_vacio", {}, _NULO),
+        # jsonb_typeof.
+        ("config_version", "content_objeto", {"content": "{}"}, _VERDADERO),
+        ("config_version", "content_objeto", {"content": "[]"}, _FALSO),
+        ("config_version", "content_objeto", {"content": "null"}, _FALSO),
+        ("config_version", "content_objeto", {"content": '"{}"'}, _FALSO),
+        ("config_version", "content_objeto", {}, _NULO),
+        ("evaluation", "observations_used_arreglo", {"observations_used": "[]"}, _VERDADERO),
+        # Expresión regular (~).
+        ("config_version", "sha256_sha256", {"sha256": _h(1)}, _VERDADERO),
+        ("config_version", "sha256_sha256", {"sha256": "A" * 64}, _FALSO),
+        ("config_version", "sha256_sha256", {"sha256": "a" * 63}, _FALSO),
+        ("config_version", "sha256_sha256", {}, _NULO),
+        ("load_rejection", "field_nombre", {"field": "price.current"}, _VERDADERO),
+        ("load_rejection", "field_nombre", {"field": "1precio"}, _FALSO),
+        ("load_rejection", "field_nombre", {"field": ".*"}, _FALSO),
+        ("load_rejection", "reason_catalogo", {"reason": "PRECIO INVÁLIDO"}, _VERDADERO),
+        (
+            "load_rejection",
+            "reason_catalogo",
+            {"reason": "CAMPO OBLIGATORIO FALTANTE (price.current)"},
+            _VERDADERO,
+        ),
+        ("load_rejection", "reason_catalogo", {"reason": "precio inválido"}, _FALSO),
+        ("load_rejection", "reason_catalogo", {"reason": "CAMPO OBLIGATORIO FALTANTE ()"}, _FALSO),
+        # '$' de una ARE: solo al final del texto (no antes de un salto de línea final).
+        pytest.param(
+            "load_rejection",
+            "field_nombre",
+            {"field": "precio\n"},
+            _FALSO,
+            marks=pytest.mark.xfail(strict=True, reason=_DEFECTO_FIN_DE_LINEA),
+        ),
+        pytest.param(
+            "load_rejection",
+            "reason_catalogo",
+            {"reason": "CAMPO OBLIGATORIO FALTANTE (model)\n"},
+            _FALSO,
+            marks=pytest.mark.xfail(strict=True, reason=_DEFECTO_FIN_DE_LINEA),
+        ),
+        pytest.param(
+            "evaluation",
+            "rejection_reason_catalogo",
+            {"rejection_reason": "CAMPO OBLIGATORIO FALTANTE (model)\n"},
+            _FALSO,
+            marks=pytest.mark.xfail(strict=True, reason=_DEFECTO_FIN_DE_LINEA),
+        ),
+    ],
+)
+def test_cada_check_del_esquema_da_lo_mismo_que_postgresql(tabla, nombre, valores, esperado):
+    assert _check(tabla, nombre, **valores) is esperado
+
+
+def test_varios_check_violados_se_informa_el_primero_por_nombre_como_postgresql():
+    """PostgreSQL prueba los CHECK de una fila en orden alfabético de nombre."""
+    from oip.persistencia.repositorios import _checks
+
+    fila = {c.name: None for c in tablas.evaluation.columns} | {
+        "main_reason": "EVITAR",  # motivo_principal: EVITAR vs NULL -> falso
+        "reasons": ["NO EXISTE"],  # reasons_catalogo -> falso
+        "result": "OTRO",  # result_catalogo -> falso
+        "confidence": "NINGUNA",  # confidence_catalogo -> falso
+    }
+    assert _checks.violado("evaluation", fila) == "ck_evaluation_confidence_catalogo"
+
+
+@pytest.mark.parametrize(
+    "texto",
+    [
+        "upper(x) = 'A'",
+        "coalesce(x, '') <> ''",
+        "x LIKE 'a%'",
+        "x + 1 > 2",
+        "x = -1",
+        "x ~* 'a'",
+        "x !~ 'a'",
+        "x IS TRUE",
+        "x IN (SELECT y FROM t)",
+        '"X" > 0',
+        "x = 1 = 2",
+        "x = 1.5e3",
+        "x = E'a'",
+        "(x > 0",
+        "x > 0)",
+        "x > 0; DROP TABLE t",
+        "x BETWEEN 1",
+        "",
+    ],
+)
+def test_un_check_fuera_del_subconjunto_falla_de_forma_explicita(texto):
+    from oip.persistencia.repositorios import _checks
+
+    with pytest.raises(NotImplementedError):
+        _checks._Analizador(texto).todo()
+
+
+def test_el_evaluador_no_ejecuta_codigo_construido_desde_texto():
+    """Sin ``eval``/``exec``/``compile``/``__import__``; la única expresión regular que
+    compila es su tokenizador, desde una constante."""
+    import ast
+    import inspect
+
+    from oip.persistencia.repositorios import _checks
+
+    arbol = ast.parse(inspect.getsource(_checks))
+    for nodo in ast.walk(arbol):
+        if isinstance(nodo, ast.Call):
+            funcion = nodo.func
+            nombre = getattr(funcion, "id", None) or getattr(funcion, "attr", None)
+            assert nombre not in {"eval", "exec", "compile", "__import__", "getattr"} or (
+                nombre == "compile" and all(isinstance(a, ast.Constant) for a in nodo.args)
+            ), ast.dump(nodo)
+
+
+@pytest.mark.parametrize(
+    ("tabla", "nombre", "valores"),
+    [
+        ("load_run", "format_catalogo", {"format": "csv' OR '1'='1"}),
+        ("load_run", "format_catalogo", {"format": "csv') OR (1=1"}),
+        ("product", "category_catalogo", {"category": "tools' OR category IS NOT NULL OR '"}),
+        ("load_rejection", "field_nombre", {"field": "a') OR ('1"}),
+        ("load_rejection", "reason_catalogo", {"reason": "PRECIO INVÁLIDO' OR 'a'='a"}),
+        ("evaluation", "reasons_catalogo", {"reasons": ["EVITAR'] OR TRUE OR ARRAY['x"]}),
+        ("config_version", "sha256_sha256", {"sha256": "' OR sha256 IS NULL OR '"}),
+    ],
+)
+def test_un_valor_con_sql_no_altera_la_evaluacion(tabla, nombre, valores):
+    assert _check(tabla, nombre, **valores) is _FALSO
+
+
+def test_un_dato_no_se_usa_como_expresion_regular():
+    """Solo el literal del esquema es patrón: un dato con metacaracteres se compara tal cual."""
+    assert _check("config_version", "sha256_sha256", sha256="^.*$") is _FALSO
+    assert _check("load_rejection", "field_nombre", field="a|b") is _FALSO
+
+
+# --- Equivalencia memoria / PostgreSQL a nivel repositorio ----------------------------------
+
+
+def _xfail_memoria(defecto: str):
+    return [
+        pytest.param("memoria", marks=pytest.mark.xfail(strict=True, reason=defecto)),
+        pytest.param("postgres", marks=pytest.mark.integracion),
+    ]
+
+
+@pytest.mark.parametrize("param", _xfail_memoria(_DEFECTO_FIN_DE_LINEA))
+@pytest.mark.parametrize(
+    "rechazo",
+    [
+        {"motivo": "PRECIO INVÁLIDO", "campo": "precio\n"},
+        {"motivo": "CAMPO OBLIGATORIO FALTANTE (model)\n"},
+    ],
+    ids=["campo", "motivo"],
+)
+def test_un_salto_de_linea_final_se_rechaza_igual_que_en_postgresql(param, rechazo):
+    """PostgreSQL rechaza ``field``/``reason`` con ``\\n`` final (``~ '...$'``): ninguna de
+    las dos implementaciones guarda el renglón. Vale rechazarlo al construirlo
+    (``ValueError``) o al guardarlo (``ErrorDeIntegridad``)."""
+    for repositorio in _repo_de(param):
+        _carga(repositorio)
+        with pytest.raises((ValueError, ErrorDeIntegridad)):
+            repositorio.guardar_rechazo_carga(RechazoCarga(CARGA, 2, **rechazo))
+        assert _filas_de(repositorio, tablas.load_rejection) == []
+
+
+@pytest.mark.parametrize(
+    "param", ["memoria", pytest.param("postgres", marks=pytest.mark.integracion)]
+)
+def test_terminar_una_carga_que_viola_un_check_no_cambia_la_carga(param):
+    """Un cierre que viola ``ck_load_run_finished_at_orden`` se rechaza antes de escribir
+    (``ValueError``) o por el CHECK (``ErrorDeIntegridad``), y la carga queda sin terminar."""
+    for repositorio in _repo_de(param):
+        _carga(repositorio)
+        antes = _filas_de(repositorio, tablas.load_run)
+        reporte = ReporteCarga(T0 - MICRO, 0, 0, 0, {})
+        with pytest.raises((ValueError, ErrorDeIntegridad)) as error:
+            repositorio.terminar_carga(CARGA, reporte)
+        if isinstance(error.value, ErrorDeIntegridad):
+            assert error.value.restriccion == "ck_load_run_finished_at_orden"
+        assert _filas_de(repositorio, tablas.load_run) == antes
+        assert repositorio.leer_carga(CARGA).reporte is None
+
+
+@pytest.mark.parametrize(
+    "param", ["memoria", pytest.param("postgres", marks=pytest.mark.integracion)]
+)
+def test_el_borde_de_integer_se_guarda_y_uno_mas_no(param):
+    for repositorio in _repo_de(param):
+        _carga(repositorio)
+        repositorio.guardar_rechazo_carga(RechazoCarga(CARGA, 2**31 - 1, "PRECIO INVÁLIDO"))
+        with pytest.raises(ValueError):
+            repositorio.guardar_rechazo_carga(RechazoCarga(CARGA, 2**31, "PRECIO INVÁLIDO"))
+        assert [f["line_number"] for f in _filas_de(repositorio, tablas.load_rejection)] == [
+            2**31 - 1
+        ]
+
+
+@pytest.mark.parametrize(
+    ("columna", "valor", "cabe"),
+    [
+        (tablas.load_rejection.c.line_number, 2**31 - 1, True),
+        (tablas.load_rejection.c.line_number, 2**31, False),
+        (tablas.load_rejection.c.line_number, -(2**31), True),
+        (tablas.load_rejection.c.line_number, -(2**31) - 1, False),
+        (tablas.evaluation.c.config_version_id, 2**63 - 1, True),
+        (tablas.evaluation.c.config_version_id, 2**63, False),
+        (tablas.evaluation.c.config_version_id, -(2**63), True),
+        (tablas.evaluation.c.config_version_id, -(2**63) - 1, False),
+        (tablas.client_request.c.idempotency_key, _h(1), True),
+        (tablas.client_request.c.idempotency_key, _h(1) + "0", False),
+    ],
+)
+def test_los_rangos_de_integer_bigint_y_char_son_los_de_postgresql(columna, valor, cabe):
+    from oip.persistencia.repositorios import _columnas
+
+    if cabe:
+        assert _columnas._valor(columna, valor, "ruta") == valor
+    else:
+        with pytest.raises(ValueError):
+            _columnas._valor(columna, valor, "ruta")
+
+
+def test_un_booleano_no_entra_en_un_entero():
+    from oip.persistencia.repositorios import _columnas
+
+    with pytest.raises(TypeError):
+        _columnas._valor(tablas.load_rejection.c.line_number, True, "ruta")
