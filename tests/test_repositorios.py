@@ -1009,3 +1009,69 @@ def test_los_check_en_memoria_siguen_la_semantica_de_sql(tabla, fila, violado):
     completa = {c.name: None for c in tablas.metadata.tables[tabla].columns} | fila
     esperado = None if violado is None else f"ck_{tabla}_{violado}"
     assert _checks.violado(tabla, completa) == esperado
+
+
+# --- '$' de una ARE: solo al final del texto (como PostgreSQL) -----------------------------
+
+
+@pytest.mark.parametrize(
+    ("tabla", "fila", "violado"),
+    [
+        ("load_rejection", {"field": "precio\n"}, "field_nombre"),
+        ("load_rejection", {"reason": "CAMPO OBLIGATORIO FALTANTE (model)\n"}, "reason_catalogo"),
+        (
+            "evaluation",
+            {"rejection_reason": "CAMPO OBLIGATORIO FALTANTE (model)\n"},
+            "rejection_reason_catalogo",
+        ),
+        ("config_version", {"sha256": "a" * 64 + "\n"}, "sha256_sha256"),
+        ("load_run", {"file_sha256": "a" * 64 + "\n"}, "file_sha256_sha256"),
+        ("load_rejection", {"field": "precio"}, None),
+        ("config_version", {"sha256": "a" * 64}, None),
+    ],
+)
+def test_un_salto_de_linea_final_viola_el_check_en_memoria(tabla, fila, violado):
+    from oip.persistencia.repositorios import _checks
+
+    completa = {c.name: None for c in tablas.metadata.tables[tabla].columns} | fila
+    esperado = None if violado is None else f"ck_{tabla}_{violado}"
+    assert _checks.violado(tabla, completa) == esperado
+
+
+@pytest.mark.parametrize(
+    ("patron", "texto", "coincide"),
+    [
+        ("^a$", "a", True),
+        ("^a$", "a\n", False),
+        ("^a\\$$", "a$", True),  # '$' escapado es el carácter
+        ("^[$]$", "$", True),  # '$' dentro de una clase es el carácter
+        ("^[]$]$", "$", True),  # ']' justo tras '[' es de la clase
+        ("^[^]$]$", "x", True),
+        ("^[^]$]$", "$", False),
+        ("^a.b$", "a\nb", True),  # en una ARE '.' también coincide con '\n'
+    ],
+)
+def test_el_operador_regex_en_memoria_sigue_la_are_de_postgresql(patron, texto, coincide):
+    from oip.persistencia.repositorios import _checks
+
+    assert _checks._comparar("~", texto, patron) is coincide
+
+
+def test_una_huella_con_salto_de_linea_final_se_rechaza_al_construir():
+    from oip.persistencia.repositorios._tipos import _huella
+
+    _huella("a" * 64, "huella")
+    with pytest.raises(ValueError, match="huella"):
+        _huella("a" * 64 + "\n", "huella")
+
+
+@pytest.mark.parametrize(
+    ("motivo", "campo"),
+    [
+        ("PRECIO INVÁLIDO", "precio\n"),
+        ("CAMPO OBLIGATORIO FALTANTE (model)\n", None),
+    ],
+)
+def test_un_rechazo_con_salto_de_linea_final_no_se_construye(motivo, campo):
+    with pytest.raises(ValueError):
+        RechazoCarga(UUID(int=1), 2, motivo, None, campo)

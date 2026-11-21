@@ -76,6 +76,45 @@ def _o(a: Any, b: Any) -> Any:
     return None if a is None or b is None else False
 
 
+def _patron_are(patron: str) -> str:
+    """Una expresión regular de PostgreSQL (ARE, modo por defecto) como patrón de ``re``.
+
+    En una ARE ``$`` solo coincide al final del texto; en ``re`` también antes de un salto de
+    línea final (``'a\\n'`` cumpliría ``'^a$'``). Por eso cada ``$`` sin escapar y fuera de
+    ``[...]`` pasa a ``\\Z``. La otra diferencia del modo por defecto, que ``.`` coincide con
+    un salto de línea, la cubre ``re.DOTALL`` en ``_comparar``."""
+    salida: list[str] = []
+    i = 0
+    en_clase = False
+    while i < len(patron):
+        c = patron[i]
+        if c == "\\" and i + 1 < len(patron):
+            salida.append(patron[i : i + 2])
+            i += 2
+            continue
+        if en_clase:
+            en_clase = c != "]"
+        elif c == "[":
+            # Un ']' justo tras '[' o '[^' es un carácter de la clase, no su cierre.
+            en_clase = True
+            salida.append(c)
+            i += 1
+            if i < len(patron) and patron[i] == "^":
+                salida.append("^")
+                i += 1
+            if i < len(patron) and patron[i] == "]":
+                salida.append("]")
+                i += 1
+            continue
+        elif c == "$":
+            salida.append(r"\Z")
+            i += 1
+            continue
+        salida.append(c)
+        i += 1
+    return "".join(salida)
+
+
 def _comparar(op: str, a: Any, b: Any) -> Any:
     if a is None or b is None:
         return None
@@ -92,7 +131,7 @@ def _comparar(op: str, a: Any, b: Any) -> Any:
     if op == ">=":
         return a >= b
     if op == "~":
-        return re.search(b, a) is not None
+        return re.search(_patron_are(b), a, re.DOTALL) is not None
     raise NotImplementedError(op)  # pragma: no cover
 
 

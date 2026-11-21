@@ -1171,21 +1171,18 @@ _DEFECTO_FIN_DE_LINEA = (
             "field_nombre",
             {"field": "precio\n"},
             _FALSO,
-            marks=pytest.mark.xfail(strict=True, reason=_DEFECTO_FIN_DE_LINEA),
         ),
         pytest.param(
             "load_rejection",
             "reason_catalogo",
             {"reason": "CAMPO OBLIGATORIO FALTANTE (model)\n"},
             _FALSO,
-            marks=pytest.mark.xfail(strict=True, reason=_DEFECTO_FIN_DE_LINEA),
         ),
         pytest.param(
             "evaluation",
             "rejection_reason_catalogo",
             {"rejection_reason": "CAMPO OBLIGATORIO FALTANTE (model)\n"},
             _FALSO,
-            marks=pytest.mark.xfail(strict=True, reason=_DEFECTO_FIN_DE_LINEA),
         ),
     ],
 )
@@ -1286,7 +1283,9 @@ def _xfail_memoria(defecto: str):
     ]
 
 
-@pytest.mark.parametrize("param", _xfail_memoria(_DEFECTO_FIN_DE_LINEA))
+@pytest.mark.parametrize(
+    "param", ["memoria", pytest.param("postgres", marks=pytest.mark.integracion)]
+)
 @pytest.mark.parametrize(
     "rechazo",
     [

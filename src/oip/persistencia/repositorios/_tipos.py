@@ -51,6 +51,8 @@ Formato = Literal["jsonl", "csv"]
 #: ``product_identifier.kind`` (TAB-03).
 ClaseIdentificador = Literal["gtin", "brand_model", "retailer_sku", "asin"]
 
+# Se aplican con ``fullmatch``: con ``match``, ``$`` de ``re`` también coincide antes de un
+# salto de línea final, y el ``~ '...$'`` de PostgreSQL (ARE) no (``'precio\n'`` no vale).
 _HUELLA = re.compile(r"^[0-9a-f]{64}$")
 _CAMPO = re.compile(r"^[A-Za-z][A-Za-z0-9_.]*$")
 _MOTIVO_CON_CAMPO = re.compile(
@@ -86,7 +88,7 @@ def motivo_rechazo_valido(motivo: str) -> bool:
     """Un motivo del catálogo de rechazo (design.md §6): un código base o ``CAMPO
     OBLIGATORIO FALTANTE (<campo>)`` con el nombre del campo, igual que el ``CHECK`` de
     TAB-02 y TAB-10."""
-    return motivo in _MOTIVOS_SIN_CAMPO or _MOTIVO_CON_CAMPO.match(motivo) is not None
+    return motivo in _MOTIVOS_SIN_CAMPO or _MOTIVO_CON_CAMPO.fullmatch(motivo) is not None
 
 
 # --- Base ---------------------------------------------------------------------------------
@@ -116,7 +118,7 @@ def _texto(valor: str | None, nombre: str) -> None:
 
 
 def _huella(valor: str, nombre: str) -> None:
-    if not _HUELLA.match(valor):
+    if not _HUELLA.fullmatch(valor):
         raise ValueError(f"{nombre}: huella sha256 en hexadecimal (64 caracteres en minúscula)")
 
 
@@ -330,7 +332,7 @@ class RechazoCarga(_Tipado):
             raise ValueError("renglon: empieza en 1")
         if not motivo_rechazo_valido(self.motivo):
             raise ValueError("motivo: fuera del catálogo de rechazo (design.md §6)")
-        if self.campo is not None and not _CAMPO.match(self.campo):
+        if self.campo is not None and not _CAMPO.fullmatch(self.campo):
             raise ValueError("campo: solo el nombre del campo")
 
 
