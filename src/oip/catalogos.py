@@ -118,9 +118,24 @@ class Marca(StrEnum):
     EMPAQUE_POR_CONFIRMAR = "EMPAQUE POR CONFIRMAR"
 
 
+class DatoEstimado(StrEnum):
+    """El ``<dato>`` de ``ESTIMADO (<dato>)`` (design.md §9; DEC-266)."""
+
+    PESO = "peso"
+    DEVOLUCION = "devolución"
+    UNIDADES = "unidades"
+
+
 def marca_estimado(dato: str) -> str:
     """``ESTIMADO (<dato>)``, por ejemplo ``ESTIMADO (peso)`` o ``ESTIMADO (devolución)``."""
     return _con_dato(Marca.ESTIMADO, dato, "dato")
+
+
+def es_marca(texto: str) -> bool:
+    """``True`` si ``texto`` es una marca del registro (design.md §9; DEC-266): una ``Marca``
+    salvo ``ESTIMADO`` solo, una ``CausaCanalCerrado`` o ``ESTIMADO (<dato>)`` con el dato de
+    ``DatoEstimado``. Una causa de canal por revisar no es marca."""
+    raise NotImplementedError
 
 
 def _con_dato(base: StrEnum, dato: str, nombre: str) -> str:

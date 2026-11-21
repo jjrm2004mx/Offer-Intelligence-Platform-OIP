@@ -480,9 +480,9 @@ def test_el_particular_descarta_availability_text_y_evidence():
     assert "555" not in volcado and "Ana" not in volcado
 
 
-def test_el_particular_conserva_content_mientras_se_resuelve_rn_013():
-    """``content`` no se descarta: RN-013 §4.1 confirma el producto con modelo + marca y el
-    mismo contenido, y B18 lo da ("mismo contenido"). Queda para Jesús (ver el PR)."""
+def test_el_particular_conserva_content_dec245():
+    """``content`` no se descarta (DEC-245): RN-013 §4.1 confirma el producto con modelo +
+    marca y el mismo contenido, y B18 lo da ("mismo contenido")."""
     obs = leer_observacion({**PARTICULAR, "content": "tool only"})
     assert obs.content == "tool only"
 
