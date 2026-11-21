@@ -127,15 +127,23 @@ class DatoEstimado(StrEnum):
 
 
 def marca_estimado(dato: str) -> str:
-    """``ESTIMADO (<dato>)``, por ejemplo ``ESTIMADO (peso)`` o ``ESTIMADO (devolución)``."""
-    return _con_dato(Marca.ESTIMADO, dato, "dato")
+    """``ESTIMADO (<dato>)``, por ejemplo ``ESTIMADO (peso)`` o ``ESTIMADO (devolución)``.
+
+    El dato es uno de ``DatoEstimado`` (DEC-266); otro levanta ``ValueError``."""
+    marca = _con_dato(Marca.ESTIMADO, dato, "dato")
+    if marca not in _MARCAS_ESTIMADO:
+        raise ValueError(f"dato de {Marca.ESTIMADO.value} fuera del catálogo DatoEstimado")
+    return marca
 
 
 def es_marca(texto: str) -> bool:
     """``True`` si ``texto`` es una marca del registro (design.md §9; DEC-266): una ``Marca``
     salvo ``ESTIMADO`` solo, una ``CausaCanalCerrado`` o ``ESTIMADO (<dato>)`` con el dato de
     ``DatoEstimado``. Una causa de canal por revisar no es marca."""
-    raise NotImplementedError
+    return type(texto) is str and texto in _MARCAS_DEL_REGISTRO
+
+
+_MARCAS_ESTIMADO = frozenset(f"{Marca.ESTIMADO.value} ({d.value})" for d in DatoEstimado)
 
 
 def _con_dato(base: StrEnum, dato: str, nombre: str) -> str:
@@ -213,6 +221,13 @@ CAUSAS_POR_REVISAR_POR_CANAL: MappingProxyType[Canal, tuple[CausaCanalPorRevisar
     )
 )
 
+
+#: Marcas que aceptan ``EvaluacionCanal`` y ``RegistroEvaluacion`` (design.md §9; DEC-266).
+_MARCAS_DEL_REGISTRO = frozenset(
+    {m.value for m in Marca if m is not Marca.ESTIMADO}
+    | {c.value for c in CausaCanalCerrado}
+    | _MARCAS_ESTIMADO
+)
 
 # --- Nivel (RN-009) ----------------------------------------------------------------------
 

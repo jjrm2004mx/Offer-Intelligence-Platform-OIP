@@ -47,6 +47,7 @@ from oip.entradas._comun import (
     Entero,
     Esquema,
     RegistroInvalido,
+    ValorJson,
     ausente,
     decimal_o_none,
     validar_esquema,
@@ -223,7 +224,7 @@ class Observacion(Esquema):
     extracted_at: AwareDatetime
     extraction_method: str | None = None
     blocked: Booleano
-    evidence: dict[str, Any] | None = None
+    evidence: dict[str, ValorJson] | None = None
 
     @property
     def es_particular(self) -> bool:

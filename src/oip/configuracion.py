@@ -236,7 +236,7 @@ def _zonas_canonicas() -> frozenset[str]:
 
 
 def _zona_valida(nombre: str) -> str:
-    if not _ZONA_IANA.match(nombre):
+    if not _ZONA_IANA.fullmatch(nombre):
         raise ValueError(f"se esperaba una zona IANA Región/Ciudad, como America/Tijuana: {nombre}")
     if nombre not in _zonas_canonicas():
         raise ValueError(f"zona horaria desconocida o alias antiguo de IANA: {nombre}")
@@ -757,12 +757,12 @@ class _CargadorYaml(yaml.SafeLoader):
 
 
 # Entero decimal sin cero inicial (0, 60, -5, 1_000); fuera quedan 060, 0x1F, 0b11 y 1:30.
-_ENTERO_DECIMAL = re.compile(r"^[-+]?(?:0|[1-9][0-9_]*)$")
+_ENTERO_DECIMAL = re.compile(r"[-+]?(?:0|[1-9][0-9_]*)")
 
 
 def _entero_desde_yaml(cargador: yaml.SafeLoader, nodo: yaml.ScalarNode) -> int:
     texto = str(cargador.construct_scalar(nodo))
-    if not _ENTERO_DECIMAL.match(texto):
+    if not _ENTERO_DECIMAL.fullmatch(texto):
         raise yaml.constructor.ConstructorError(
             None,
             None,

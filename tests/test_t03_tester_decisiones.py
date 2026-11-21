@@ -150,7 +150,7 @@ def test_dec236_comercio_con_evidence_no_valida_se_rechaza():
 
 
 def test_dec245_content_del_particular_se_conserva():
-    """DEC-245 (resuelve el pendiente de DEC-236): ``content`` del particular se conserva."""
+    """DEC-245 (cierra lo que DEC-236 dejó abierto): ``content`` del particular se conserva."""
     assert leer_observacion(_particular()).content == "tool only"
 
 

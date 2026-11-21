@@ -286,7 +286,7 @@ def _registro(n: int, instante, id_config: int, **cambios) -> RegistroEvaluacion
                 nivel=Nivel.RECOMENDABLE,
                 nivel_calculado=Nivel.RECOMENDABLE,
                 ganancia_total=Decimal("31.40"),
-                marcas=("Z MARCA", "A MARCA"),
+                marcas=("SIN COMPARABLES LOCALES", "MARGEN ESTIMADO"),
             ),
         ),
         "observaciones_usadas": (ObservacionUsada(UUID(int=1), T0),),
@@ -480,7 +480,10 @@ def test_los_montos_y_porcentajes_vuelven_como_decimal_exacto(repo):
     (canal,) = leido.canales
     assert str(canal.margen_neto_pct) == "72.85382830626450116009280742"
     assert type(canal.precio_venta) is Decimal and canal.precio_venta == Decimal("84.9915")
-    assert canal.marcas == ("Z MARCA", "A MARCA")  # el orden del registro, no alfabético
+    assert canal.marcas == (
+        "SIN COMPARABLES LOCALES",
+        "MARGEN ESTIMADO",
+    )  # el orden del registro, no alfabético
     obs = repo.leer_observacion(UUID(int=1)).observacion
     assert type(obs.weight_kg) is Decimal and str(obs.weight_kg) == "2.375"
     assert type(obs.price.current) is Decimal and obs.price.current == Decimal("40.00")
