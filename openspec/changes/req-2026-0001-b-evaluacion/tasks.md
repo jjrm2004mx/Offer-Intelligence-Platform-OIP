@@ -7,15 +7,15 @@ Tareas de la parte B del REQ-2026-0001 v2.9 (`req-2026-0001-b-evaluacion`). **1 
 | Hito | Resultado comprobable | Tareas |
 |---|---|---|
 | H1 Cimientos listos | El paquete instala, el dinero redondea solo la lista cerrada, la configuración de §5 carga con versión, el contrato y las capturas validan su forma, el motor devuelve un registro, las migraciones suben y bajan y el repositorio guarda y lee en memoria y en PostgreSQL | T01, T02, T03, T04, T05, T06 |
-| H2 Entradas | Una observación inválida da `RECHAZADA_VALIDACION` con su motivo; un archivo JSON Lines o CSV carga, rechaza por registro y deja su reporte | T07, T08 |
+| H2 Entradas | Una observación inválida da `RECHAZADA_VALIDACION` con su motivo; un archivo JSON Lines o CSV carga, rechaza por registro y deja su reporte | T07, T08a, T08b |
 | H3 Referencias de precio | Precio habitual con episodio de liquidación, descuento real, franja y calidad del precio, como B30, B6 y B7 | T09, T10 |
 | H4 La parte evalúa una oferta de punta a punta | B1 completo: confianza, referencias, costo de compra, los dos canales, elección, nivel del aviso y resultado | T11 |
-| H5 Canales, referencias y configuración completos | Todos los escenarios de `canales-y-margen`, B14, B32, B27 y B31 | T12, T13, T14, T15, T16, T17 |
+| H5 Canales, referencias y configuración completos | Todos los escenarios de `canales-y-margen`, B14, B32, B27 y B31 | T24, T25, T12, T13, T14, T15, T16, T17 |
 | H6 Resultado completo | Descartadas, revisión manual, evitar, particular y usados | T18, T19, T20 |
 | H7 Carga que evalúa, guarda, reevalúa y reproduce | B34 (a) de punta a punta, registro en PostgreSQL recalculable, ≤ 2 s, y reevaluación con "ya no recomendado" | T21, T22 |
 | H8 Desplegado en Rocky | Migraciones probadas en Rocky (PoC de DEC-179) y carga de un archivo con Podman, con evidencia en el PR | T23 |
 
-**Ruta crítica:** T01 → T02 → T04 → T09 → T10 → T11 → T20 → T21 → T22 → T23 (72 h). En paralelo: T03 (después de T01), T05 → T06 y T07 → T08 (después de T04), y T12 a T19 (después de T11). Total: 23 tareas, 152 h.
+**Ruta crítica:** T01 → T02 → T04 → T09 → T10 → T11 → T20 → T21 → T22 → T23 (72 h). En paralelo: T03 (después de T01), T05 → T06 y T07 → T08a → T08b (después de T04), T24 y T25 (después de T11) y T12 a T19 (después de T11; T12 a T16 y T18 esperan además a T24, y T13, T16 y T18 a T25). Total: 26 tareas, 168 h. T08 se partió en T08a y T08b, y se agregaron T24 y T25, por las observaciones del issue #34 (DEC-273).
 
 **Definition of Done común** (todas las tareas): comportamientos esperados con prueba en verde (los escenarios con `@pytest.mark.scenario("<ID de la matriz>")`); `ruff check .` y `ruff format --check .` limpios; `bash scripts/check-egress.sh src` en verde; sin secretos ni datos personales en código, logs, pruebas o commits; sin `float` en montos; gates de GitHub Actions en verde; commits con `Refs: #2` y `Change: req-2026-0001-b-evaluacion`; PR revisado y fusionado por Jesús (G4).
 
@@ -40,7 +40,7 @@ Tareas de la parte B del REQ-2026-0001 v2.9 (`req-2026-0001-b-evaluacion`). **1 
 - **Objetivo:** cargar la configuración desde YAML con esquema estricto, huella y versión, sin valores por defecto en el código.
 - **Capacidad:** cimientos. **Escenarios:** ninguno propio; la ejercitan todos, y B27 y B31 la prueban en T17.
 - **Alcance:** esquema de las secciones PAR-01 a PAR-13; `configuracion.py`; `tests/fixtures/config/base.yaml` (REQ §5, con "—" como clave ausente); `config/oip-config.yaml` inicial de producción con la fuente de cada valor en comentarios (Pendiente 7).
-- **Fuera de alcance:** guardar la versión en la base (T06) y la CLI (T08); secciones de las partes A, C y D.
+- **Fuera de alcance:** guardar la versión en la base (T06) y la CLI (T08b); secciones de las partes A, C y D.
 - **Construye (design.md):** CMP-04, PAR-01, PAR-02, PAR-03, PAR-04, PAR-05, PAR-06, PAR-07, PAR-08, PAR-09, PAR-10, PAR-11, PAR-12, PAR-13, RNF-2, RNF-6
 - **Comportamientos esperados** (design.md §7, §12): un archivo válido da un objeto inmutable con `version`, `schemaVersion` y `sha256` estable; un parámetro faltante, un tipo inválido o una sección desconocida rechazan el archivo entero con el nombre del parámetro; los montos y porcentajes quedan como `Decimal`; los dos archivos del repo cargan.
 - **Guía de implementación:** pydantic en modo estricto, `extra="forbid"`; comisiones con los tres tipos (`flat`, `total_threshold`, `tiers`) y el mínimo por unidad; la tasa de devolución asignada referencia otra categoría (S-27); el umbral de demanda se deriva del tamaño de la categoría (DEC-225); dominios de comercios solo en `config/` y en `tests/fixtures/` (gate de egress).
@@ -53,9 +53,9 @@ Tareas de la parte B del REQ-2026-0001 v2.9 (`req-2026-0001-b-evaluacion`). **1 
 ## 3. T03 — Contrato de ingesta 3.1 y esquemas de capturas (cimientos)
 
 - **Objetivo:** modelar la observación del contrato 3.1 y las 7 capturas con los nombres y tipos de `design.md` CTR-04.
-- **Capacidad:** cimientos. **Escenarios:** ninguno propio; los ejercitan B20 (T07) y B34 (T08, T21).
+- **Capacidad:** cimientos. **Escenarios:** ninguno propio; los ejercitan B20 (T07) y B34 (T08b, T21).
 - **Alcance:** `entradas/contrato.py` (contrato 3.1 citado de la arquitectura §8, `schemaVersion` 3.1 / 3.0 / ausente, reglas del particular de DEC-227 b, `title` armado con `brand` + `model`, GTIN con dígito verificador) y `entradas/capturas.py` (7 esquemas, conversión MXN → USD sin redondear).
-- **Fuera de alcance:** validación contra la configuración (dominios, ciudades: T07) y lectura de archivos (T08).
+- **Fuera de alcance:** validación contra la configuración (dominios, ciudades: T07) y lectura de archivos (T08b).
 - **Construye (design.md):** CMP-05, CMP-06, CTR-01, CTR-04, RNF-7, RNF-11
 - **Comportamientos esperados** (design.md §6, §12): cada obligatorio faltante produce `CAMPO OBLIGATORIO FALTANTE (<campo>)` con el nombre del campo del archivo y en el orden de §6; campos desconocidos se descartan; `client_request` no tiene campo de notas; un GTIN con dígito verificador inválido no confirma la coincidencia; `price.current` con más de 2 decimales o ≤ 0 se marca para `PRECIO INVÁLIDO`.
 - **Guía de implementación:** el contrato no se redefine: los nombres y obligatorios son los de la arquitectura §8; `recordType` no es parte del modelo (lo quita el cargador); el alias del cliente nunca se escribe en logs ni en mensajes de error.
@@ -100,7 +100,7 @@ Tareas de la parte B del REQ-2026-0001 v2.9 (`req-2026-0001-b-evaluacion`). **1 
 ## 6. T06 — Repositorios en memoria y PostgreSQL (cimientos)
 
 - **Objetivo:** dar al cargador y al ensamblador una interfaz de datos con dos implementaciones equivalentes.
-- **Capacidad:** cimientos. **Escenarios:** ninguno propio; lo ejercitan B34 (T08, T21) y la reevaluación (T22).
+- **Capacidad:** cimientos. **Escenarios:** ninguno propio; lo ejercitan B34 (T08b, T21) y la reevaluación (T22).
 - **Alcance:** `persistencia/repositorios.py`: Protocol `Repositorio`, `RepositorioMemoria`, `RepositorioPostgres`; guardar y leer observaciones (con TAB-08), capturas, versiones de configuración, cargas y evaluaciones; lecturas "a un instante" de §5 de `design.md`; conexión con la contraseña del `podman secret`.
 - **Fuera de alcance:** armar el contexto (T21).
 - **Construye (design.md):** CMP-20, RNF-8
@@ -119,7 +119,7 @@ Tareas de la parte B del REQ-2026-0001 v2.9 (`req-2026-0001-b-evaluacion`). **1 
 - **Objetivo:** paso 1 de REQ §3.2 con `RECHAZADA_VALIDACION` y su motivo.
 - **Capacidad:** `carga-y-validacion`. **Escenarios:** B20 (a), B20 (b), B20 (c), B20 (d), B20 (e), B20 (f), B20 (g), B20 (h).
 - **Alcance:** `entradas/validacion.py` (precio, dominio autorizado, enlace `https` de plataforma permitida, obligatorios del contrato y del particular, ciudad); el paso 1 del motor y el registro de rechazo.
-- **Fuera de alcance:** lectura de archivos (T08).
+- **Fuera de alcance:** lectura de archivos (T08b).
 - **Construye (design.md):** CMP-07, CMP-17, RNF-7, RNF-4
 - **Comportamientos esperados:** los 8 escenarios de B20; además, el orden de comprobaciones de `design.md` §6 cuando fallan dos a la vez (prueba unitaria); la publicación de un particular con `availability.state` distinto de `listed` se rechaza (REQ §6 punto 1; DEC-242).
 - **Guía de implementación:** validación sintáctica de la URL (host igual o subdominio de un dominio autorizado; prefijo de ruta de la plataforma si lo configura PAR-09); nunca se abre una URL; el rechazo no guarda la observación en el historial; T07 valida `availability.state = listed` en la publicación de un particular (REQ §6 punto 1; DEC-242), que T03 no comprueba.
@@ -128,20 +128,46 @@ Tareas de la parte B del REQ-2026-0001 v2.9 (`req-2026-0001-b-evaluacion`). **1 
 
 - [x] 7.1 Implementar la validación del paso 1 y verificar los 8 escenarios de B20 marcados con `@pytest.mark.scenario`
 
-## 8. T08 — Cargador de archivos JSON Lines y CSV con reporte (B34 b y c)
+## 8. T08a — Validación y persistencia previas al cargador (cimientos)
+
+- **Objetivo:** dejar listos los esquemas de entrada, la migración y el repositorio que usa el cargador, con las decisiones del issue #34 de validación y persistencia (DEC-273).
+- **Capacidad:** `carga-y-validacion`. **Escenarios:** ninguno propio; los ejercitan B20 (T07) y B34 (T08b, T21).
+- **Alcance:**
+  - Montos con más de 2 decimales rechazados al leer en `entradas/contrato.py` y rangos de las capturas en `entradas/capturas.py`, con sus motivos (DEC-257; decisiones 2 y 2b).
+  - Migración `0004`: `local_comparable.price_usd` a `numeric` sin escala, y se quita la excepción `_DERIVADAS` de T06 (DEC-258; decisión 3).
+  - Repositorio, en memoria y en PostgreSQL: `buscar_publicacion` rechaza con `ValueError` una tienda vacía o solo espacios, y sin tienda se pasa `None` (decisión 16). Las lecturas por id (`version_configuracion`, `leer_producto`, `leer_observacion`, `leer_carga`, `leer_evaluacion`, `terminar_carga`, `observacion_por_clave`) verifican el tipo exacto (`int` sin `bool`, `UUID`, `str`) y dan `TypeError` (decisión 17).
+  - `conexion.py`: `url_de_conexion` rechaza con `ErrorDeConexion`, sin la URL en el mensaje, las claves `password` y `passfile` en la query, sin distinguir mayúsculas (decisión 18).
+  - `_checks.py` y `_columnas.py`: `NotImplementedError` al importar ante casts distintos de `::text[]`, identificadores que no son columnas de la tabla (y `TRUE`/`FALSE`) y `SmallInteger` (16 bits o `NotImplementedError`); en `_patron_are`, ante `[:`, `[.`, `[=`, `(?`, `***` y escapes alfabéticos, con los patrones validados al importar (decisión 19).
+  - `entradas/contrato.py`: en la observación de un comercio, `pickupLocation` se descarta al leer; ni se valida ni se guarda (decisión 37).
+- **Fuera de alcance:** el cargador, la clave de idempotencia y la URL canónica (T08b).
+- **Construye (design.md):** CMP-05, CMP-06, CMP-19, CMP-20, CTR-01, CTR-04, TAB-09, RNF-5, RNF-4
+- **Comportamientos esperados:** una prueba por regla: cada monto con más de 2 decimales y cada rango de CTR-04 con su motivo (`PRECIO INVÁLIDO` o `CAMPO OBLIGATORIO FALTANTE (<campo>)`); `0004` sube y baja en integración y `price_usd` guarda el mismo valor en memoria y en PostgreSQL; la batería de contrato con la tienda vacía y los tipos de id; `password` en la query rechazado; los `NotImplementedError` al importar; un comercio con una ciudad que no existe se acepta sin `pickup_location`.
+- **Guía de implementación:** el rechazo del repositorio queda como última barrera de los decimales; los motivos solo llevan el código y el campo, nunca el valor (R-20).
+- **Depende de:** T06, T07. **Estimación:** 6 h.
+- **DoD:** común; evidencia de las pruebas de integración de `0004` (Jesús en Rocky o el job de CI de DEC-251).
+
+- [ ] 8.1 Implementar los decimales y rangos de entrada y el descarte de `pickupLocation` en un comercio, y verificar sus pruebas unitarias
+- [ ] 8.2 Escribir `0004`, endurecer el repositorio, la conexión y los `CHECK` de memoria, y verificar la batería de contrato en memoria y en integración
+
+## 8b. T08b — Cargador de archivos JSON Lines y CSV con reporte (B34 b y c)
 
 - **Objetivo:** un solo cargador que valida por `recordType`, rechaza por registro sin detener la carga y deja el reporte.
 - **Capacidad:** `carga-y-validacion`. **Escenarios:** B34 (b), B34 (c).
-- **Alcance:** `entradas/cargador.py` (CTR-02, CTR-03, CTR-05); guardar en el repositorio; `oip config cargar` y `oip cargar` en la CLI (sin evaluar todavía: la evaluación la conecta T21).
-- **Fuera de alcance:** disparar evaluaciones (T21).
+- **Alcance:**
+  - `entradas/cargador.py` (CTR-02, CTR-03, CTR-05); guardar en el repositorio; `oip config cargar` y `oip cargar` en la CLI (sin evaluar todavía: la evaluación la conecta T21).
+  - Clave de idempotencia de una observación sin `idempotencyKey`, con `extractedAt` en UTC truncado al minuto y `storeCode` ausente como texto vacío (DEC-255; decisión 1).
+  - URL canónica, y prefijo de ruta de PAR-09 comparado sobre la ruta normalizada en `entradas/validacion.py`, con una prueba de `..` y `%2e%2e` (DEC-256; decisiones 1b y 1b-bis).
+  - El cargador pone `captured_at` = instante de la carga (reloj o `--instante`), con una prueba de reproducción (DEC-271; decisión 31).
+  - Una prueba de que todo rechazo de una carga lleva su carga y su renglón (decisión 33).
+- **Fuera de alcance:** disparar evaluaciones (T21); el origen de un rechazo del Worker (parte A).
 - **Construye (design.md):** CMP-08, CMP-22, CTR-02, CTR-03, CTR-05, CTR-07, RNF-5, RNF-4
 - **Comportamientos esperados:** B34 (b) y B34 (c), con los motivos de `design.md` §6 (`CAMPO OBLIGATORIO FALTANTE (condition)` en B34 b); más las pruebas unitarias de §12 (archivo vacío, renglón que no es JSON, CSV sin tipo en el nombre, listas con `|`, duplicados contados en `duplicates`).
 - **Guía de implementación:** JSON con `parse_float=Decimal`; `recordType` se quita antes de validar la observación; una transacción por registro; el reporte no guarda contenido; `citiesToRegister` con las ciudades de `CIUDAD NO CONFIGURADA`. Los esquemas de T03 tienen enteros y booleanos estrictos (DEC-238): el cargador convierte el texto de CSV (`"true"`/`"false"`, `"3"`) al tipo del campo antes de validar; un texto que no se convierte llega como está y el esquema lo rechaza. El cargador pasa a `leer_captura` la zona de `general.timezone` (DEC-240), siempre la zona ya validada de la configuración: una zona inválida es un error de configuración, no del registro (DEC-247).
-- **Depende de:** T06, T07. **Estimación:** 7 h.
+- **Depende de:** T08a. **Estimación:** 7 h.
 - **DoD:** común.
 
-- [ ] 8.1 Implementar la lectura de JSON Lines y CSV con el despacho por `recordType` y verificar las pruebas unitarias de formato
-- [ ] 8.2 Implementar el reporte de carga y los comandos de la CLI y verificar B34 (b) y B34 (c) con `RepositorioMemoria`
+- [ ] 8b.1 Implementar la lectura de JSON Lines y CSV con el despacho por `recordType`, la clave de idempotencia y la URL canónica, y verificar las pruebas unitarias de formato, de la clave y de la URL
+- [ ] 8b.2 Implementar el reporte de carga, `captured_at` y los comandos de la CLI, y verificar B34 (b) y B34 (c) con `RepositorioMemoria`
 
 ## 9. T09 — Precio habitual y episodio de liquidación (B30)
 
@@ -162,7 +188,7 @@ Tareas de la parte B del REQ-2026-0001 v2.9 (`req-2026-0001-b-evaluacion`). **1 
 
 - **Objetivo:** descuento anunciado y real con sus marcas, precio de mercado hoy y calidad del precio.
 - **Capacidad:** `referencias-de-precio`. **Escenarios:** B6, B7.
-- **Alcance:** `descuento.py` (franjas, `PRECIO ANTES INFLADO`, `DESCUENTO ANUNCIADO NO COMPROBADO`, precio típico de la tienda, calidad RN-012 con S-22 y S-28, MSRP solo para mostrar) y el precio de mercado hoy básico en `referencias.py` (48 h, disponible, sin la oferta evaluada).
+- **Alcance:** `descuento.py` (CMP-12: franjas, `PRECIO ANTES INFLADO`, `DESCUENTO ANUNCIADO NO COMPROBADO`, calidad RN-012 con S-22 y S-28, y el uso del precio típico y del MSRP, este solo para mostrar) y, en `referencias.py` (CMP-11), el precio típico de la tienda, el MSRP y el precio de mercado hoy básico (48 h, disponible, sin la oferta evaluada). Corregido por la decisión 29 del issue #34: el precio típico y el MSRP están en `referencias.py`, como dice CMP-11.
 - **Fuera de alcance:** comercio = cadena y su excepción (T16); Amazon sin oferta hoy (T16).
 - **Construye (design.md):** CMP-11, CMP-12, PAR-10, RNF-4
 - **Comportamientos esperados:** B6 y B7 (con el "Dado" completado como dice `design.md` §12).
@@ -197,7 +223,7 @@ Tareas de la parte B del REQ-2026-0001 v2.9 (`req-2026-0001-b-evaluacion`). **1 
 - **Construye (design.md):** CMP-13, CMP-14, PAR-06, PAR-12, RNF-4
 - **Comportamientos esperados:** B2 (base), B15, B16, B17.
 - **Guía de implementación:** los comparables cuentan solo del mismo producto y estado y de la zona de venta local (PAR-09).
-- **Depende de:** T11. **Estimación:** 6 h.
+- **Depende de:** T11, T24. **Estimación:** 6 h.
 - **DoD:** común.
 
 - [ ] 12.1 Implementar el techo local, el castigo sin mínimo, el envío sin peso y la comisión desconocida y verificar B2 (base), B15, B16 y B17
@@ -211,7 +237,7 @@ Tareas de la parte B del REQ-2026-0001 v2.9 (`req-2026-0001-b-evaluacion`). **1 
 - **Construye (design.md):** CMP-13, CMP-14, CMP-15, PAR-05, PAR-13, RNF-4
 - **Comportamientos esperados:** B4, B9 (base), B21, B25; prueba unitaria del empate de nivel del aviso (`design.md` §10 punto 6).
 - **Guía de implementación:** la baja por competencia aplica solo en Amazon; `nivel_calculado` solo en canales disponibles o por revisar (DEC-224 a).
-- **Depende de:** T11. **Estimación:** 6 h.
+- **Depende de:** T11, T24, T25. **Estimación:** 6 h.
 - **DoD:** común.
 
 - [ ] 13.1 Implementar restricciones, competencia más barata, confianza baja y sin rotación y verificar B4, B9 (base), B21 y B25
@@ -225,7 +251,7 @@ Tareas de la parte B del REQ-2026-0001 v2.9 (`req-2026-0001-b-evaluacion`). **1 
 - **Construye (design.md):** CMP-13, CMP-14, CMP-15, PAR-06, PAR-11, RNF-4
 - **Comportamientos esperados:** B10 (a), B10 (b), B12, B13, B26 (a), B26 (b).
 - **Guía de implementación:** el mismo ranking sirve para umbral, días y tope; ventana del ranking según `design.md` §10 punto 3.
-- **Depende de:** T11. **Estimación:** 7 h.
+- **Depende de:** T11, T24. **Estimación:** 7 h.
 - **DoD:** común.
 
 - [ ] 14.1 Implementar el ranking y la demanda desconocida y verificar B10 (a) y B10 (b)
@@ -240,7 +266,7 @@ Tareas de la parte B del REQ-2026-0001 v2.9 (`req-2026-0001-b-evaluacion`). **1 
 - **Construye (design.md):** CMP-13, CMP-02, RNF-5, RNF-4
 - **Comportamientos esperados:** B28 (a), B28 (b), B33.
 - **Guía de implementación:** sin precio de venta no hay margen de Amazon, ni informativo; la venta local se calcula con la fórmula completa y un solo `redondear`.
-- **Depende de:** T11. **Estimación:** 5 h.
+- **Depende de:** T11, T24. **Estimación:** 5 h.
 - **DoD:** común.
 
 - [ ] 15.1 Implementar el cierre sin precio de venta en Amazon y verificar B28 (a), B28 (b) y B33
@@ -254,7 +280,7 @@ Tareas de la parte B del REQ-2026-0001 v2.9 (`req-2026-0001-b-evaluacion`). **1 
 - **Construye (design.md):** CMP-11, CMP-12, PAR-02, PAR-08, RNF-4
 - **Comportamientos esperados:** B14, B32.
 - **Guía de implementación:** la cadena sale de PAR-02; S-28 en la calidad de B14.
-- **Depende de:** T11. **Estimación:** 5 h.
+- **Depende de:** T11, T24, T25. **Estimación:** 5 h.
 - **DoD:** común.
 
 - [ ] 16.1 Implementar el precio de venta sin oferta hoy y la regla de cadena y verificar B14 y B32
@@ -277,12 +303,12 @@ Tareas de la parte B del REQ-2026-0001 v2.9 (`req-2026-0001-b-evaluacion`). **1 
 
 - **Objetivo:** los caminos a `DESCARTADA` con el margen ajustado calculado aunque no haya descuento real (DEC-198).
 - **Capacidad:** `resultado-y-reevaluacion`. **Escenarios:** B3, B22, B23, B29.
-- **Alcance:** motivos `MERCADO YA BARATO`, `SIN CANAL DISPONIBLE`, `MARGEN NEGATIVO`; demanda local baja cierra el canal local; todos los motivos guardados.
+- **Alcance:** motivos `MERCADO YA BARATO`, `SIN CANAL DISPONIBLE`, `MARGEN NEGATIVO`; demanda local baja cierra el canal local; todos los motivos guardados. Con `SIN CANAL DISPONIBLE`, las cuatro invariantes del registro por estado del canal (decisión 14 del issue #34; REQ §3.2.1, §3.2.2 y DEC-224 a): un canal cerrado sin `nivel` ni `nivel_calculado`; `NIVEL_ASIGNADO` con al menos un canal disponible con nivel; `SIN_NIVEL` con al menos un canal disponible.
 - **Fuera de alcance:** usados y particulares (T20).
 - **Construye (design.md):** CMP-16, CMP-14, RNF-4
 - **Comportamientos esperados:** B3, B22, B23, B29.
 - **Guía de implementación:** `MARGEN NEGATIVO` solo mira canales disponibles y exige que no haya canal por revisar; un canal por revisar no entra.
-- **Depende de:** T11. **Estimación:** 6 h.
+- **Depende de:** T11, T24, T25. **Estimación:** 6 h.
 - **DoD:** común.
 
 - [ ] 18.1 Implementar los motivos de descarte y verificar B3, B22, B23 y B29
@@ -309,7 +335,7 @@ Tareas de la parte B del REQ-2026-0001 v2.9 (`req-2026-0001-b-evaluacion`). **1 
 - **Fuera de alcance:** la carga del archivo de B34 (a) (T21).
 - **Construye (design.md):** CMP-10, CMP-11, CMP-12, CMP-13, PAR-09, PAR-12, RNF-4
 - **Comportamientos esperados:** B18, B24 (a), B24 (b), B24 (c).
-- **Guía de implementación:** el usado usa el valor de referencia en lugar del precio habitual; con estimado de Jesús, margen informativo con el techo de los comparables que haya.
+- **Guía de implementación:** el usado usa el valor de referencia en lugar del precio habitual; con estimado de Jesús, margen informativo con el techo de los comparables que haya. En un usado, `references.precio_habitual` y su fuente quedan vacíos, con su prueba (DEC-263).
 - **Depende de:** T11. **Estimación:** 8 h.
 - **DoD:** común.
 
@@ -324,8 +350,8 @@ Tareas de la parte B del REQ-2026-0001 v2.9 (`req-2026-0001-b-evaluacion`). **1 
 - **Fuera de alcance:** reevaluación (T22).
 - **Construye (design.md):** CMP-21, CMP-08, CMP-22, RNF-1, RNF-2, RNF-3, RNF-4
 - **Comportamientos esperados:** B34 (a) (con `CAMPO OBLIGATORIO FALTANTE (exchangeRate)` y la observación evaluada con el resultado de B18); recalcular cada evaluación guardada da el mismo registro (RNF-3); cambiar un parámetro y cargar la configuración cambia el resultado de una evaluación nueva y la anterior conserva su versión (RNF-2); evaluar con el historial sintético de `design.md` §11 tarda < 2 s (RNF-1), en memoria y en integración.
-- **Guía de implementación:** las evaluaciones van después de cargar todo el archivo, en orden; la ficha de Amazon no se evalúa como oferta; `observations_used` lista cada observación del contexto con su fecha.
-- **Depende de:** T08, T20. **Estimación:** 8 h.
+- **Guía de implementación:** las evaluaciones van después de cargar todo el archivo, en orden; la ficha de Amazon no se evalúa como oferta; `observations_used` lista cada observación del contexto con su fecha. Prueba del borde de los 90 días del contexto: una cadena de episodios que empezó antes no se ve y el recálculo da el mismo registro (DEC-264). El contexto toma las capturas con `captured_at` ≤ instante (DEC-271).
+- **Depende de:** T08b, T20. **Estimación:** 8 h.
 - **DoD:** común; evidencia de las pruebas de integración en local.
 
 - [ ] 21.1 Implementar el ensamblador y guardar el registro y verificar B34 (a) con `RepositorioMemoria`
@@ -339,7 +365,7 @@ Tareas de la parte B del REQ-2026-0001 v2.9 (`req-2026-0001-b-evaluacion`). **1 
 - **Fuera de alcance:** el resumen y el tablero (parte C).
 - **Construye (design.md):** CMP-18, CMP-21, TAB-12, RNF-4
 - **Comportamientos esperados:** B2 (b), B9 (b); prueba unitaria de que una observación del mismo día no cambia el habitual (excluye el día evaluado).
-- **Guía de implementación:** `design.md` §10 punto 5 y Pendiente 6; la reevaluación guarda la evaluación anterior y las referencias que cambiaron.
+- **Guía de implementación:** `design.md` §10 punto 5 y Pendiente 6; la reevaluación guarda la evaluación anterior y las referencias que cambiaron. La oferta se toma exacta del `input_snapshot` de la evaluación anterior, con una prueba de que una marca restringida reevaluada da el mismo resultado (DEC-265); el mercado hoy usa el orden del filtro de DEC-261 (T25).
 - **Depende de:** T21, T12, T13. **Estimación:** 7 h.
 - **DoD:** común.
 
@@ -353,12 +379,50 @@ Tareas de la parte B del REQ-2026-0001 v2.9 (`req-2026-0001-b-evaluacion`). **1 
 - **Fuera de alcance:** servicio HTTP, Metabase y Telegram (parte C).
 - **Construye (design.md):** CMP-23, RNF-8, RNF-10
 - **Comportamientos esperados** (design.md Migration Plan): respaldo, `upgrade` de `0001` y `0002`, `downgrade` y `upgrade` otra vez; `oip config cargar` y `oip cargar` de un archivo sintético en el contenedor; las pruebas de integración pasan contra la base de Rocky; ningún secreto en la imagen ni en los logs.
-- **Guía de implementación:** contenedor de migraciones de una sola ejecución antes del servicio; etiqueta `:rollback-<fecha>`; ningún puerto fuera de `127.0.0.1`.
+- **Guía de implementación:** contenedor de migraciones de una sola ejecución antes del servicio; etiqueta `:rollback-<fecha>`; ningún puerto fuera de `127.0.0.1`. Notas del runbook (decisión 32 del issue #34): no subir `psycopg` a DEBUG en producción; no bajar `0003` con rechazos guardados; esperar a la base con `pg_isready -h 127.0.0.1`. Código: `0003` se niega a bajar con rechazos guardados, como `0002` (se edita por DEC-272, antes de aplicarla en una base que no sea desechable), con prueba de integración en Rocky; el arranque fija el logger `psycopg` en WARNING de forma explícita.
 - **Depende de:** T21, T22. **Estimación:** 6 h.
 - **DoD:** común; evidencia de Jesús en el PR (salidas de los comandos en Rocky). No se archiva el cambio sin esta prueba (DEC-182).
 
 - [ ] 23.1 Escribir el `Containerfile`, los Quadlets y la sección del runbook y verificar que la imagen construye sin secretos
 - [ ] 23.2 Correr en Rocky el respaldo, las migraciones y una carga, y verificar la evidencia en el PR
+
+## 24. T24 — Endurecimiento de los tipos de T04 (cimientos)
+
+- **Objetivo:** cerrar las observaciones del issue #34 sobre los tipos del dominio, la configuración y los fixtures antes de las variantes de canales (DEC-273).
+- **Capacidad:** cimientos. **Escenarios:** ninguno propio; lo ejercitan T12 a T22.
+- **Alcance** (decisiones del issue #34):
+  - 12: `RegistroEvaluacion` y `Referencias` rechazan con `ValueError` texto vacío o solo espacios en `motivo_rechazo`, `marcas` y `fuente_precio_habitual`.
+  - 13: un `RegistroEvaluacion` con entrada exige `id`, `evaluado_en`, versiones de RN, evaluación anterior, referencias cambiadas y carga iguales a los de la entrada.
+  - 15: `EvaluacionCanal` y `RegistroEvaluacion` validan cada marca contra el catálogo, con el catálogo cerrado nuevo del dato de `ESTIMADO (<dato>)` (DEC-266).
+  - 20: `_ENTERO_DECIMAL` y `_ZONA_IANA` de `configuracion.py` usan `fullmatch`, con una prueba de un entero con salto de línea final rechazado.
+  - 23: `EvaluacionCanal` rechaza con `ValueError` causas fuera del orden del catálogo (DEC-269).
+  - 24: el docstring de `CanalEvaluado` dice que en venta local `costo_venta` = entrega + otros (sin prueba nueva).
+  - 28: sucursales sintéticas por cadena (`tp-cv` y una de una segunda cadena sintética) en `tests/config_tienda_prueba.py`, para usar desde T12; los fixtures viejos no se reescriben.
+  - 34: al construir, las tuplas dentro de un valor `Any` (`evidence`) se convierten en listas, con una prueba de ida y vuelta del `input_snapshot`.
+  - 36: renombrar `test_el_particular_conserva_content_mientras_se_resuelve_rn_013` y `test_dec236_content_del_particular_se_conserva_pendiente_de_jesus` (sin "pendiente") y citar DEC-245 en sus docstrings; las aserciones no cambian.
+- **Fuera de alcance:** las invariantes por estado del canal (T18); emitir marcas nuevas.
+- **Construye (design.md):** CMP-04, CMP-09, CMP-17, CTR-06, RNF-3
+- **Comportamientos esperados:** una prueba por punto (salvo el 24); la suite completa sigue en verde.
+- **Guía de implementación:** si choca con T08a en los fixtures o en `configuracion.py`, la sesión de orquestación simula el merge y da el orden (DEC-253).
+- **Depende de:** T11. **Estimación:** 6 h.
+- **DoD:** común.
+
+- [ ] 24.1 Implementar las validaciones de los tipos del dominio (12, 13, 15, 23, 34) y verificar sus pruebas unitarias
+- [ ] 24.2 Aplicar `fullmatch`, las sucursales sintéticas, el docstring y los nombres de las pruebas (20, 24, 28, 36) y verificar la suite completa
+
+## 25. T25 — Mercado hoy y calidad sin datos: ajustes (decisiones 6 y 10)
+
+- **Objetivo:** fijar el orden del filtro del mercado hoy y la calidad con precio antes inflado sin datos, antes de las tareas que los usan.
+- **Capacidad:** `referencias-de-precio`. **Escenarios:** ninguno nuevo; los ejercitan B6, B7, B9, B14, B32 y B3.
+- **Alcance:** en `referencias.py`, de cada publicación primero la observación más reciente dentro de las 48 h y después el filtro de nueva, vendida por el comercio y disponible (DEC-261), para el mercado hoy, la competencia más barata y la reevaluación, con el ajuste de la prueba del developer de T10; en `descuento.py`, la marca `PRECIO ANTES INFLADO` se revisa antes de la salida "sin datos" y da Descuento cuestionable (RN-012 §3, "sin importar los números"; decisión 10 del issue #34).
+- **Fuera de alcance:** comercio = cadena y su excepción (T16).
+- **Construye (design.md):** CMP-11, CMP-12, RNF-4
+- **Comportamientos esperados:** un agotado reciente saca a la publicación del mercado hoy; `PRECIO ANTES INFLADO` sin habitual ni mercado hoy da Descuento cuestionable; B6 y B7 siguen en verde.
+- **Guía de implementación:** `design.md` §10 punto 4.
+- **Depende de:** T11. **Estimación:** 4 h.
+- **DoD:** común.
+
+- [ ] 25.1 Implementar el orden del filtro del mercado hoy y la calidad con precio antes inflado sin datos, y verificar sus pruebas unitarias
 
 ## Matriz de cobertura
 
@@ -418,5 +482,5 @@ Una fila por escenario y variante de la parte B (54). La columna RN es la del en
 | B32 | `referencias-de-precio` | Comercio = cadena | T16 | RN-002, RN-012, RN-016, RN-018 |
 | B33 | `canales-y-margen` | Redondeo una sola vez por fórmula | T15 | RN-001, RN-005, RN-016 |
 | B34 (a) | `carga-y-validacion` | Carga de un archivo JSON Lines con registros de varios tipos | T21 | RN-014, RN-016, RN-017 (del requisito; el criterio del REQ no cita RN) |
-| B34 (b) | `carga-y-validacion` | Carga de un archivo CSV de un solo tipo | T08 | RN-014, RN-016 (del requisito; el criterio del REQ no cita RN) |
-| B34 (c) | `carga-y-validacion` | recordType obligatorio en cada renglón JSON Lines | T08 | RN-013 (del requisito; el criterio del REQ no cita RN) |
+| B34 (b) | `carga-y-validacion` | Carga de un archivo CSV de un solo tipo | T08b | RN-014, RN-016 (del requisito; el criterio del REQ no cita RN) |
+| B34 (c) | `carga-y-validacion` | recordType obligatorio en cada renglón JSON Lines | T08b | RN-013 (del requisito; el criterio del REQ no cita RN) |
