@@ -170,14 +170,15 @@ def calidad_del_precio(datos: DatosCalidad, parametros: DescuentoYCalidad) -> Ca
     if not isinstance(datos, DatosCalidad):
         raise TypeError("se esperaba DatosCalidad")
     calidad = parametros.quality
+    # 1. Descuento cuestionable (se evalúa primero, también sin datos: RN-012 §3, "sin
+    # importar los números"; decisión 10 del issue #34).
+    if datos.precio_antes_inflado:
+        return CalidadPrecio.DESCUENTO_CUESTIONABLE
     if datos.precio_habitual is None and datos.precio_mercado_hoy is None:
         return None
     entre_los_mas_baratos = datos.precio_mercado_hoy is not None and datos.precio <= (
         datos.precio_mercado_hoy * (1 + calidad.cheapest_tolerance_pct / _CIEN)
     )
-    # 1. Descuento cuestionable (se evalúa primero).
-    if datos.precio_antes_inflado:
-        return CalidadPrecio.DESCUENTO_CUESTIONABLE
     if datos.precio_habitual is None:
         anunciado = datos.descuento_anunciado
         if anunciado is not None and anunciado > 0 and datos.otros_comercios <= _UN_COMERCIO:

@@ -422,7 +422,7 @@ Tareas de la parte B del REQ-2026-0001 v2.9 (`req-2026-0001-b-evaluacion`). **1 
 - **Depende de:** T11. **Estimación:** 4 h.
 - **DoD:** común.
 
-- [ ] 25.1 Implementar el orden del filtro del mercado hoy y la calidad con precio antes inflado sin datos, y verificar sus pruebas unitarias
+- [x] 25.1 Implementar el orden del filtro del mercado hoy y la calidad con precio antes inflado sin datos, y verificar sus pruebas unitarias
 
 ## Matriz de cobertura
 

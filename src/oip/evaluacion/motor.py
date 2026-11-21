@@ -175,7 +175,8 @@ def calcular_descuento(contexto: ContextoEvaluacion, avance: Avance) -> Avance:
 def calcular_calidad(contexto: ContextoEvaluacion, avance: Avance) -> Avance:
     """Paso 5 (RN-012 v1; S-22, S-28; CMP-12): calidad del precio, que se muestra junto al
     resultado y no lo cambia. En un usado no aplica (DEC-215; S-13 para el estado
-    desconocido). Sin datos (ni precio habitual ni precio de mercado hoy) queda vacía."""
+    desconocido). Sin datos (ni precio habitual ni precio de mercado hoy) queda vacía, salvo
+    con ``PRECIO ANTES INFLADO``, que da Descuento cuestionable (RN-012 §3; T25)."""
     oferta = contexto.oferta.observacion
     precio = oferta.price.current
     if precio is None:

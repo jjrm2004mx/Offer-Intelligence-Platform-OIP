@@ -449,16 +449,33 @@ def disponible_para_mercado_hoy(observacion: Observacion, contexto: ContextoEval
     return observacion.availability.state is EstadoDisponibilidad.IN_STOCK_CONFIRMED
 
 
-def _cuenta_para_el_mercado_hoy(
-    registrada: ObservacionRegistrada, contexto: ContextoEvaluacion, limite: dt.timedelta
+def _es_lectura(observacion: Observacion) -> bool:
+    """La observación es una lectura de la publicación: una consulta bloqueada no genera
+    observación (REQ §3.1 punto 5) y una con precio inválido la rechaza la validación (REQ
+    §3.2 paso 1). En la ficha de Amazon el precio es el botón de compra (DEC-234 3), así que
+    ``price.current`` no la invalida."""
+    if observacion.blocked:
+        return False
+    return observacion.amazon_listing is not None or not observacion.precio_invalido
+
+
+def _dentro_de_la_antiguedad(
+    observacion: Observacion, contexto: ContextoEvaluacion, limite: dt.timedelta
 ) -> bool:
-    observacion = registrada.observacion
+    """Antigüedad (``instante − extractedAt``) de 0 al límite de PAR-08, incluido."""
     edad = contexto.instante - observacion.extracted_at
+    return dt.timedelta(0) <= edad <= limite
+
+
+def _cumple_el_filtro_del_mercado_hoy(
+    observacion: Observacion, contexto: ContextoEvaluacion
+) -> bool:
+    """Nueva, vendida por el comercio, disponible (S-03) y con precio (DEC-261: se aplica a
+    la observación más reciente de la publicación, no antes de elegirla)."""
     return (
-        dt.timedelta(0) <= edad <= limite
-        and _precio_de_referencia(observacion) is not None
-        and _cuenta_para_el_habitual(observacion)
+        _cuenta_para_el_habitual(observacion)
         and disponible_para_mercado_hoy(observacion, contexto)
+        and _precio_de_referencia(observacion) is not None
     )
 
 
@@ -476,26 +493,34 @@ def mercado_hoy(contexto: ContextoEvaluacion) -> MercadoHoy | None:
     """
     oferta = contexto.oferta
     limite = dt.timedelta(hours=_parametros(contexto).market_today_max_age_hours)
+    # 1. De cada publicación, la observación más reciente dentro de la antigüedad.
     mas_recientes: dict[UUID, ObservacionRegistrada] = {}
     for registrada in _guardadas(contexto):
         if registrada.id_publicacion is None or registrada.id is None:
             continue
         if registrada.id_publicacion == oferta.id_publicacion or registrada.id == oferta.id:
             continue
-        if not _cuenta_para_el_mercado_hoy(registrada, contexto, limite):
+        observacion = registrada.observacion
+        if not _es_lectura(observacion):
+            continue
+        if not _dentro_de_la_antiguedad(observacion, contexto, limite):
             continue
         anterior = mas_recientes.get(registrada.id_publicacion)
-        clave = (registrada.observacion.extracted_at, registrada.id)
+        clave = (observacion.extracted_at, registrada.id)
         if anterior is None or clave > (anterior.observacion.extracted_at, anterior.id):
             mas_recientes[registrada.id_publicacion] = registrada
-    if not mas_recientes:
-        return None
-    # Cada una tiene precio: lo exige _cuenta_para_el_mercado_hoy.
-    precios = [
-        p for r in mas_recientes.values() if (p := _precio_de_referencia(r.observacion)) is not None
+    # 2. Después, el filtro: si la más reciente no cumple, la publicación sale.
+    que_cumplen = [
+        r
+        for r in mas_recientes.values()
+        if _cumple_el_filtro_del_mercado_hoy(r.observacion, contexto)
     ]
+    if not que_cumplen:
+        return None
+    # Cada una tiene precio: lo exige _cumple_el_filtro_del_mercado_hoy.
+    precios = [p for r in que_cumplen if (p := _precio_de_referencia(r.observacion)) is not None]
     evaluada = cadena_de(oferta.observacion.retailer_code, contexto)
-    cadenas = {cadena_de(r.observacion.retailer_code, contexto) for r in mas_recientes.values()}
+    cadenas = {cadena_de(r.observacion.retailer_code, contexto) for r in que_cumplen}
     return MercadoHoy(precio=min(precios), otras_cadenas=frozenset(cadenas - {evaluada}))
 
 

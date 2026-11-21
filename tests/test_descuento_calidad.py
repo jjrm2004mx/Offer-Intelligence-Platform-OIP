@@ -1,6 +1,7 @@
 """Pruebas de T10: descuento anunciado y sus marcas, precio de mercado hoy, precio típico de la
 tienda y calidad del precio (CMP-11, CMP-12, PAR-10; RN-002 v2, RN-003 v2, RN-012 v1; S-03,
-S-22, S-28), con los escenarios B6 y B7.
+S-22, S-28), con los escenarios B6 y B7, y los ajustes de T25 (DEC-261: orden del filtro
+del mercado hoy; decisión 10 del #34: precio antes inflado sin datos).
 
 Fixtures sintéticos: comercios ficticios con dominios reservados (example.com, example.net,
 example.org); ninguna prueba abre una URL. Instante explícito, sin reloj ni zona de la
@@ -25,7 +26,7 @@ from oip.configuracion import cargar_configuracion_texto
 from oip.dinero import formatear_porcentaje
 from oip.entradas.capturas import leer_captura
 from oip.entradas.contrato import leer_observacion
-from oip.evaluacion import motor, referencias
+from oip.evaluacion import canales, motor, referencias
 from oip.evaluacion.contexto import ContextoEvaluacion, ObservacionRegistrada
 from oip.evaluacion.descuento import (
     DatosCalidad,
@@ -482,7 +483,7 @@ def test_mercado_hoy_en_tienda_confianza_alta_o_media(disponibilidad, liquidacio
     assert (_hoy(obs) is not None) is cuenta
 
 
-def test_mercado_hoy_la_observacion_mas_reciente_que_cumple_de_cada_publicacion():
+def test_mercado_hoy_la_observacion_mas_reciente_de_cada_publicacion_y_despues_el_filtro():
     pub = UUID(int=9_001)
     antes = _obs("100.00", publicacion=pub, momento=_momento(horas_antes=10))
     despues = _obs("120.00", publicacion=pub, momento=_momento(horas_antes=3))
@@ -492,7 +493,10 @@ def test_mercado_hoy_la_observacion_mas_reciente_que_cumple_de_cada_publicacion(
         momento=_momento(horas_antes=1),
         availability={"state": "out_of_stock"},
     )
-    assert _hoy(antes, despues, agotada).precio == Decimal("120.00")
+    # DEC-261: primero la más reciente (la agotada) y después el filtro → la publicación sale.
+    assert _hoy(antes, despues, agotada) is None
+    # Sin la agotada, la más reciente es la de $120, no la anterior de $100.
+    assert _hoy(antes, despues).precio == Decimal("120.00")
 
 
 def test_mercado_hoy_con_la_ficha_de_amazon():
@@ -702,3 +706,182 @@ def test_b7_solo_referencia():
         assert canal.rendimiento_mensual_pct is None
         assert canal.nivel is None
     assert registro.nivel_aviso is None
+
+
+# --- T25: orden del filtro del mercado hoy (DEC-261) y cuestionable sin datos ------------
+
+
+def _agotado(precio: str, publicacion: UUID, horas_antes: int, **cambios):
+    datos = {"availability": {"state": "out_of_stock"}, **cambios}
+    return _obs(precio, publicacion=publicacion, momento=_momento(horas_antes=horas_antes), **datos)
+
+
+def test_t25_un_agotado_reciente_saca_a_la_publicacion_y_no_a_las_demas():
+    pub = UUID(int=9_101)
+    disponible = _obs("90.00", publicacion=pub, momento=_momento(horas_antes=20))
+    agotado = _agotado("95.00", pub, horas_antes=2)
+    otra = _obs("130.00", comercio="tienda-c", momento=_momento(horas_antes=30))
+    hoy = _hoy(disponible, agotado, otra)
+    assert hoy.precio == Decimal("130.00")  # el $90 viejo de la publicación agotada no entra
+    assert hoy.otras_cadenas == frozenset({"cadena-c"})  # cadena-b ya no da dato de hoy
+    # El orden de las observaciones en el contexto no cambia el resultado.
+    assert _hoy(otra, agotado, disponible) == hoy
+
+
+@pytest.mark.parametrize(
+    "cambios",
+    [{"condition": "used"}, {"seller": "externo"}, {"availability": {"state": "in_stock"}}],
+    ids=["usada", "vendedor-externo", "en-linea-no-confirmada"],
+)
+def test_t25_la_mas_reciente_que_no_cumple_saca_a_la_publicacion(cambios):
+    pub = UUID(int=9_102)
+    anterior = _obs("90.00", publicacion=pub, momento=_momento(horas_antes=20))
+    reciente = _obs("95.00", publicacion=pub, momento=_momento(horas_antes=2), **cambios)
+    assert _hoy(anterior, reciente) is None
+    # Si la que no cumple es la anterior, la más reciente sí da precio.
+    vieja = _obs("80.00", publicacion=pub, momento=_momento(horas_antes=30), **cambios)
+    assert _hoy(vieja, anterior).precio == Decimal("90.00")
+
+
+def test_t25_tienda_fisica_la_confianza_es_la_de_la_mas_reciente():
+    pub = UUID(int=9_103)
+    base = {"purchaseMode": "tienda", "comercio": "tienda-b", "publicacion": pub}
+    media = _obs(
+        "90.00", momento=_momento(horas_antes=10), availability={"state": "in_stock"}, **base
+    )
+    baja = _obs(
+        "92.00", momento=_momento(horas_antes=3), availability={"state": "out_of_stock"}, **base
+    )
+    assert _hoy(media).precio == Decimal("90.00")  # sola, sin número y ≤ 12 h: Media
+    assert _hoy(media, baja) is None  # la más reciente está agotada
+
+
+def test_t25_ficha_de_amazon_reciente_sin_boton_de_compra_saca_a_amazon():
+    pub = UUID(int=9_104)
+    con_boton = _ficha("119.00", horas_antes=20, publicacion=pub)
+    sin_boton = _ficha(None, horas_antes=2, publicacion=pub)
+    assert _hoy(fichas=[con_boton]).precio == Decimal("119.00")
+    assert _hoy(fichas=[con_boton, sin_boton]) is None
+
+
+def test_t25_borde_de_las_48_horas_y_la_antiguedad_cuenta_contra_el_instante():
+    pub = UUID(int=9_105)
+    justo = _obs("150.00", publicacion=pub, momento=_momento(horas_antes=48))
+    # Un agotado fuera de la ventana no es "la más reciente" (más vieja que la de 48 h).
+    fuera = _agotado("140.00", pub, horas_antes=49)
+    assert _hoy(fuera, justo).precio == Decimal("150.00")
+    # Exactamente a 48 h y agotada: es la más reciente en la ventana y saca a la publicación.
+    justo_agotada = _agotado("150.00", pub, horas_antes=48)
+    vieja_disponible = _obs("100.00", publicacion=pub, momento=_momento(horas_antes=49))
+    assert _hoy(vieja_disponible, justo_agotada) is None
+    # Una observación posterior al instante no está en la ventana: no saca a la publicación.
+    futura = _obs(
+        "99.00",
+        publicacion=pub,
+        momento=_momento(horas_antes=-1),
+        availability={"state": "out_of_stock"},
+    )
+    assert _hoy(justo, futura).precio == Decimal("150.00")
+
+
+def test_t25_mismo_instante_desempata_el_id_antes_del_filtro():
+    pub = UUID(int=9_106)
+    momento = _momento(horas_antes=5)
+    menor_disponible = _obs("90.00", publicacion=pub, momento=momento, ident=UUID(int=1_001))
+    mayor_agotada = _obs(
+        "91.00",
+        publicacion=pub,
+        momento=momento,
+        ident=UUID(int=1_002),
+        availability={"state": "out_of_stock"},
+    )
+    assert _hoy(menor_disponible, mayor_agotada) is None
+    assert _hoy(mayor_agotada, menor_disponible) is None  # no depende del orden de llegada
+    menor_agotada = dataclasses.replace(mayor_agotada, id=UUID(int=1_000))
+    assert _hoy(menor_agotada, menor_disponible).precio == Decimal("90.00")
+
+
+def test_t25_bloqueada_o_precio_invalido_no_es_la_mas_reciente():
+    pub = UUID(int=9_107)
+    disponible = _obs("90.00", publicacion=pub, momento=_momento(horas_antes=20))
+    bloqueada = _obs("1.00", publicacion=pub, momento=_momento(horas_antes=2), blocked=True)
+    invalida = _obs(
+        "0.00",
+        publicacion=pub,
+        momento=_momento(horas_antes=1),
+        price={"current": "0.00", "currency": "USD"},
+    )
+    assert invalida.observacion.precio_invalido
+    assert _hoy(disponible, bloqueada, invalida).precio == Decimal("90.00")
+
+
+def test_t25_la_competencia_mas_barata_usa_el_mismo_mercado_hoy():
+    # Venta en Amazon $119 → umbral 119 × 85% = 101.15. La publicación de $90 está agotada
+    # en su observación más reciente: no da precio de hoy y no hay competencia más barata.
+    pub = UUID(int=9_108)
+    disponible = _obs("90.00", publicacion=pub, momento=_momento(horas_antes=20))
+    agotado = _agotado("90.00", pub, horas_antes=2)
+    ficha = _ficha("119.00")
+
+    def competencia(*historial):
+        contexto = _contexto(_oferta("29.00"), historial, [ficha])
+        refs = referencias.calcular_referencias(contexto)
+        costo = canales.costo_compra(contexto.oferta.observacion, CONFIG.contenido)
+        return refs.precio_mercado_hoy, canales.evaluar_amazon(contexto, refs, costo)
+
+    hoy, amazon = competencia(disponible)
+    assert hoy == Decimal("90.00")
+    assert amazon.baja_por_competencia is True  # 90 < 101.15
+    hoy, amazon = competencia(disponible, agotado)
+    assert hoy == Decimal("119.00")  # solo la ficha de Amazon
+    assert amazon.baja_por_competencia is False
+
+
+def test_t25_el_motor_y_las_referencias_usan_el_mismo_mercado_hoy():
+    # La reevaluación (T22) recalcula las referencias con calcular_referencias y el paso 5
+    # con mercado_hoy: los dos dan el mismo valor con el orden de DEC-261.
+    pub = UUID(int=9_109)
+    historial = [
+        _obs("90.00", publicacion=pub, momento=_momento(horas_antes=20)),
+        _agotado("90.00", pub, horas_antes=2),
+        _obs("130.00", comercio="tienda-c"),
+    ]
+    contexto = _contexto(_oferta(), historial)
+    assert referencias.calcular_referencias(contexto).precio_mercado_hoy == Decimal("130.00")
+    assert referencias.mercado_hoy(contexto).precio == Decimal("130.00")
+    assert motor.evaluar(contexto).referencias.precio_mercado_hoy == Decimal("130.00")
+
+
+def test_t25_precio_antes_inflado_sin_habitual_ni_mercado_hoy_es_cuestionable():
+    datos = _datos(
+        precio_habitual=None,
+        precio_mercado_hoy=None,
+        otros_comercios=0,
+        descuento_anunciado=Decimal(90),
+        precio_antes_inflado=True,
+    )
+    assert calidad_del_precio(datos, PARAMETROS) is CalidadPrecio.DESCUENTO_CUESTIONABLE
+    # Sin la marca, sin datos sigue sin calidad.
+    sin_marca = dataclasses.replace(datos, precio_antes_inflado=False)
+    assert calidad_del_precio(sin_marca, PARAMETROS) is None
+
+
+def test_t25_motor_precio_antes_inflado_sin_datos_es_cuestionable():
+    # Solo pasa si la ventana del precio típico es mayor que la del habitual: la tienda tiene
+    # historial de hace 61 a 90 días ($25) y el producto ninguno en los últimos 60 días.
+    otra = _config(
+        tipico=("store_typical_window_days: 60", "store_typical_window_days: 90"),
+    )
+    propia = _historial("25.00", range(-90, -85), comercio=TIENDA_PRUEBA)
+    contexto = _contexto(_oferta("20.00", was="200.00"), propia, configuracion=otra)
+    registro = motor.evaluar(contexto)
+    assert registro.referencias.precio_habitual is None
+    assert registro.referencias.precio_mercado_hoy is None
+    assert registro.marcas == (Marca.PRECIO_ANTES_INFLADO.value,)  # 200 > 1.5 × 25
+    assert registro.calidad_precio is CalidadPrecio.DESCUENTO_CUESTIONABLE
+    assert Motivo.SIN_HISTORIAL_SUFICIENTE in registro.motivos
+    # Con la configuración de producción, el mismo historial ya no da precio típico: sin
+    # marca y sin datos, sin calidad.
+    sin_ventana = motor.evaluar(_contexto(_oferta("20.00", was="200.00"), propia))
+    assert sin_ventana.marcas == (Marca.DESCUENTO_ANUNCIADO_NO_COMPROBADO.value,)
+    assert sin_ventana.calidad_precio is None
