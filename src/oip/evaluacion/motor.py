@@ -14,8 +14,12 @@ En T04 los pasos 1 a 10 eran **funciones vacías** (devuelven el avance sin camb
 llenan las tareas siguientes, cada una con sus reglas. T07 llena el paso 1 (validar); T09,
 los pasos 3 y 4 (precio habitual, episodio de liquidación, descuento real y franja); T10,
 el precio de mercado hoy y el MSRP del paso 3, el descuento anunciado con sus marcas y
-``SIN HISTORIAL SUFICIENTE`` del paso 4 y la calidad del precio del paso 5. Los
-motivos y la precedencia (``resultado``, CMP-16) y el armado del registro ya están completos.
+``SIN HISTORIAL SUFICIENTE`` del paso 4 y la calidad del precio del paso 5; T11, la
+confianza del paso 2 (RN-007), el mínimo de 60 días y la venta esperada en Amazon del paso 3,
+el costo de compra (paso 6), el estado y los números de cada canal (pasos 7 y 8), el nivel,
+las unidades, los días y el rendimiento, y la elección del canal con el nivel del aviso
+(paso 9). Los motivos y la precedencia (``resultado``, CMP-16) y el armado del registro ya
+están completos.
 """
 
 from __future__ import annotations
@@ -36,7 +40,14 @@ from oip.catalogos import (
     Resultado,
 )
 from oip.entradas.validacion import motivo_de_rechazo
-from oip.evaluacion import descuento, referencias
+from oip.evaluacion import (
+    canales,
+    descuento,
+    eleccion,
+    identificacion,
+    referencias,
+    rentabilidad,
+)
 from oip.evaluacion.contexto import (
     ContextoEvaluacion,
     EvaluacionCanal,
@@ -70,6 +81,8 @@ class Avance:
     marcas: tuple[str, ...] = ()
     observaciones_usadas: tuple[ObservacionUsada, ...] = ()
     decision: Decision | None = None
+    #: Lo que la rentabilidad necesita de cada canal (CMP-13), en el orden de ``canales``.
+    insumos_canales: tuple[canales.CanalEvaluado, ...] = ()
 
     @property
     def rechazada(self) -> bool:
@@ -96,10 +109,25 @@ def validar(contexto: ContextoEvaluacion, avance: Avance) -> Avance:
     return dataclasses.replace(avance, motivo_rechazo=motivo)
 
 
+def _con_marcas(avance: Avance, nuevas: tuple[str, ...]) -> tuple[str, ...]:
+    """Las marcas del registro más las nuevas, en orden y sin repetidos (REQ §3.2.3)."""
+    return tuple(dict.fromkeys((*avance.marcas, *nuevas)))
+
+
 def identificar(contexto: ContextoEvaluacion, avance: Avance) -> Avance:
     """Paso 2 (RN-013, RN-014, RN-015, RN-007; CMP-10): coincidencia, estado, vendedor,
-    riesgos, "evitar siempre" y confianza. Lo llena su tarea."""
-    return avance
+    riesgos, "evitar siempre" y confianza.
+
+    T11: la confianza de la disponibilidad (RN-007 v2; S-25) y, en tienda física con
+    confianza Baja, la marca ``CONFIANZA BAJA`` (RN-009 §4.2). Lo demás lo llenan T19 y T20.
+    """
+    oferta = contexto.oferta.observacion
+    parametros = contexto.configuracion.contenido.levels.confidence
+    confianza = identificacion.confianza_disponibilidad(oferta, contexto.instante, parametros)
+    marcas = avance.marcas
+    if identificacion.es_tienda_fisica(oferta) and confianza is Confianza.BAJA:
+        marcas = _con_marcas(avance, (Marca.CONFIANZA_BAJA.value,))
+    return dataclasses.replace(avance, confianza=confianza, marcas=marcas)
 
 
 def calcular_referencias(contexto: ContextoEvaluacion, avance: Avance) -> Avance:
@@ -173,29 +201,106 @@ def calcular_calidad(contexto: ContextoEvaluacion, avance: Avance) -> Avance:
 
 
 def calcular_costo_compra(contexto: ContextoEvaluacion, avance: Avance) -> Avance:
-    """Paso 6 (RN-001; CMP-13): precio + impuesto + envío + recogida."""
-    return avance
+    """Paso 6 (RN-001; CMP-13): precio + impuesto + envío hacia mí (la recogida con
+    particulares la agrega T20)."""
+    costo = canales.costo_compra(contexto.oferta.observacion, contexto.configuracion.contenido)
+    return dataclasses.replace(avance, costo_compra=None if costo is None else costo.total)
 
 
 def evaluar_canales(contexto: ContextoEvaluacion, avance: Avance) -> Avance:
-    """Pasos 7 y 8 (§3.2.1; CMP-13, CMP-14): estado y números de cada canal."""
-    return avance
+    """Pasos 7 y 8 (§3.2.1; CMP-13, CMP-14): estado, causas, precio y costo de venta y
+    márgenes de cada canal. Las marcas de cada canal (también sus causas de cerrado, REQ
+    §3.2.3) van en el canal (TAB-11 ``marks``); las de la oferta, en el registro (TAB-10)."""
+    if avance.costo_compra is None:
+        return avance
+    configuracion = contexto.configuracion.contenido
+    refs = avance.referencias if avance.referencias is not None else Referencias()
+    costo = canales.costo_compra(contexto.oferta.observacion, configuracion)
+    insumos = (
+        canales.evaluar_amazon(contexto, refs, costo),
+        canales.evaluar_local(contexto, refs, costo),
+    )
+    evaluados = []
+    for canal in insumos:
+        margenes = rentabilidad.calcular_margenes(
+            canal,
+            avance.costo_compra,
+            refs.minimo_60_dias_amazon,
+            configuracion.amazon.drop_penalty,
+        )
+        evaluados.append(
+            EvaluacionCanal(
+                canal=canal.canal,
+                estado=canal.estado,
+                causas_cerrado=canal.causas_cerrado,
+                causas_por_revisar=canal.causas_por_revisar,
+                precio_venta=canal.precio_venta,
+                costo_venta=canal.costo_venta,
+                margen_neto=None if margenes is None else margenes.margen_neto,
+                margen_neto_pct=None if margenes is None else margenes.margen_neto_pct,
+                costo_devoluciones=None if margenes is None else margenes.costo_devoluciones,
+                castigo=None if margenes is None else margenes.castigo,
+                margen_ajustado=None if margenes is None else margenes.margen_ajustado,
+                margen_ajustado_pct=None if margenes is None else margenes.margen_ajustado_pct,
+                marcas=canal.marcas,
+            )
+        )
+    return dataclasses.replace(avance, canales=tuple(evaluados), insumos_canales=insumos)
+
+
+def _con_insumos(avance: Avance) -> bool:
+    """Los canales los armó ``evaluar_canales`` con sus insumos (uno por canal)."""
+    return bool(avance.canales) and len(avance.canales) == len(avance.insumos_canales)
 
 
 def asignar_nivel(contexto: ContextoEvaluacion, avance: Avance) -> Avance:
     """Nivel y ``nivel_calculado`` por canal (RN-009; CMP-14), antes que las unidades porque
     el tope depende del nivel (design.md §3)."""
-    return avance
+    if avance.costo_compra is None or not _con_insumos(avance):
+        return avance
+    confianza_ok = identificacion.confianza_permite_nivel(
+        contexto.oferta.observacion, avance.confianza
+    )
+    con_nivel = tuple(
+        rentabilidad.asignar_nivel(
+            canal,
+            insumos,
+            descuento_real=avance.descuento_real,
+            costo_compra=avance.costo_compra,
+            confianza_ok=confianza_ok,
+            configuracion=contexto.configuracion.contenido,
+        )
+        for canal, insumos in zip(avance.canales, avance.insumos_canales, strict=True)
+    )
+    return dataclasses.replace(avance, canales=con_nivel)
 
 
 def calcular_unidades_y_rendimiento(contexto: ContextoEvaluacion, avance: Avance) -> Avance:
-    """Unidades, días y rendimiento por canal (RN-005; CMP-14)."""
-    return avance
+    """Unidades, días, rendimiento y ganancia total por canal (RN-005; CMP-14)."""
+    if not _con_insumos(avance):
+        return avance
+    calculados = tuple(
+        rentabilidad.calcular_unidades(
+            canal,
+            insumos,
+            descuento_real=avance.descuento_real,
+            configuracion=contexto.configuracion.contenido,
+        )
+        for canal, insumos in zip(avance.canales, avance.insumos_canales, strict=True)
+    )
+    return dataclasses.replace(avance, canales=calculados)
 
 
 def elegir_canal(contexto: ContextoEvaluacion, avance: Avance) -> Avance:
     """Paso 9 (RN-018, S-33; CMP-15): canal elegido y nivel del aviso con su canal."""
-    return avance
+    desempate = contexto.configuracion.contenido.levels.channel_tiebreak_pct
+    elegida = eleccion.elegir(avance.canales, desempate)
+    return dataclasses.replace(
+        avance,
+        canal_elegido=elegida.canal_elegido,
+        nivel_aviso=elegida.nivel_aviso,
+        canal_aviso=elegida.canal_aviso,
+    )
 
 
 def decidir_resultado(contexto: ContextoEvaluacion, avance: Avance) -> Avance:
