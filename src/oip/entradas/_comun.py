@@ -56,6 +56,7 @@ __all__ = [
     "FechaHoraCaptura",
     "Monto",
     "RegistroInvalido",
+    "ValorJson",
     "a_decimal",
     "ausente",
     "decimal_o_none",
@@ -157,6 +158,20 @@ def _a_lo_mas_2_decimales(valor: Decimal) -> Decimal:
 Monto = Annotated[Decimal, BeforeValidator(a_decimal), AfterValidator(_a_lo_mas_2_decimales)]
 """Monto en USD leído sin ``float`` y con 2 decimales como máximo: si tiene más, el campo
 no es válido y da ``CAMPO OBLIGATORIO FALTANTE (<campo>)`` (DEC-257, DEC-244)."""
+
+
+def tuplas_a_listas(valor: Any) -> Any:
+    """El mismo valor con cada tupla (también anidada) convertida en lista: un valor ``Any``
+    queda igual a como vuelve del JSON canónico (CTR-06, RNF-3; decisión 34 del #34)."""
+    if isinstance(valor, list | tuple):
+        return [tuplas_a_listas(v) for v in valor]
+    if isinstance(valor, Mapping):
+        return {k: tuplas_a_listas(v) for k, v in valor.items()}
+    return valor
+
+
+ValorJson = Annotated[Any, AfterValidator(tuplas_a_listas)]
+"""Valor libre de JSON (``evidence``), con las tuplas convertidas en listas al construir."""
 
 Entero = StrictInt
 """Entero estricto: ni ``bool`` ni texto ni ``Decimal`` (DEC-238)."""

@@ -111,7 +111,9 @@ class CanalEvaluado(_Estricto):
     """Estado de un canal, sus números base y lo que necesita la rentabilidad (CMP-14).
 
     - ``precio_venta`` y ``costo_venta``: ``None`` si no se pueden calcular (sin precio de venta,
-      comisión desconocida, envío por cotizar…); el margen neto solo existe con los dos.
+      comisión desconocida, envío por cotizar…); el margen neto solo existe con los dos. En
+      venta local, ``costo_venta`` = entrega de RN-008 + otros (RN-001 §4; PAR-12 no trae
+      otros; design.md §10 punto 14), de modo que neto = venta − compra − costo de venta.
     - ``tasa_devolucion_pct`` y ``perdida_devolucion_pct``: los de RN-005 del canal (en venta
       local, la tasa de PAR-12 y pérdida 100%).
     - ``ventas_al_mes``: ventas al mes que le tocan a Jesús, redondeadas hacia abajo (RN-005,

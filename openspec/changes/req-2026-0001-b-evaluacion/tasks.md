@@ -407,8 +407,8 @@ Tareas de la parte B del REQ-2026-0001 v2.9 (`req-2026-0001-b-evaluacion`). **1 
 - **Depende de:** T11. **Estimación:** 6 h.
 - **DoD:** común.
 
-- [ ] 24.1 Implementar las validaciones de los tipos del dominio (12, 13, 15, 23, 34) y verificar sus pruebas unitarias
-- [ ] 24.2 Aplicar `fullmatch`, las sucursales sintéticas, el docstring y los nombres de las pruebas (20, 24, 28, 36) y verificar la suite completa
+- [x] 24.1 Implementar las validaciones de los tipos del dominio (12, 13, 15, 23, 34) y verificar sus pruebas unitarias
+- [x] 24.2 Aplicar `fullmatch`, las sucursales sintéticas, el docstring y los nombres de las pruebas (20, 24, 28, 36) y verificar la suite completa
 
 ## 25. T25 — Mercado hoy y calidad sin datos: ajustes (decisiones 6 y 10)
 

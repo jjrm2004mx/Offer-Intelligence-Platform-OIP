@@ -770,6 +770,11 @@ def _registro(
     n: int = 1, instante=T0, id_config: int = 1, id_publicacion=ID_PUBLICACION, **cambios
 ) -> RegistroEvaluacion:
     contexto = _contexto(UUID(int=500 + n), instante, id_config)
+    # El registro y su entrada dicen lo mismo (T24, decisión 13 del #34).
+    reevaluacion = ("id_evaluacion_anterior", "referencias_cambiadas", "id_carga")
+    contexto = dataclasses.replace(
+        contexto, **{k: cambios[k] for k in reevaluacion if k in cambios}
+    )
     base = {
         "id": contexto.id_evaluacion,
         "evaluado_en": instante,
@@ -803,8 +808,8 @@ def _registro(
                 canal=Canal.AMAZON,
                 estado=EstadoCanal.CERRADO,
                 causas_cerrado=(
-                    CausaCanalCerrado.SIN_ROTACION,
                     CausaCanalCerrado.PRODUCTO_NO_NUEVO,
+                    CausaCanalCerrado.SIN_ROTACION,
                 ),
                 precio_venta=None,
                 nivel=None,
@@ -843,8 +848,8 @@ def test_la_evaluacion_vuelve_igual_con_su_contexto_y_sus_canales(repo):
     assert type(leido.canales[1].dias_para_recuperar) is int
     assert str(leido.canales[1].precio_venta) == "76.6175"
     assert leido.canales[0].causas_cerrado == (
-        CausaCanalCerrado.SIN_ROTACION,
         CausaCanalCerrado.PRODUCTO_NO_NUEVO,
+        CausaCanalCerrado.SIN_ROTACION,
     )
     assert repo.leer_evaluacion(UUID(int=12345)) is None
 
