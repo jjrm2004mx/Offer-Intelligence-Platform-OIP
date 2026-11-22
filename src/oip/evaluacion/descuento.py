@@ -39,8 +39,10 @@ clase que se cumple:
 "Entre los más baratos" = precio ≤ precio de mercado hoy × (1 + ``cheapest_tolerance_pct``
 %); sin precio de mercado hoy no se cumple (RN-012 §11). "Comercios" = cadenas distintas de
 la evaluada (DEC-216; design.md §10.4). En un **usado** la calidad **no aplica** (DEC-215).
-Sin precio habitual ni precio de mercado hoy no hay datos y no hay calidad. El MSRP solo se
-muestra (DEC-218): no entra aquí.
+Sin precio habitual ni precio de mercado hoy no hay datos y no hay calidad, **salvo** con
+``PRECIO ANTES INFLADO``: la marca se revisa antes de la salida "sin datos" y da Descuento
+cuestionable "sin importar los números" (RN-012 §3 y §4; decisión 10 del issue #34). El MSRP
+solo se muestra (DEC-218): no entra aquí.
 """
 
 from __future__ import annotations
@@ -161,20 +163,22 @@ class DatosCalidad:
 
 
 def calidad_del_precio(datos: DatosCalidad, parametros: DescuentoYCalidad) -> CalidadPrecio | None:
-    """Calidad del precio de una oferta **nueva** (RN-012 v1 §4, S-22, S-28). ``None`` si no
-    hay precio habitual ni precio de mercado hoy (sin datos). Un usado no llega aquí: su
-    calidad es ``NO_APLICA`` (DEC-215)."""
+    """Calidad del precio de una oferta **nueva** (RN-012 v1 §4, S-22, S-28). Primero
+    ``PRECIO ANTES INFLADO`` → Descuento cuestionable, también sin datos (RN-012 §3: "sin
+    importar los números"); después, ``None`` si no hay precio habitual ni precio de mercado
+    hoy (sin datos). Un usado no llega aquí: su calidad es ``NO_APLICA`` (DEC-215)."""
     if not isinstance(datos, DatosCalidad):
         raise TypeError("se esperaba DatosCalidad")
     calidad = parametros.quality
+    # 1. Descuento cuestionable (se evalúa primero, también sin datos: RN-012 §3, "sin
+    # importar los números"; decisión 10 del issue #34).
+    if datos.precio_antes_inflado:
+        return CalidadPrecio.DESCUENTO_CUESTIONABLE
     if datos.precio_habitual is None and datos.precio_mercado_hoy is None:
         return None
     entre_los_mas_baratos = datos.precio_mercado_hoy is not None and datos.precio <= (
         datos.precio_mercado_hoy * (1 + calidad.cheapest_tolerance_pct / _CIEN)
     )
-    # 1. Descuento cuestionable (se evalúa primero).
-    if datos.precio_antes_inflado:
-        return CalidadPrecio.DESCUENTO_CUESTIONABLE
     if datos.precio_habitual is None:
         anunciado = datos.descuento_anunciado
         if anunciado is not None and anunciado > 0 and datos.otros_comercios <= _UN_COMERCIO:
