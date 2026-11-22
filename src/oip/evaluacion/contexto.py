@@ -84,6 +84,8 @@ from typing import Any, Self
 from uuid import UUID
 
 from oip.catalogos import (
+    CAUSAS_CERRADO_POR_CANAL,
+    CAUSAS_POR_REVISAR_POR_CANAL,
     CalidadPrecio,
     Canal,
     CausaCanalCerrado,
@@ -95,6 +97,7 @@ from oip.catalogos import (
     Nivel,
     ReferenciaPrecio,
     Resultado,
+    es_marca,
 )
 from oip.configuracion import ConfiguracionVersionada
 from oip.entradas.capturas import (
@@ -228,7 +231,8 @@ class Episodio(_Dominio):
 class Referencias(_Dominio):
     """Referencias de precio de la evaluación (TAB-10 ``references``; RN-002), sin redondear.
 
-    ``fuente_precio_habitual`` es la fuente de ``FuentePrecios`` (``historial_propio``).
+    ``fuente_precio_habitual`` es la fuente de ``FuentePrecios`` (``historial_propio``); vacía
+    o solo de espacios levanta ``ValueError`` (vacío = ausente: va ``None``).
     """
 
     precio_habitual: Decimal | None = None
@@ -239,11 +243,19 @@ class Referencias(_Dominio):
     minimo_60_dias_amazon: Decimal | None = None
     precio_venta_amazon: Decimal | None = None
 
+    def __post_init__(self) -> None:
+        _Dominio.__post_init__(self)
+        _sin_texto_vacio(self.fuente_precio_habitual, "fuente_precio_habitual")
+
 
 @dataclasses.dataclass(frozen=True, slots=True)
 class EvaluacionCanal(_Dominio):
     """Estado y números de un canal (TAB-11; REQ §3.2.1). Un dato que no se calcula en el
-    estado del canal queda en ``None``."""
+    estado del canal queda en ``None``.
+
+    Las causas van sin repetidos y en el orden del catálogo del canal (design.md §9; DEC-269);
+    las marcas, sin repetidos y del catálogo de marcas (DEC-266). Si no, ``ValueError``.
+    """
 
     canal: Canal
     estado: EstadoCanal
@@ -267,9 +279,13 @@ class EvaluacionCanal(_Dominio):
 
     def __post_init__(self) -> None:
         _Dominio.__post_init__(self)
-        _sin_repetidos(self.causas_cerrado, "causas_cerrado")
-        _sin_repetidos(self.causas_por_revisar, "causas_por_revisar")
-        _sin_repetidos(self.marcas, "marcas")
+        _en_orden_del_catalogo(
+            self.causas_cerrado, CAUSAS_CERRADO_POR_CANAL[self.canal], "causas_cerrado"
+        )
+        _en_orden_del_catalogo(
+            self.causas_por_revisar, CAUSAS_POR_REVISAR_POR_CANAL[self.canal], "causas_por_revisar"
+        )
+        _marcas_del_catalogo(self.marcas)
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -281,6 +297,10 @@ class RegistroEvaluacion(_Dominio):
     "lleva a" del principal; ``motivo_rechazo`` solo y siempre en ``RECHAZADA_VALIDACION``;
     nivel del aviso y su canal solo con ``NIVEL_ASIGNADO`` (design.md §10.6), que exige canal
     elegido, nivel del aviso y su canal (REQ §3.2.2). ``entrada`` no sale en el ``repr``.
+
+    ``motivo_rechazo`` y cada marca no pueden ser texto vacío o solo de espacios; las marcas son
+    del catálogo (DEC-266). ``id``, ``evaluado_en``, ``versiones_rn``, la evaluación anterior,
+    las referencias cambiadas y la carga son los de la ``entrada`` (CTR-06, RNF-3).
     """
 
     id: UUID
@@ -315,8 +335,10 @@ class RegistroEvaluacion(_Dominio):
 
     def __post_init__(self) -> None:
         _Dominio.__post_init__(self)
-        _sin_repetidos(self.marcas, "marcas")
+        _sin_texto_vacio(self.motivo_rechazo, "motivo_rechazo")
+        _marcas_del_catalogo(self.marcas)
         _sin_repetidos(self.referencias_cambiadas, "referencias_cambiadas")
+        _igual_a_la_entrada(self)
         orden = list(Motivo)
         if list(self.motivos) != sorted(set(self.motivos), key=orden.index):
             raise ValueError("motivos: sin repetidos y en el orden de REQ §3.2.3")
@@ -349,3 +371,52 @@ _SIN_MOTIVO = frozenset(
 def _sin_repetidos(valores: tuple[Any, ...], nombre: str) -> None:
     if len(set(valores)) != len(valores):
         raise ValueError(f"{nombre}: sin repetidos")
+
+
+def _sin_texto_vacio(valor: str | None, nombre: str) -> None:
+    """Vacío = ausente: un texto vacío o solo de espacios va como ``None``."""
+    if valor is not None and not valor.strip():
+        raise ValueError(f"{nombre}: texto vacío; si no hay valor, va None")
+
+
+def _marcas_del_catalogo(marcas: tuple[str, ...]) -> None:
+    """Sin repetidos, sin texto vacío y del catálogo de marcas (design.md §9; DEC-266). El
+    mensaje cita la posición, no el texto."""
+    for i, marca in enumerate(marcas):
+        _sin_texto_vacio(marca, f"marcas[{i}]")
+        if not es_marca(marca):
+            raise ValueError(f"marcas[{i}]: fuera del catálogo de marcas (DEC-266)")
+    _sin_repetidos(marcas, "marcas")
+
+
+def _en_orden_del_catalogo(causas: tuple[Any, ...], catalogo: tuple[Any, ...], nombre: str) -> None:
+    """Sin repetidos, del catálogo del canal y en su orden (design.md §9; DEC-269)."""
+    _sin_repetidos(causas, nombre)
+    if any(c not in catalogo for c in causas):
+        raise ValueError(f"{nombre}: fuera del catálogo del canal (design.md §9)")
+    if list(causas) != sorted(causas, key=catalogo.index):
+        raise ValueError(f"{nombre}: en el orden del catálogo del canal (DEC-269)")
+
+
+def _igual_a_la_entrada(registro: RegistroEvaluacion) -> None:
+    """El registro y su ``entrada`` dicen lo mismo de la evaluación (decisión 13 del #34)."""
+    entrada = registro.entrada
+    pares = (
+        ("id", registro.id, entrada.id_evaluacion),
+        ("evaluado_en", registro.evaluado_en, entrada.instante),
+        ("versiones_rn", dict(registro.versiones_rn), dict(entrada.versiones_rn)),
+        (
+            "id_evaluacion_anterior",
+            registro.id_evaluacion_anterior,
+            entrada.id_evaluacion_anterior,
+        ),
+        (
+            "referencias_cambiadas",
+            registro.referencias_cambiadas,
+            entrada.referencias_cambiadas,
+        ),
+        ("id_carga", registro.id_carga, entrada.id_carga),
+    )
+    for nombre, del_registro, de_la_entrada in pares:
+        if del_registro != de_la_entrada:
+            raise ValueError(f"{nombre}: distinto del de la entrada (CTR-06)")

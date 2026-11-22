@@ -27,6 +27,7 @@ from decimal import Decimal
 from typing import Annotated, Any
 
 from pydantic import (
+    AfterValidator,
     AwareDatetime,
     BaseModel,
     BeforeValidator,
@@ -49,6 +50,7 @@ __all__ = [
     "Esquema",
     "FechaHoraCaptura",
     "RegistroInvalido",
+    "ValorJson",
     "a_decimal",
     "ausente",
     "decimal_o_none",
@@ -126,6 +128,20 @@ def decimal_o_none(valor: object) -> Decimal | None:
 
 Dec = Annotated[Decimal, BeforeValidator(a_decimal)]
 """``Decimal`` leído sin ``float``."""
+
+
+def tuplas_a_listas(valor: Any) -> Any:
+    """El mismo valor con cada tupla (también anidada) convertida en lista: un valor ``Any``
+    queda igual a como vuelve del JSON canónico (CTR-06, RNF-3; decisión 34 del #34)."""
+    if isinstance(valor, list | tuple):
+        return [tuplas_a_listas(v) for v in valor]
+    if isinstance(valor, Mapping):
+        return {k: tuplas_a_listas(v) for k, v in valor.items()}
+    return valor
+
+
+ValorJson = Annotated[Any, AfterValidator(tuplas_a_listas)]
+"""Valor libre de JSON (``evidence``), con las tuplas convertidas en listas al construir."""
 
 Entero = StrictInt
 """Entero estricto: ni ``bool`` ni texto ni ``Decimal`` (DEC-238)."""

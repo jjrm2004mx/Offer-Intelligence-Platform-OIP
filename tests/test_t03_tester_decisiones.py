@@ -149,8 +149,8 @@ def test_dec236_comercio_con_evidence_no_valida_se_rechaza():
     assert _rechazo(leer_observacion, datos).motivo == _motivo("evidence")
 
 
-def test_dec236_content_del_particular_se_conserva_pendiente_de_jesus():
-    """DEC-236: ``content`` PENDIENTE de Jesús; hoy se conserva (estado vigente)."""
+def test_dec245_content_del_particular_se_conserva():
+    """DEC-245 (cierra lo que DEC-236 dejó abierto): ``content`` del particular se conserva."""
     assert leer_observacion(_particular()).content == "tool only"
 
 
