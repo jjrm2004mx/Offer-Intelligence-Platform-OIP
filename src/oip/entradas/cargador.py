@@ -40,8 +40,14 @@ Reglas que fija aquí la parte B:
   única excepción es ``citiesToRegister``: los **códigos** de ciudad que dieron ``CIUDAD
   NO CONFIGURADA``, que el reporte pide dar de alta (REQ §6).
 
-No evalúa: disparar la evaluación de cada observación nueva es de T21 (CMP-21). Sin reloj,
-sin red.
+- **Evaluación al final** (design.md §2; T21): después de cargar todo el archivo y de
+  escribir el reporte, se evalúa, en el orden del archivo, cada observación nueva de un
+  origen de compra con el ensamblador (CMP-21, ``evaluar_carga``), para que una captura del
+  mismo archivo ya cuente. Una ficha de Amazon no se evalúa como oferta (DEC-203); un
+  duplicado o un rechazo, tampoco. Los ids de las evaluaciones guardadas quedan en
+  ``ReporteDeCarga.evaluaciones`` (no son parte de CTR-05).
+
+Sin reloj, sin red.
 """
 
 from __future__ import annotations
@@ -154,6 +160,9 @@ class ReporteDeCarga:
     rechazados_por_motivo: Mapping[str, int]
     rechazos: tuple[RechazoDelReporte, ...]
     ciudades_por_registrar: tuple[str, ...]
+    #: Ids de las evaluaciones guardadas al final de la carga, en el orden del archivo (T21).
+    #: No van en ``a_json``: CTR-05 no las tiene.
+    evaluaciones: tuple[UUID, ...] = ()
 
     def a_json(self) -> dict[str, Any]:
         """El reporte con los nombres de CTR-05, listo para ``json.dumps``."""
@@ -261,7 +270,8 @@ def cargar(
 
     ``nuevo_id`` da los identificadores nuevos (carga, productos, publicaciones,
     observaciones, capturas y registros de rechazo); con uno determinista, la misma carga
-    da el mismo resultado. Levanta ``ErrorDeArchivo`` (antes de empezar la carga) si el
+    da el mismo resultado; también da los ids de las evaluaciones del final de la carga.
+    Levanta ``ErrorDeArchivo`` (antes de empezar la carga) si el
     archivo no se puede leer como carga; nunca por un renglón inválido.
     """
     if not isinstance(contenido, bytes):
