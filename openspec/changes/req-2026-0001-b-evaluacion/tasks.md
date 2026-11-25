@@ -361,8 +361,8 @@ Tareas de la parte B del REQ-2026-0001 v2.9 (`req-2026-0001-b-evaluacion`). **1 
 - **Depende de:** T11. **Estimación:** 8 h.
 - **DoD:** común.
 
-- [ ] 20.1 Implementar el valor de referencia de usados y el canal local por revisar y verificar B24 (a), B24 (b) y B24 (c)
-- [ ] 20.2 Implementar la compra a particular con recogida y verificar B18
+- [x] 20.1 Implementar el valor de referencia de usados y el canal local por revisar y verificar B24 (a), B24 (b) y B24 (c)
+- [x] 20.2 Implementar la compra a particular con recogida y verificar B18
 
 ## 21. T21 — Carga que dispara la evaluación, registro guardado y reproducible (B34 a)
 

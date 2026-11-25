@@ -382,10 +382,15 @@ def test_descuento_real_rechaza_float_y_habitual_no_positivo():
 
 
 def test_un_usado_no_se_mide_contra_el_precio_habitual():
+    # DEC-263 (T20): un usado no guarda el precio habitual de los nuevos; su referencia es el
+    # valor de RN-014 y, sin comparables, aplica SIN REFERENCIA DE USADOS (no SIN HISTORIAL).
     registro = motor.evaluar(_contexto(_obs(0, "99.00", condition="used"), _diez_dias()))
-    assert registro.referencias.precio_habitual == Decimal("100.00")
+    assert registro.referencias.precio_habitual is None
+    assert registro.referencias.fuente_precio_habitual is None
+    assert registro.referencias.episodio is None
+    assert registro.referencias.valor_referencia_usados is None
     assert registro.descuento_real is None
-    assert registro.motivos == ()
+    assert registro.motivos == (Motivo.SIN_REFERENCIA_DE_USADOS,)
 
 
 # --- Reproducible y puro -------------------------------------------------------------------

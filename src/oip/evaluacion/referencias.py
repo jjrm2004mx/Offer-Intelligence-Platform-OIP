@@ -6,8 +6,9 @@ de mercado hoy** básico, el **MSRP** (solo se muestra), el **precio típico de 
 (RN-003) y los datos que usa la calidad del precio (RN-012): las cadenas del mercado hoy, el
 mínimo registrado y los días de historial. Desde T11, el **mínimo de 60 días en Amazon** y el
 **precio de venta esperado en Amazon** con la oferta nueva hoy. El precio habitual en Amazon
-sin oferta hoy (S-02), la regla de comercio = cadena en el mercado hoy (con su excepción en
-liquidación) y el valor de referencia de usados los agregan sus tareas (T16, T20).
+sin oferta hoy (S-02) y la regla de comercio = cadena en el mercado hoy (con su excepción en
+liquidación) los agrega su tarea (T16). Desde T20, el **valor de referencia de usados**
+(RN-014 §4), que en un no nuevo reemplaza al precio habitual (DEC-263).
 
 Implementa la interfaz ``FuentePrecios`` (``PriceReferenceSource`` de la arquitectura §2.2,
 ADR-007) con la fuente ``historial_propio``: cada referencia guarda la fuente que la dio.
@@ -83,6 +84,8 @@ from zoneinfo import ZoneInfo
 
 from oip.catalogos import Condicion, Confianza, EstadoDisponibilidad, ModoCompra, Vendedor
 from oip.configuracion import ReferenciaPrecio as ParametrosReferencia
+from oip.dinero import TipoMonto, redondear
+from oip.entradas.capturas import ComparableLocal
 from oip.entradas.contrato import Observacion
 from oip.evaluacion.contexto import (
     ContextoEvaluacion,
@@ -101,6 +104,7 @@ __all__ = [
     "PrecioHabitual",
     "cadena_de",
     "calcular_referencias",
+    "comparables_de_usados",
     "dia_calendario",
     "dia_evaluado",
     "dias_de_historial",
@@ -118,6 +122,7 @@ __all__ = [
     "precio_tipico_de_la_tienda",
     "precio_venta_amazon",
     "serie_de_la_publicacion",
+    "valor_referencia_usados",
 ]
 
 #: Fuente del precio habitual calculado con las observaciones de OIP (ADR-007, DEC-123).
@@ -568,6 +573,60 @@ def msrp(contexto: ContextoEvaluacion) -> Decimal | None:
     return None if propio is None else propio.value
 
 
+# --- Usados: valor de referencia (RN-014 §4; T20) -----------------------------------------
+
+
+def comparables_de_usados(contexto: ContextoEvaluacion) -> tuple[ComparableLocal, ...]:
+    """Comparables que cuentan para el valor de referencia de un no nuevo (RN-014 §4): del
+    mismo producto (los del contexto) y del mismo estado que la oferta, de una ciudad de la
+    zona de venta local (PAR-09 ``in_local_sale_zone``; DEC-171) y con precio en USD. Vacío
+    en una oferta nueva. Orden: el del contexto."""
+    observacion = contexto.oferta.observacion
+    if es_nuevo(observacion):
+        return ()
+    # S-13: un particular sin estado es "usado" hasta la inspección.
+    condicion = observacion.condition if observacion.condition is not None else Condicion.USED
+    ciudades = contexto.configuracion.contenido.private_sellers.cities
+    validos = []
+    for comparable in contexto.comparables:
+        ciudad = ciudades.get(comparable.city.strip())
+        if comparable.condition is not condicion or ciudad is None:
+            continue
+        if not ciudad.in_local_sale_zone or comparable.price_usd is None:
+            continue
+        validos.append(comparable)
+    return tuple(validos)
+
+
+def valor_referencia_usados(contexto: ContextoEvaluacion) -> Decimal | None:
+    """Valor de referencia de un no nuevo (RN-014 §4; REQ §3.2 paso 3), que reemplaza al
+    precio habitual (DEC-263).
+
+    Con al menos ``local_sale.used.min_comparables`` comparables de
+    ``comparables_de_usados``: la mediana de las ventas concretadas o, si solo hay precios
+    pedidos, la mediana de los precios pedidos × ``local_sale.used.asking_price_factor_pct``,
+    redondeado una vez (``TipoMonto.VALOR_REFERENCIA_USADOS``; B18: 130 × 85% = 110.50).
+    ``None`` en una oferta nueva o con menos comparables (``SIN REFERENCIA DE USADOS``,
+    S-31).
+
+    Lectura **provisional** (RN-014 §4 no la fija; reportada en el issue #34): con al menos
+    ``min_comparables`` ventas concretadas, la mediana de las ventas, sin factor; con menos
+    ventas, la mediana de **todos** los comparables (pedidos y ventas) × el factor. Es la
+    lectura conservadora: una venta suelta no sube el valor por encima del de los pedidos con
+    el factor, y la mediana sigue contando con todos los comparables del mínimo.
+    """
+    comparables = comparables_de_usados(contexto)
+    parametros = contexto.configuracion.contenido.local_sale.used
+    if len(comparables) < parametros.min_comparables:
+        return None
+    ventas = [c.price_usd for c in comparables if c.sold and c.price_usd is not None]
+    if len(ventas) >= parametros.min_comparables:
+        return redondear(TipoMonto.VALOR_REFERENCIA_USADOS, mediana(ventas))
+    todos = [c.price_usd for c in comparables if c.price_usd is not None]
+    factor = parametros.asking_price_factor_pct / Decimal(100)
+    return redondear(TipoMonto.VALOR_REFERENCIA_USADOS, mediana(todos) * factor)
+
+
 # --- Amazon: mínimo de 60 días y precio de venta esperado (T11) ---------------------------
 
 
@@ -616,10 +675,14 @@ def calcular_referencias(
 ) -> Referencias:
     """Referencias de precio de la oferta (TAB-10 ``references``): el precio habitual con su
     fuente y, si lo hay, su episodio; el precio de mercado hoy, el MSRP (solo se muestra), el
-    mínimo de 60 días y el precio de venta esperado en Amazon.
+    mínimo de 60 días y el precio de venta esperado en Amazon; en un no nuevo, el valor de
+    referencia de usados en lugar del precio habitual (DEC-263).
     Una referencia que no se puede calcular queda en ``None`` (vacío = ausente)."""
     fuente = HistorialPropio() if fuente is None else fuente
-    habitual = fuente.precio_habitual(contexto)
+    nuevo = es_nuevo(contexto.oferta.observacion)
+    # DEC-263: un no nuevo no guarda el precio habitual de los nuevos; su referencia es el
+    # valor de RN-014 (REQ §3.2 paso 3).
+    habitual = fuente.precio_habitual(contexto) if nuevo else None
     hoy = mercado_hoy(contexto)
     return Referencias(
         precio_habitual=None if habitual is None else habitual.valor,
@@ -629,4 +692,5 @@ def calcular_referencias(
         msrp=msrp(contexto),
         minimo_60_dias_amazon=minimo_60_dias_amazon(contexto),
         precio_venta_amazon=precio_venta_amazon(contexto),
+        valor_referencia_usados=None if nuevo else valor_referencia_usados(contexto),
     )

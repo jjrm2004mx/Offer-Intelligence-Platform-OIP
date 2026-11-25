@@ -2,7 +2,8 @@
 
 T11 llena la **confianza de la disponibilidad** (RN-007 v2 §4.1 y §4.2; S-25). La
 coincidencia (RN-013), el estado (RN-014, S-13), el vendedor y los riesgos (RN-015, S-21) y la
-lista "evitar siempre" los agregan sus tareas (T19, T20).
+lista "evitar siempre" los agregan sus tareas (T19, T20). T20 agrega la **compra a particular**
+(``PARTICULAR``, RN-014 §4) y el **riesgo de procedencia** (RN-015 §4, PAR-04 y PAR-05).
 
 Reglas de la confianza (todas sus cifras salen de PAR-13, ``levels.confidence``; ninguna está
 en el código):
@@ -38,15 +39,19 @@ from __future__ import annotations
 import datetime as dt
 from decimal import Decimal
 
-from oip.catalogos import Confianza, EstadoDisponibilidad, ModoCompra
+from oip.catalogos import Confianza, EstadoDisponibilidad, ModoCompra, Motivo, Vendedor
 from oip.configuracion import Confianza as ParametrosConfianza
+from oip.configuracion import Configuracion
 from oip.entradas.contrato import Observacion
 
 __all__ = [
     "antiguedad_horas",
     "confianza_disponibilidad",
     "confianza_permite_nivel",
+    "es_compra_a_particular",
     "es_tienda_fisica",
+    "motivos_de_particular",
+    "riesgo_de_procedencia",
 ]
 
 _MICROSEGUNDO = dt.timedelta(microseconds=1)
@@ -142,3 +147,52 @@ def confianza_permite_nivel(observacion: Observacion, confianza: Confianza | Non
     if not es_tienda_fisica(observacion):
         return True
     return confianza in _ALTA_O_MEDIA
+
+
+# --- Particular y riesgo de procedencia (RN-014 §4, RN-015; T20) --------------------------
+
+
+def es_compra_a_particular(observacion: Observacion) -> bool:
+    """Compra a un particular (REQ §6 punto 1; DEC-239): ``retailerCode``, ``seller`` y
+    ``purchaseMode`` valen ``particular``."""
+    observacion = _exigir_observacion(observacion)
+    return (
+        observacion.retailer_code.strip() == Vendedor.PARTICULAR.value
+        and observacion.seller is Vendedor.PARTICULAR
+        and observacion.purchase_mode is ModoCompra.PARTICULAR
+    )
+
+
+def riesgo_de_procedencia(observacion: Observacion, configuracion: Configuracion) -> bool:
+    """Riesgo de procedencia (RN-015 §4; S-21): producto propenso a falsificación o robo
+    (categoría con ``categories.<código>.provenance_risk``, marca de
+    ``lists.provenance_risk_brands`` o producto de ``lists.provenance_risk_products``)
+    comprado a un particular o a un vendedor externo."""
+    # Import local: ``canales`` importa ``referencias``, que importa este módulo.
+    from oip.evaluacion.canales._base import _es_el_producto, _marca_en
+
+    observacion = _exigir_observacion(observacion)
+    if not isinstance(configuracion, Configuracion):
+        raise TypeError("se esperaba la Configuracion")
+    if observacion.seller not in (Vendedor.PARTICULAR, Vendedor.EXTERNO):
+        return False
+    categoria = configuracion.categories.get(observacion.category)
+    if categoria is not None and categoria.provenance_risk:
+        return True
+    listas = configuracion.lists
+    return _marca_en(listas.provenance_risk_brands, observacion) or any(
+        _es_el_producto(p, observacion) for p in listas.provenance_risk_products
+    )
+
+
+def motivos_de_particular(
+    observacion: Observacion, configuracion: Configuracion
+) -> tuple[Motivo, ...]:
+    """Motivos de revisión manual de una compra a particular (REQ §3.2.3): ``PARTICULAR``
+    (inspección física obligatoria, RN-014 §4) y, si aplica, ``RIESGO DE PROCEDENCIA``
+    (RN-015), en el orden del catálogo. Vacío si la oferta no es de un particular."""
+    if not es_compra_a_particular(observacion):
+        return ()
+    if riesgo_de_procedencia(observacion, configuracion):
+        return (Motivo.PARTICULAR, Motivo.RIESGO_DE_PROCEDENCIA)
+    return (Motivo.PARTICULAR,)

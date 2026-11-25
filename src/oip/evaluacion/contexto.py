@@ -233,6 +233,11 @@ class Referencias(_Dominio):
 
     ``fuente_precio_habitual`` es la fuente de ``FuentePrecios`` (``historial_propio``); vacía
     o solo de espacios levanta ``ValueError`` (vacío = ausente: va ``None``).
+
+    ``valor_referencia_usados`` es el valor de referencia de un producto no nuevo (RN-014
+    §4), redondeado una vez (``TipoMonto.VALOR_REFERENCIA_USADOS``); ``None`` en un nuevo o
+    con menos comparables que ``local_sale.used.min_comparables``. En un no nuevo,
+    ``precio_habitual``, su fuente y su episodio quedan vacíos (DEC-263; T20).
     """
 
     precio_habitual: Decimal | None = None
@@ -242,6 +247,7 @@ class Referencias(_Dominio):
     msrp: Decimal | None = None
     minimo_60_dias_amazon: Decimal | None = None
     precio_venta_amazon: Decimal | None = None
+    valor_referencia_usados: Decimal | None = None
 
     def __post_init__(self) -> None:
         _Dominio.__post_init__(self)

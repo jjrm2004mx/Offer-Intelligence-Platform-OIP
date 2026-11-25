@@ -357,6 +357,7 @@ def test_todos_los_campos_salen_aunque_esten_vacios():
         "msrp": None,
         "minimo_60_dias_amazon": None,
         "precio_venta_amazon": None,
+        "valor_referencia_usados": None,
     }
 
 

@@ -18,8 +18,10 @@ el precio de mercado hoy y el MSRP del paso 3, el descuento anunciado con sus ma
 confianza del paso 2 (RN-007), el mínimo de 60 días y la venta esperada en Amazon del paso 3,
 el costo de compra (paso 6), el estado y los números de cada canal (pasos 7 y 8), el nivel,
 las unidades, los días y el rendimiento, y la elección del canal con el nivel del aviso
-(paso 9). Los motivos y la precedencia (``resultado``, CMP-16) y el armado del registro ya
-están completos.
+(paso 9). T20, los usados (valor de referencia de RN-014 en el paso 3 y su descuento real en
+el 4), la compra a particular (``PARTICULAR`` y ``RIESGO DE PROCEDENCIA`` en el paso 2, la
+recogida en el 6). Los motivos y la precedencia (``resultado``, CMP-16) y el armado del
+registro ya están completos.
 """
 
 from __future__ import annotations
@@ -119,15 +121,18 @@ def identificar(contexto: ContextoEvaluacion, avance: Avance) -> Avance:
     riesgos, "evitar siempre" y confianza.
 
     T11: la confianza de la disponibilidad (RN-007 v2; S-25) y, en tienda física con
-    confianza Baja, la marca ``CONFIANZA BAJA`` (RN-009 §4.2). Lo demás lo llenan T19 y T20.
+    confianza Baja, la marca ``CONFIANZA BAJA`` (RN-009 §4.2). T20: ``PARTICULAR`` y, con un
+    particular, ``RIESGO DE PROCEDENCIA`` (RN-014 §4, RN-015). Lo demás lo llena T19.
     """
+    configuracion = contexto.configuracion.contenido
     oferta = contexto.oferta.observacion
-    parametros = contexto.configuracion.contenido.levels.confidence
+    parametros = configuracion.levels.confidence
     confianza = identificacion.confianza_disponibilidad(oferta, contexto.instante, parametros)
     marcas = avance.marcas
     if identificacion.es_tienda_fisica(oferta) and confianza is Confianza.BAJA:
         marcas = _con_marcas(avance, (Marca.CONFIANZA_BAJA.value,))
-    return dataclasses.replace(avance, confianza=confianza, marcas=marcas)
+    motivos = (*avance.motivos, *identificacion.motivos_de_particular(oferta, configuracion))
+    return dataclasses.replace(avance, confianza=confianza, marcas=marcas, motivos=motivos)
 
 
 def calcular_referencias(contexto: ContextoEvaluacion, avance: Avance) -> Avance:
@@ -141,18 +146,32 @@ def calcular_referencias(contexto: ContextoEvaluacion, avance: Avance) -> Avance
 def calcular_descuento(contexto: ContextoEvaluacion, avance: Avance) -> Avance:
     """Paso 4 (RN-003; CMP-12): descuento anunciado y real, franja y marcas.
 
-    Solo en una oferta **nueva** (S-13): la de un usado se mide contra el valor de
-    referencia de RN-014 (REQ §3.2 paso 3) y no lleva ``SIN HISTORIAL SUFICIENTE``; lo
-    agrega su tarea (T20). Sin precio habitual no hay descuento real y aplica el motivo
-    ``SIN HISTORIAL SUFICIENTE`` (REQ §3.2.3). El descuento anunciado y sus marcas
-    (``PRECIO ANTES INFLADO``, ``DESCUENTO ANUNCIADO NO COMPROBADO``) se calculan con o sin
-    precio habitual.
+    En una oferta **nueva** (S-13) se mide contra el precio habitual: sin él no hay
+    descuento real y aplica ``SIN HISTORIAL SUFICIENTE`` (REQ §3.2.3). El descuento anunciado
+    y sus marcas (``PRECIO ANTES INFLADO``, ``DESCUENTO ANUNCIADO NO COMPROBADO``) se
+    calculan con o sin precio habitual.
+
+    En un **no nuevo** (T20) el descuento real se mide contra el valor de referencia de
+    RN-014 (REQ §3.2 paso 3; DEC-263), con su franja; sin valor de referencia no hay descuento
+    real ni franja (no se evalúan ``MERCADO YA BARATO`` ni ``SOLO REFERENCIA``) y aplica
+    ``SIN REFERENCIA DE USADOS`` en lugar de ``SIN HISTORIAL SUFICIENTE`` (B24 a). El
+    descuento anunciado de RN-003 compara con el precio típico de la tienda, que es de nuevos:
+    en un no nuevo no se calcula.
     """
     oferta = contexto.oferta.observacion
     precio = oferta.price.current
-    if precio is None or not referencias.es_nuevo(oferta):
+    if precio is None:
         return avance
     parametros = contexto.configuracion.contenido.discount_quality
+    if not referencias.es_nuevo(oferta):
+        valor = avance.referencias.valor_referencia_usados if avance.referencias else None
+        if valor is None:
+            motivos = (*avance.motivos, Motivo.SIN_REFERENCIA_DE_USADOS)
+            return dataclasses.replace(avance, motivos=motivos)
+        real = descuento.descuento_real(valor, precio)
+        motivo = descuento.franja(real, parametros)
+        motivos = avance.motivos if motivo is None else (*avance.motivos, motivo)
+        return dataclasses.replace(avance, descuento_real=real, motivos=motivos)
     tachado = oferta.price.was
     anunciado = descuento.descuento_anunciado(tachado, precio)
     tipico = referencias.precio_tipico_de_la_tienda(contexto) if tachado is not None else None
@@ -202,8 +221,8 @@ def calcular_calidad(contexto: ContextoEvaluacion, avance: Avance) -> Avance:
 
 
 def calcular_costo_compra(contexto: ContextoEvaluacion, avance: Avance) -> Avance:
-    """Paso 6 (RN-001; CMP-13): precio + impuesto + envío hacia mí (la recogida con
-    particulares la agrega T20)."""
+    """Paso 6 (RN-001; CMP-13): precio + impuesto + envío hacia mí + recogida con un
+    particular (RN-008; S-14, sin impuesto)."""
     costo = canales.costo_compra(contexto.oferta.observacion, contexto.configuracion.contenido)
     return dataclasses.replace(avance, costo_compra=None if costo is None else costo.total)
 
