@@ -83,6 +83,7 @@ from zoneinfo import ZoneInfo
 
 from oip.catalogos import Condicion, Confianza, EstadoDisponibilidad, ModoCompra, Vendedor
 from oip.configuracion import ReferenciaPrecio as ParametrosReferencia
+from oip.entradas.capturas import ComparableLocal
 from oip.entradas.contrato import Observacion
 from oip.evaluacion.contexto import (
     ContextoEvaluacion,
@@ -101,6 +102,7 @@ __all__ = [
     "PrecioHabitual",
     "cadena_de",
     "calcular_referencias",
+    "comparables_de_usados",
     "dia_calendario",
     "dia_evaluado",
     "dias_de_historial",
@@ -118,6 +120,7 @@ __all__ = [
     "precio_tipico_de_la_tienda",
     "precio_venta_amazon",
     "serie_de_la_publicacion",
+    "valor_referencia_usados",
 ]
 
 #: Fuente del precio habitual calculado con las observaciones de OIP (ADR-007, DEC-123).
@@ -566,6 +569,30 @@ def msrp(contexto: ContextoEvaluacion) -> Decimal | None:
         return ultima.value
     propio = contexto.oferta.observacion.msrp
     return None if propio is None else propio.value
+
+
+# --- Usados: valor de referencia (RN-014 §4; T20) -----------------------------------------
+
+
+def comparables_de_usados(contexto: ContextoEvaluacion) -> tuple[ComparableLocal, ...]:
+    """Comparables que cuentan para el valor de referencia de un no nuevo (RN-014 §4): del
+    mismo producto (los del contexto) y del mismo estado que la oferta, de una ciudad de la
+    zona de venta local (PAR-09 ``in_local_sale_zone``; DEC-171) y con precio en USD. Vacío
+    en una oferta nueva. Orden: el del contexto."""
+    raise NotImplementedError("T20: fase 2")
+
+
+def valor_referencia_usados(contexto: ContextoEvaluacion) -> Decimal | None:
+    """Valor de referencia de un no nuevo (RN-014 §4; REQ §3.2 paso 3), que reemplaza al
+    precio habitual (DEC-263).
+
+    Con al menos ``local_sale.used.min_comparables`` comparables de
+    ``comparables_de_usados``: la mediana de las ventas concretadas o, si solo hay precios
+    pedidos, la mediana de los precios pedidos × ``local_sale.used.asking_price_factor_pct``,
+    redondeado una vez (``TipoMonto.VALOR_REFERENCIA_USADOS``; B18: 130 × 85% = 110.50).
+    ``None`` en una oferta nueva o con menos comparables (``SIN REFERENCIA DE USADOS``,
+    S-31)."""
+    raise NotImplementedError("T20: fase 2")
 
 
 # --- Amazon: mínimo de 60 días y precio de venta esperado (T11) ---------------------------

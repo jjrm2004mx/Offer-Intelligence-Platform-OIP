@@ -56,10 +56,15 @@ def _comparables(contexto: ContextoEvaluacion) -> tuple[ComparableLocal, ...]:
 
 
 def precio_venta_local(
-    contexto: ContextoEvaluacion, precio_mercado_hoy: Decimal | None
+    contexto: ContextoEvaluacion,
+    precio_mercado_hoy: Decimal | None,
+    valor_referencia_usados: Decimal | None = None,
 ) -> PrecioLocal | None:
-    """Precio de venta local (RN-016 §4). ``None`` sin estimado de Jesús ni precio de mercado
-    hoy (``SIN PRECIO LOCAL``). El valor de referencia de usados (RN-014) lo agrega T20."""
+    """Precio de venta local (RN-016 §4). Estimado = el de Jesús; si no, en un nuevo,
+    ``market_today_pct`` del precio de mercado hoy, y en un no nuevo,
+    ``used_reference_value_pct`` de ``valor_referencia_usados`` (RN-014; T20). ``None`` sin
+    estimado (``SIN PRECIO LOCAL``, o ``SIN REFERENCIA DE USADOS`` por revisar en un no nuevo
+    sin valor de referencia, S-31)."""
     if not isinstance(contexto, ContextoEvaluacion):
         raise TypeError("se esperaba un ContextoEvaluacion")
     if precio_mercado_hoy is not None:

@@ -33,6 +33,15 @@ def tasa_impuesto(observacion: Observacion, impuestos: Impuestos) -> Decimal:
     return impuestos.fallback_rate_pct
 
 
+def costo_recogida(observacion: Observacion, configuracion: Configuracion) -> Decimal | None:
+    """Traslado de recogida de una compra a particular (RN-008 §4; RN-014 §4; S-14): km y
+    horas de la ciudad ``pickupLocation`` (PAR-09 ``private_sellers.cities``) con las tarifas
+    y los costos fijos de PAR-12 (``local_sale.transport``), redondeado una vez
+    (``TipoMonto.TRASLADO_RECOGIDA``; B18: $9.50). ``None`` si la oferta no es de un
+    particular o su ciudad no está en PAR-09."""
+    raise NotImplementedError("T20: fase 2")
+
+
 def costo_compra(observacion: Observacion, configuracion: Configuracion) -> CostoCompra | None:
     """Costo de compra de la oferta (RN-001 §4; REQ §3.2 paso 6). ``None`` sin precio. El envío
     hacia mí es ``shipping.toMeCost`` o el de ``shipping_to_me_default`` (PAR-06)."""

@@ -46,14 +46,16 @@ class _Estricto:
 @dataclasses.dataclass(frozen=True, slots=True)
 class CostoCompra(_Estricto):
     """Costo de compra de la oferta (RN-001 §4). Montos redondeados una vez cada uno;
-    ``total`` = precio + impuesto + envío hacia mí, ya redondeados. ``tasa_impuesto_pct`` en
-    puntos, sin redondear."""
+    ``total`` = precio + impuesto + envío hacia mí + recogida, ya redondeados.
+    ``tasa_impuesto_pct`` en puntos, sin redondear. ``recogida`` es el traslado de recogida de
+    una compra a particular (RN-008, S-14; ``TipoMonto.TRASLADO_RECOGIDA``); 0 en las demás."""
 
     precio: Decimal
     tasa_impuesto_pct: Decimal
     impuesto: Decimal
     envio_hacia_mi: Decimal
     total: Decimal
+    recogida: Decimal = Decimal(0)
 
 
 @dataclasses.dataclass(frozen=True, slots=True)

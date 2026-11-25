@@ -79,6 +79,7 @@ from oip.evaluacion.canales._base import (
 )
 from oip.evaluacion.canales._compra import (
     costo_compra,
+    costo_recogida,
     tasa_impuesto,
 )
 from oip.evaluacion.canales._local import (
@@ -102,6 +103,7 @@ __all__ = [
     "competencia_mas_barata",
     "costo_compra",
     "costo_entrega",
+    "costo_recogida",
     "demanda_en_amazon",
     "demanda_local",
     "dias_por_unidad_local",
