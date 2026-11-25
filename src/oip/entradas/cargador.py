@@ -181,7 +181,10 @@ def dia_de_carga(instante: dt.datetime, configuracion: Configuracion) -> dt.date
     """El día de la carga: el del ``instante`` en la zona de ``general.timezone`` (PAR-01;
     DEC-257, DEC-274). La zona ya la validó la configuración (DEC-247)."""
     _exigir_instante(instante)
-    return instante.astimezone(ZoneInfo(configuracion.general.timezone)).date()
+    try:
+        return instante.astimezone(ZoneInfo(configuracion.general.timezone)).date()
+    except OverflowError:
+        raise ValueError("instante: fuera del rango de fechas en la zona de la carga") from None
 
 
 def clave_idempotencia(observacion: Observacion) -> str:
@@ -262,6 +265,8 @@ def cargar(
     if not isinstance(version, VersionConfiguracion):
         raise TypeError("version: se esperaba la VersionConfiguracion guardada")
     _exigir_instante(instante)
+    # El día de la carga, antes de empezarla: un instante sin día en la zona no la inicia.
+    dia = dia_de_carga(instante, version.configuracion.contenido)
     nombre = Path(nombre).name
     formato = formato_de_nombre(nombre)
     tipo_csv = tipo_de_nombre_csv(nombre) if formato == "csv" else None
@@ -280,7 +285,7 @@ def cargar(
         tipo_registro=tipo_csv,
     )
     repositorio.iniciar_carga(carga)
-    proceso = _Proceso(repositorio, version, instante, carga.id, nuevo_id)
+    proceso = _Proceso(repositorio, version, instante, dia, carga.id, nuevo_id)
     for renglon in renglones:
         proceso.registro(renglon, formato, tipo_csv)
 
@@ -445,6 +450,7 @@ class _Proceso:
         repositorio: Repositorio,
         version: VersionConfiguracion,
         instante: dt.datetime,
+        dia: dt.date,
         id_carga: UUID,
         nuevo_id: Callable[[], UUID],
     ) -> None:
@@ -453,7 +459,7 @@ class _Proceso:
         self.config = version.configuracion.contenido
         self.instante = instante
         self.zona = ZoneInfo(self.config.general.timezone)
-        self.dia = dia_de_carga(instante, self.config)
+        self.dia = dia
         self.id_carga = id_carga
         self.nuevo_id = nuevo_id
         self.cargados = 0

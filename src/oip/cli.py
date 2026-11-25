@@ -27,7 +27,7 @@ from pathlib import Path
 from typing import TextIO
 
 from oip.configuracion import ErrorConfiguracion, cargar_configuracion
-from oip.entradas.cargador import ErrorDeArchivo, cargar_archivo
+from oip.entradas.cargador import ErrorDeArchivo, cargar_archivo, dia_de_carga
 from oip.persistencia.repositorios import ErrorRepositorio, Repositorio
 
 __all__ = ["main"]
@@ -54,6 +54,10 @@ def _instante(texto: str) -> dt.datetime:
         raise argparse.ArgumentTypeError("--instante: fecha y hora ISO 8601") from None
     if valor.utcoffset() is None:
         raise argparse.ArgumentTypeError("--instante: lleva el desfase (por ejemplo -08:00 o Z)")
+    try:
+        valor.astimezone(dt.UTC)
+    except OverflowError:
+        raise argparse.ArgumentTypeError("--instante: fuera del rango de fechas en UTC") from None
     return valor
 
 
@@ -126,6 +130,11 @@ def _cargar(
             "oip: no hay configuración activa a ese instante; regístrela con oip config cargar",
             file=errores,
         )
+        return 1
+    try:
+        dia_de_carga(instante, version.configuracion.contenido)
+    except ValueError as error:
+        print(f"oip: {error}", file=errores)
         return 1
     reporte = cargar_archivo(archivo, repo, version, instante)
     print(json.dumps(reporte.a_json(), ensure_ascii=False, indent=2), file=salida)

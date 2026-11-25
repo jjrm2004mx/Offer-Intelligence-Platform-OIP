@@ -1021,16 +1021,6 @@ def test_el_cargador_no_escribe_el_alias_en_los_logs(caplog):
 # =========================================================================================
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=OverflowError,
-    reason=(
-        "IMPLEMENTATION DEFECT T08b-1: un extractedAt válido para el contrato pero fuera del "
-        "rango de datetime al pasar a UTC (9999-12-31T23:00-08:00 o 0001-01-01T00:00+05:00) "
-        "levanta OverflowError y detiene toda la carga (REQ §3.2.6 punto 1: un registro "
-        "inválido no detiene la carga)"
-    ),
-)
 @pytest.mark.parametrize("extraida", ["9999-12-31T23:00:00-08:00", "0001-01-01T00:00:00+05:00"])
 def test_defecto_1_extracted_at_fuera_de_rango_utc_no_detiene_la_carga(extraida):
     contenido = jsonl(comercio("/p/fuera", extractedAt=extraida), comercio("/p/siguiente"))
@@ -1040,15 +1030,6 @@ def test_defecto_1_extracted_at_fuera_de_rango_utc_no_detiene_la_carga(extraida)
     assert motivos(reporte)[0][0] == 1
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=OverflowError,
-    reason=(
-        "IMPLEMENTATION DEFECT T08b-2: un visitedAt con desfase fuera del rango de datetime "
-        "en la zona de la carga (0001-01-01T00:00+05:00) levanta OverflowError al comprobar "
-        "el día de la carga y detiene toda la carga (REQ §3.2.6 punto 1)"
-    ),
-)
 def test_defecto_2_visited_at_fuera_de_rango_no_detiene_la_carga():
     contenido = jsonl(_visita("0001-01-01T00:00:00+05:00"), demanda())
     reporte, _, _ = correr("v.jsonl", contenido)

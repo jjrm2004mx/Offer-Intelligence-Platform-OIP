@@ -1332,3 +1332,91 @@ def test_copia_profunda_de_los_datos_no_cambia(repo):
     original = copy.deepcopy(datos)
     _cargar(repo, "a.jsonl", _jsonl(_obs(datos)))
     assert datos == original
+
+
+# --- Fechas y horas fuera del rango al pasarlas a UTC o a la zona (corrección T08b-1 y T08b-2) --
+
+
+@pytest.mark.parametrize(
+    "extraida",
+    ["9999-12-31T23:00:00-08:00", "0001-01-01T00:00:00+05:00", "0001-01-01T00:59:00+01:00"],
+)
+def test_extracted_at_que_no_cabe_en_utc_es_rechazo_del_renglon(extraida):
+    repo = Espia()
+    contenido = _jsonl(
+        _obs(_comercio(extractedAt=extraida)),
+        _obs(_comercio(productUrl=f"https://{DOMINIO_PRUEBA}/p/2")),
+    )
+    reporte = _cargar(repo, "a.jsonl", contenido)
+    assert _rechazos(reporte) == [(1, _faltante("extractedAt"))]
+    assert reporte.cargados == 1
+    guardada = repo.leer_carga(reporte.id_carga)
+    assert guardada.reporte is not None and guardada.reporte.rechazados == 1
+    (rechazo,) = [a for n, a in repo.llamadas if n == "guardar_rechazo_carga"]
+    assert rechazo[0].campo == "extractedAt" and rechazo[1] is not None  # DEC-250
+
+
+def test_extracted_at_en_el_borde_del_rango_utc_se_acepta(repo):
+    contenido = _jsonl(_obs(_comercio(extractedAt="9999-12-31T23:59:00+00:00")))
+    assert _cargar(repo, "a.jsonl", contenido).cargados == 1
+
+
+@pytest.mark.parametrize(
+    "visita",
+    [
+        "0001-01-01T00:00:00+05:00",  # no cabe en UTC
+        "9999-12-31T23:00:00",  # sin desfase: en Tijuana no cabe en UTC
+        "0001-01-01T03:00:00+00:00",  # cabe en UTC, no en la zona de la carga (DEC-274)
+    ],
+)
+def test_visited_at_que_no_cabe_en_utc_o_en_la_zona_es_rechazo_del_renglon(repo, visita):
+    contenido = _jsonl(
+        {
+            "recordType": "store_visit",
+            "storeCode": "tp-cv",
+            "brand": "M",
+            "model": "X",
+            "result": "found",
+            "visitedAt": visita,
+        },
+        _demanda(),
+    )
+    reporte = _cargar(repo, "a.jsonl", contenido)
+    assert _rechazos(reporte) == [(1, _faltante("visitedAt"))]
+    assert reporte.cargados == 1
+    assert repo.leer_carga(reporte.id_carga).reporte is not None
+
+
+def test_csv_con_extracted_at_fuera_de_rango(repo):
+    contenido = (
+        "retailerCode,productUrl,title,category,price.current,seller,availability.state,"
+        "purchaseMode,extractedAt,blocked\n"
+        f"{TIENDA_PRUEBA},https://{DOMINIO_PRUEBA}/p/1,P,tools,9.99,comercio,in_stock,envio,"
+        "9999-12-31T23:00:00-08:00,false\n"
+        f"{TIENDA_PRUEBA},https://{DOMINIO_PRUEBA}/p/2,P,tools,9.99,comercio,in_stock,envio,"
+        "2026-11-17T10:00:00-08:00,false\n"
+    ).encode()
+    reporte = _cargar(repo, "observation.csv", contenido)
+    assert _rechazos(reporte) == [(2, _faltante("extractedAt"))] and reporte.cargados == 1
+
+
+def test_un_instante_sin_dia_en_la_zona_no_empieza_la_carga():
+    repo = Espia()
+    extremo = dt.datetime(1, 1, 1, 3, tzinfo=dt.UTC)  # en Tijuana sería el año 0
+    with pytest.raises(ValueError, match="instante"):
+        _cargar(repo, "a.jsonl", _jsonl(_demanda()), instante=extremo)
+    assert "iniciar_carga" not in [n for n, _ in repo.llamadas]
+
+
+def test_cli_instante_fuera_de_rango(tmp_path, repo):
+    # La configuración queda activa desde el año 1 para que solo falle el día de la carga.
+    temprano = dt.datetime(1, 1, 1, 1, tzinfo=dt.UTC)
+    _cli(["config", "cargar", str(_config_yaml(tmp_path))], repo, lambda: temprano)
+    archivo = tmp_path / "a.jsonl"
+    archivo.write_bytes(_jsonl(_demanda()))
+    codigo, _, _ = _cli(["cargar", str(archivo), "--instante", "0001-01-01T00:00:00+05:00"], repo)
+    assert codigo == 2
+    codigo, _, errores = _cli(
+        ["cargar", str(archivo), "--instante", "0001-01-01T03:00:00+00:00"], repo
+    )
+    assert codigo == 1 and "fuera del rango" in errores

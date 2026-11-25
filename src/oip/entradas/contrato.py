@@ -13,7 +13,8 @@ son los de la arquitectura §8. Este módulo agrega solo las reglas de la parte 
   valerlo (DEC-239). Se descartan ``availability.text`` y ``evidence``, texto libre que no
   es parte de la publicación (DEC-236).
 - ``availability`` sin ``state`` cuenta como ``availability.state`` faltante (DEC-237).
-- Enteros y booleanos estrictos (DEC-238); ``extractedAt`` y las demás horas, con desfase.
+- Enteros y booleanos estrictos (DEC-238); ``extractedAt`` y las demás horas, con desfase y
+  que se puedan pasar a UTC (si no, ``CAMPO OBLIGATORIO FALTANTE (extractedAt)``).
 - **GTIN** con dígito verificador (RN-013, arquitectura §7.3): un GTIN inválido no rechaza
   la observación, pero ``gtin_valido`` es falso y no confirma la coincidencia.
 - ``price.current`` > 0 y con 2 decimales como máximo: si no, la observación queda
@@ -37,7 +38,7 @@ from collections.abc import Iterable, Mapping
 from decimal import Decimal
 from typing import Annotated, Any, Literal
 
-from pydantic import AwareDatetime, BeforeValidator
+from pydantic import BeforeValidator
 
 from oip.catalogos import (
     Categoria,
@@ -51,6 +52,7 @@ from oip.entradas._comun import (
     Dec,
     Entero,
     Esquema,
+    FechaHora,
     Monto,
     RegistroInvalido,
     ValorJson,
@@ -228,7 +230,7 @@ class Observacion(Esquema):
     shipping: Envio | None = None
     msrp: MsrpObservado | None = None
     amazon_listing: FichaAmazon | None = None
-    extracted_at: AwareDatetime
+    extracted_at: FechaHora
     extraction_method: str | None = None
     blocked: Booleano
     evidence: dict[str, ValorJson] | None = None

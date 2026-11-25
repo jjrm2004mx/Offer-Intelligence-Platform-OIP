@@ -111,7 +111,12 @@ def _fecha_hora_no_posterior(valor: dt.datetime, info: ValidationInfo) -> dt.dat
         return valor
     contexto = info.context if isinstance(info.context, Mapping) else {}
     zona = contexto.get(CONTEXTO_ZONA)
-    local = valor.astimezone(zona) if isinstance(zona, dt.tzinfo) else valor
+    try:
+        local = valor.astimezone(zona) if isinstance(zona, dt.tzinfo) else valor
+    except OverflowError:
+        # Fuera del rango de fechas en la zona de la carga: no es un valor válido del campo
+        # (CAMPO OBLIGATORIO FALTANTE, design.md §6); no detiene la carga (lectura de T08b).
+        raise ValueError("la fecha y hora no cabe en la zona de la carga") from None
     if local.date() > dia:
         raise ValueError("la fecha es posterior al día de la carga")
     return valor
