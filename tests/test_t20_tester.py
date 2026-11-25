@@ -322,7 +322,7 @@ def test_b18_particular_revision_con_inspeccion():
     assert refs.fuente_precio_habitual is None
     assert refs.episodio is None
     assert _cerca(registro.descuento_real, REAL_B18)
-    assert formatear_porcentaje(registro.descuento_real) == "36.7"
+    assert formatear_porcentaje(registro.descuento_real) == "36.7 %"
 
     # Compra 70 + 9.50 = $79.50 (sin impuesto, S-14).
     assert registro.costo_compra == D("79.50")
@@ -398,8 +398,9 @@ def test_b24_a_usado_sin_referencia_venta_local_por_revisar():
 
 
 @pytest.mark.scenario("B24 (b)")
-def test_b24_b_demanda_local_baja_prevalece_cerrado_y_descarta():
-    """REQ §5 B24 (b); S-31 (una causa de cerrado prevalece sobre por revisar); §3.2.1."""
+def test_b24_b_demanda_local_baja_prevalece_cerrado():
+    """REQ §5 B24 (b), parte de canales: S-31 (una causa de cerrado prevalece sobre por
+    revisar); §3.2.1. Los motivos de revisión se guardan."""
     registro = motor.evaluar(_contexto_b24(demanda_local=(_demanda_baja(),)))
 
     _amazon_cerrado_por_no_nuevo(registro)
@@ -407,9 +408,30 @@ def test_b24_b_demanda_local_baja_prevalece_cerrado_y_descarta():
     assert local.estado is EstadoCanal.CERRADO
     assert local.causas_cerrado == (CausaCanalCerrado.DEMANDA_LOCAL_BAJA,)
     assert local.nivel_calculado is None and local.margen_ajustado is None
+    assert local.precio_venta is None
 
-    # Los dos canales cerrados → SIN CANAL DISPONIBLE → DESCARTADA; los motivos de revisión
-    # se guardan.
+    for motivo in (
+        Motivo.SIN_REFERENCIA_DE_USADOS,
+        Motivo.PARTICULAR,
+        Motivo.RIESGO_DE_PROCEDENCIA,
+    ):
+        assert motivo in registro.motivos
+    assert registro.descuento_real is None
+    assert registro.calidad_precio is CalidadPrecio.NO_APLICA
+
+
+@pytest.mark.scenario("B24 (b)")
+@pytest.mark.xfail(
+    strict=True,
+    reason=(
+        "Hueco del plan, no defecto de T20 (DEC-249): SIN CANAL DISPONIBLE lo construye T18 "
+        "y T20 no depende de T18 (issue #34, T20-2). Quitar el xfail cuando T18 lo agregue."
+    ),
+)
+def test_b24_b_resultado_descartada_sin_canal_disponible():
+    """REQ §5 B24 (b), resultado: los dos canales cerrados → SIN CANAL DISPONIBLE →
+    DESCARTADA; los motivos de revisión se guardan después (orden de §3.2.3)."""
+    registro = motor.evaluar(_contexto_b24(demanda_local=(_demanda_baja(),)))
     assert registro.resultado is Resultado.DESCARTADA
     assert registro.motivo_principal is Motivo.SIN_CANAL_DISPONIBLE
     assert registro.motivos == (
@@ -418,8 +440,6 @@ def test_b24_b_demanda_local_baja_prevalece_cerrado_y_descarta():
         Motivo.PARTICULAR,
         Motivo.RIESGO_DE_PROCEDENCIA,
     )
-    assert registro.descuento_real is None
-    assert registro.calidad_precio is CalidadPrecio.NO_APLICA
 
 
 @pytest.mark.scenario("B24 (c)")
@@ -440,11 +460,11 @@ def test_b24_c_usado_sin_referencia_con_estimado_margen_informativo():
     assert local.costo_venta == D("9.50")
     assert local.margen_neto == D("14.50")
     assert _cerca(local.margen_neto_pct, D("14.50") / D("79.50") * 100)
-    assert formatear_porcentaje(local.margen_neto_pct) == "18.2"
+    assert formatear_porcentaje(local.margen_neto_pct) == "18.2 %"
     assert local.castigo == D("10.35")
     assert local.margen_ajustado == D("4.15")
     assert _cerca(local.margen_ajustado_pct, D("4.15") / D("79.50") * 100)
-    assert formatear_porcentaje(local.margen_ajustado_pct) == "5.2"
+    assert formatear_porcentaje(local.margen_ajustado_pct) == "5.2 %"
     # Sin descuento real no hay nivel_calculado; por revisar: sin unidades, días ni
     # rendimiento (S-30).
     assert local.nivel is None and local.nivel_calculado is None
