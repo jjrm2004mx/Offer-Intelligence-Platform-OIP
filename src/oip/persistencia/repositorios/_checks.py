@@ -97,6 +97,13 @@ def _patron_are(patron: str) -> str:
     Levanta ``NotImplementedError`` ante una forma fuera del subconjunto común de los dos
     motores: ``[:``, ``[.``, ``[=``, ``(?``, ``***`` o un escape alfabético (``\\y``).
 
+    Lectura de la decisión 19 del #34: esas cinco formas se buscan como **subcadena** del
+    patrón, antes de mirar los escapes y las clases. Por eso se rechaza también lo que los
+    dos motores entienden igual pero empieza con ``(?``, como un grupo sin captura
+    ``(?:…)``, y las formas escapadas, como ``\\(?`` o ``\\[:``, aunque en ellas ``(`` o
+    ``[`` sean literales. Es una barrera conservadora a propósito: los patrones del esquema
+    no las usan y se validan al importar.
+
     En una ARE ``$`` solo coincide al final del texto; en ``re`` también antes de un salto de
     línea final (``'a\\n'`` cumpliría ``'^a$'``). Por eso cada ``$`` sin escapar y fuera de
     ``[...]`` pasa a ``\\Z``. La otra diferencia del modo por defecto, que ``.`` coincide con

@@ -13,7 +13,9 @@ nada del contenido: eso lo hacen los esquemas (CMP-05, CMP-06) y la validación 
   campo ausente; las listas van separadas por ``|``. Enteros y booleanos se convierten
   desde el texto al tipo del campo en el esquema (DEC-238): solo ``"true"``/``"false"`` y
   un entero decimal exacto; un texto que no se convierte llega como está y el esquema lo
-  rechaza. Los montos quedan como texto: el esquema los lee como ``Decimal``.
+  rechaza. Los montos quedan como texto: el esquema los lee como ``Decimal``. Una columna
+  ``recordType`` es opcional; si viene, su celda llega tal cual (vacía o faltante como
+  ``""``) para que el cargador la compare con el tipo del nombre (DEC-279).
 
 Un problema del **archivo** (formato desconocido, CSV que no es UTF-8, encabezado
 repetido) levanta ``ErrorDeArchivo`` antes de empezar la carga; un problema de un
@@ -211,7 +213,9 @@ def _anidar(campos: Mapping[str, object]) -> dict[str, Any]:
 def leer_csv(contenido: bytes, tipo: TipoRegistro | None) -> Iterator[Renglon]:
     """Los renglones de un CSV con encabezado, en orden. Celda vacía = campo ausente; un
     renglón sin celdas no es un registro; las celdas de más (sin encabezado) se descartan.
-    La columna ``recordType``, si viene, se descarta: el tipo sale del nombre (CTR-03).
+    El tipo sale del nombre (CTR-03). La columna ``recordType``, si viene, queda en los
+    campos con el texto de su celda, también vacía o faltante (``""``): el cargador la
+    compara con el tipo del nombre y la quita (DEC-279).
 
     Levanta ``ErrorDeArchivo`` si el archivo no es UTF-8 o el encabezado no es válido."""
     try:
@@ -226,6 +230,7 @@ def leer_csv(contenido: bytes, tipo: TipoRegistro | None) -> Iterator[Renglon]:
     except csv.Error:
         raise ErrorDeArchivo("CSV: el encabezado no se puede leer") from None
     conversiones = _CONVERSIONES.get(tipo, {}) if tipo is not None else {}
+    columna_tipo = encabezado.index(CAMPO_TIPO) if CAMPO_TIPO in encabezado else None
     while True:
         inicio = lector.line_num + 1
         try:
@@ -241,4 +246,7 @@ def leer_csv(contenido: bytes, tipo: TipoRegistro | None) -> Iterator[Renglon]:
             for nombre, celda in zip(encabezado, celdas, strict=False)
             if nombre and nombre != CAMPO_TIPO and celda.strip()
         }
+        if columna_tipo is not None:
+            # DEC-279: vacía o faltante también se compara (da TIPO DE REGISTRO DESCONOCIDO).
+            campos[CAMPO_TIPO] = celdas[columna_tipo] if columna_tipo < len(celdas) else ""
         yield Renglon(inicio, _anidar(campos))

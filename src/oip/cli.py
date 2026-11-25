@@ -1,14 +1,18 @@
 """Línea de comandos ``oip`` (CMP-22; design.md CTR-07).
 
-- ``oip config cargar <archivo.yaml>``: valida la configuración y registra su versión
-  (TAB-01); idempotente por ``sha256``.
+- ``oip config cargar <archivo.yaml> [--instante ISO]``: valida la configuración y registra
+  su versión (TAB-01); idempotente por ``sha256``. ``--instante`` fija ``loaded_at``; sin
+  él, el reloj (DEC-278). Así una carga pasada se reproduce con ``oip cargar --instante``
+  aunque ese instante sea anterior al registro original. Una versión ya registrada (mismo
+  ``sha256``) conserva su ``loaded_at``.
 - ``oip cargar <archivo> [--instante ISO]``: carga un archivo JSON Lines o CSV (CMP-08) con
   la configuración activa a ese instante e imprime el reporte de carga (CTR-05) en JSON.
 
 Sin lógica propia: arma las dependencias y llama a la configuración (CMP-04), al cargador
 (CMP-08) y al repositorio (CMP-20). Es el **borde** que lee el reloj: sin ``--instante``, el
-instante de la carga es el del reloj, en UTC (DEC-271); el cargador lo recibe como dato.
-``--instante`` exige el desfase (no se usa la zona de la máquina). La evaluación de las
+instante de la carga (o el ``loaded_at`` de la configuración) es el del reloj, en UTC
+(DEC-271, DEC-278); el cargador y el repositorio lo reciben como dato. ``--instante`` exige
+el desfase en los dos comandos (no se usa la zona de la máquina). La evaluación de las
 observaciones nuevas y ``oip evaluacion recalcular`` llegan con T21.
 
 Los mensajes de error no llevan la URL de la base, la contraseña ni el contenido de un
@@ -69,6 +73,7 @@ def _analizador() -> argparse.ArgumentParser:
     acciones = config.add_subparsers(dest="accion", required=True)
     config_cargar = acciones.add_parser("cargar", help="registrar una versión (TAB-01)")
     config_cargar.add_argument("archivo", type=Path)
+    config_cargar.add_argument("--instante", type=_instante, default=None)  # DEC-278
 
     cargar = comandos.add_parser("cargar", help="cargar un archivo .jsonl o .csv")
     cargar.add_argument("archivo", type=Path)
@@ -92,9 +97,9 @@ def main(
     except SystemExit as fin:
         return 0 if fin.code == 0 else 2
     try:
-        if argumentos.comando == "config":
-            return _config_cargar(argumentos.archivo, repositorio(), reloj, salida)
         instante = argumentos.instante if argumentos.instante is not None else reloj()
+        if argumentos.comando == "config":
+            return _config_cargar(argumentos.archivo, repositorio(), instante, salida)
         return _cargar(argumentos.archivo, repositorio(), instante, salida, errores)
     except ErrorConfiguracion as error:
         for mensaje in error.errores:
@@ -108,9 +113,11 @@ def main(
     return 1
 
 
-def _config_cargar(archivo: Path, repo: Repositorio, reloj: Reloj, salida: TextIO) -> int:
+def _config_cargar(
+    archivo: Path, repo: Repositorio, cargada_en: dt.datetime, salida: TextIO
+) -> int:
     configuracion = cargar_configuracion(archivo)
-    version, nueva = repo.guardar_version_configuracion(configuracion, cargada_en=reloj())
+    version, nueva = repo.guardar_version_configuracion(configuracion, cargada_en=cargada_en)
     resultado = {
         "configVersionId": version.id,
         "version": version.configuracion.version,

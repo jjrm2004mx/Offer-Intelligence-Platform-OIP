@@ -7,7 +7,9 @@ design.md §6:
 1. ``recordType`` (lo comprueba y lo quita el cargador, CMP-08, antes de llegar aquí);
 2. obligatorios del contrato, en el orden de la arquitectura §8, y obligatorios del
    particular (``pickupLocation``, ``brand``, ``model``; DEC-227 b): los da
-   ``leer_observacion`` (T03) con ``CAMPO OBLIGATORIO FALTANTE (<campo>)``. Aquí se agrega
+   ``leer_observacion`` (T03) con ``CAMPO OBLIGATORIO FALTANTE (<campo>)``. ``validar`` le
+   pasa la zona de ``general.timezone`` (PAR-01): un ``extractedAt`` que no cabe en ella no
+   es un valor válido del campo (DEC-280). Aquí se agrega
    la regla de DEC-242: en la publicación de un particular, ``availability.state`` debe ser
    ``listed`` (REQ §6 punto 1); otro código cuenta como valor no válido del campo, en la
    posición de ``availability`` (DEC-234 punto 2, DEC-237, DEC-239);
@@ -15,7 +17,9 @@ design.md §6:
 4. dominio autorizado del comercio (``http`` o ``https``, arquitectura §10) o, en la
    publicación de un particular, enlace ``https`` de una plataforma permitida, con su
    prefijo de ruta si la plataforma lo configura (PAR-09; DEC-212), comparado sobre la
-   ruta ya normalizada (``..`` y ``%2e%2e`` resueltos; DEC-256) → ``DOMINIO NO
+   ruta ya normalizada (``..`` y ``%2e%2e`` resueltos; DEC-256); en la ruta del enlace de
+   un particular, un separador codificado (``%2f``, ``%5c``) o un ``%`` codificado
+   (``%25``), en mayúsculas o minúsculas, tampoco vale (DEC-277) → ``DOMINIO NO
    AUTORIZADO``;
 5. ciudad (``pickupLocation``) en la lista de PAR-09 → ``CIUDAD NO CONFIGURADA``.
 
@@ -35,10 +39,12 @@ valor ni el contenido del registro (R-20, DEC-181). Sin reloj, sin I/O, sin red.
 from __future__ import annotations
 
 import dataclasses
+import datetime as dt
 import re
 from collections.abc import Iterable, Mapping
 from typing import Any
 from urllib.parse import SplitResult, urlsplit, urlunsplit
+from zoneinfo import ZoneInfo
 
 from oip.catalogos import EstadoDisponibilidad, MotivoRechazo, Resultado, motivo_campo_faltante
 from oip.configuracion import Configuracion
@@ -62,6 +68,10 @@ _ESQUEMAS_COMERCIO = frozenset({"http", "https"})  # arquitectura §10
 _ESQUEMAS_PARTICULAR = frozenset({"https"})  # DEC-212
 #: ``%2e`` se lee como punto al resolver ``.`` y ``..`` (DEC-256).
 _PUNTO_CODIFICADO = re.compile("%2e", re.IGNORECASE)
+#: ``/``, ``\`` y ``%`` codificados: en la ruta de un particular no valen (DEC-277).
+_SEPARADOR_CODIFICADO = re.compile("%(?:2f|5c|25)", re.IGNORECASE)
+#: Campo de la fecha y hora de la extracción, con el nombre que tiene en el archivo.
+_CAMPO_EXTRAIDA = "extractedAt"
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -96,15 +106,18 @@ def validar(datos: Mapping[str, Any], configuracion: Configuracion) -> Validacio
     """Paso 1 completo sobre un registro ya decodificado y sin ``recordType``.
 
     Primero la forma del contrato y los obligatorios (``leer_observacion``, con la regla de
-    ``listed`` del particular), luego ``motivo_de_rechazo``. Nunca levanta por un registro
-    inválido: lo devuelve como rechazo.
+    ``listed`` del particular y la zona de ``general.timezone`` para ``extractedAt``,
+    DEC-280), luego ``motivo_de_rechazo``. Nunca levanta por un registro inválido: lo
+    devuelve como rechazo.
     """
     if not isinstance(configuracion, Configuracion):
         raise TypeError("se esperaba la configuración validada (Configuracion)")
     if not isinstance(datos, Mapping):
         raise TypeError("la observación debe ser un mapa de campos")
     try:
-        observacion = leer_observacion(datos, no_validos=_estado_no_listado(datos))
+        observacion = leer_observacion(
+            datos, no_validos=_estado_no_listado(datos), zona=_zona(configuracion)
+        )
     except RegistroInvalido as error:
         return Validacion(motivo_rechazo=error.motivo, campo=error.campo)
     rechazo = _primer_rechazo(observacion, configuracion)
@@ -118,8 +131,9 @@ def motivo_de_rechazo(observacion: Observacion, configuracion: Configuracion) ->
     """Primer motivo de rechazo de una observación ya leída, o ``None`` si es válida.
 
     Comprueba lo que la forma del contrato no puede saber, en el orden de design.md §6:
-    ``listed`` del particular (DEC-242), precio, dominio o plataforma, ciudad. Es lo que
-    corre el paso 1 del motor (CMP-17) sobre la oferta del contexto.
+    ``extractedAt`` en la zona de ``general.timezone`` (DEC-280), ``listed`` del particular
+    (DEC-242), precio, dominio o plataforma, ciudad. Es lo que corre el paso 1 del motor
+    (CMP-17) sobre la oferta del contexto.
     """
     if not isinstance(observacion, Observacion):
         raise TypeError("se esperaba una Observacion")
@@ -200,6 +214,9 @@ def _primer_rechazo(
     observacion: Observacion, configuracion: Configuracion
 ) -> tuple[str, str | None] | None:
     """(motivo, campo) del primer fallo en el orden de design.md §6, o ``None``."""
+    if not _cabe_en_la_zona(observacion.extracted_at, _zona(configuracion)):
+        # DEC-280: extractedAt es un obligatorio del contrato y va antes que lo demás.
+        return motivo_campo_faltante(_CAMPO_EXTRAIDA), _CAMPO_EXTRAIDA
     if observacion.es_particular and observacion.availability.state != EstadoDisponibilidad.LISTED:
         return motivo_campo_faltante(CAMPO_ESTADO), CAMPO_ESTADO
     if observacion.precio_invalido:
@@ -210,6 +227,26 @@ def _primer_rechazo(
     if ciudad is not None and ciudad not in configuracion.private_sellers.cities:
         return MotivoRechazo.CIUDAD_NO_CONFIGURADA.value, None
     return None
+
+
+def _zona(configuracion: Configuracion) -> dt.tzinfo:
+    """La zona de ``general.timezone`` (PAR-01), ya validada por la configuración (DEC-247)."""
+    return ZoneInfo(configuracion.general.timezone)
+
+
+def _cabe_en_la_zona(valor: dt.datetime, zona: dt.tzinfo) -> bool:
+    try:
+        valor.astimezone(zona)
+    except OverflowError:
+        return False
+    return True
+
+
+def _separador_codificado(url: str) -> bool:
+    """DEC-277: la ruta del enlace lleva ``%2f``, ``%5c`` o ``%25`` (sin distinguir
+    mayúsculas). Solo la ruta: la query se queda tal cual (DEC-256)."""
+    partes = _partes(url)
+    return partes is not None and _SEPARADOR_CODIFICADO.search(partes.path) is not None
 
 
 def _estado_no_listado(datos: Mapping[str, Any]) -> tuple[str, ...]:
@@ -244,6 +281,10 @@ def _partes(url: str) -> SplitResult | None:
 def _enlace_autorizado(observacion: Observacion, configuracion: Configuracion) -> bool:
     url = observacion.product_url
     if observacion.es_particular:
+        # DEC-277: un servidor que decodifica %2F antes de resolver la ruta saldría del
+        # prefijo de PAR-09; el enlace lo abre Jesús a mano.
+        if _separador_codificado(url):
+            return False
         # DEC-212: enlace https de una plataforma permitida (PAR-09).
         return any(
             url_autorizada(

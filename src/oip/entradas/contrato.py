@@ -14,7 +14,9 @@ son los de la arquitectura §8. Este módulo agrega solo las reglas de la parte 
   es parte de la publicación (DEC-236).
 - ``availability`` sin ``state`` cuenta como ``availability.state`` faltante (DEC-237).
 - Enteros y booleanos estrictos (DEC-238); ``extractedAt`` y las demás horas, con desfase y
-  que se puedan pasar a UTC (si no, ``CAMPO OBLIGATORIO FALTANTE (extractedAt)``).
+  que se puedan pasar a UTC (si no, ``CAMPO OBLIGATORIO FALTANTE (extractedAt)``). Con la
+  zona de ``general.timezone`` (``zona``, la pasa la validación), ``extractedAt`` además
+  debe caber en ella: ``0001-01-01T03:00:00Z`` no cabe en Tijuana (DEC-280).
 - **GTIN** con dígito verificador (RN-013, arquitectura §7.3): un GTIN inválido no rechaza
   la observación, pero ``gtin_valido`` es falso y no confirma la coincidencia.
 - ``price.current`` > 0 y con 2 decimales como máximo: si no, la observación queda
@@ -37,8 +39,9 @@ import datetime as dt
 from collections.abc import Iterable, Mapping
 from decimal import Decimal
 from typing import Annotated, Any, Literal
+from zoneinfo import ZoneInfo
 
-from pydantic import BeforeValidator
+from pydantic import AfterValidator, BeforeValidator, ValidationInfo
 
 from oip.catalogos import (
     Categoria,
@@ -48,6 +51,7 @@ from oip.catalogos import (
     Vendedor,
 )
 from oip.entradas._comun import (
+    CONTEXTO_ZONA,
     Booleano,
     Dec,
     Entero,
@@ -147,6 +151,23 @@ def _incoherente_de_particular(datos: Mapping[str, Any]) -> str | None:
     return None
 
 
+def _cabe_en_la_zona(valor: dt.datetime, info: ValidationInfo) -> dt.datetime:
+    """DEC-280: ``extractedAt`` debe caber en la zona de ``general.timezone`` (la del
+    contexto); si no, no es un valor válido del campo. Sin zona, no se comprueba."""
+    contexto = info.context if isinstance(info.context, Mapping) else {}
+    zona = contexto.get(CONTEXTO_ZONA)
+    if isinstance(zona, dt.tzinfo):
+        try:
+            valor.astimezone(zona)
+        except OverflowError:
+            raise ValueError("la fecha y hora no cabe en la zona de la carga") from None
+    return valor
+
+
+FechaHoraExtraida = Annotated[FechaHora, AfterValidator(_cabe_en_la_zona)]
+"""``extractedAt``: con desfase, se puede pasar a UTC y, con zona, cabe en ella (DEC-280)."""
+
+
 # --- Partes del contrato --------------------------------------------------------------
 
 
@@ -230,7 +251,7 @@ class Observacion(Esquema):
     shipping: Envio | None = None
     msrp: MsrpObservado | None = None
     amazon_listing: FichaAmazon | None = None
-    extracted_at: FechaHora
+    extracted_at: FechaHoraExtraida
     extraction_method: str | None = None
     blocked: Booleano
     evidence: dict[str, ValorJson] | None = None
@@ -267,7 +288,12 @@ def _version(datos: Mapping[str, Any]) -> str:
     return version.strip()
 
 
-def leer_observacion(datos: Mapping[str, Any], *, no_validos: Iterable[str] = ()) -> Observacion:
+def leer_observacion(
+    datos: Mapping[str, Any],
+    *,
+    no_validos: Iterable[str] = (),
+    zona: str | dt.tzinfo | None = None,
+) -> Observacion:
     """Lee una observación del contrato 3.1 desde un registro ya decodificado.
 
     Levanta ``RegistroInvalido`` con ``CAMPO OBLIGATORIO FALTANTE (<campo>)`` y el nombre
@@ -280,6 +306,11 @@ def leer_observacion(datos: Mapping[str, Any], *, no_validos: Iterable[str] = ()
     ``no_validos`` son campos que el llamador ya sabe que no traen un valor válido (la
     validación del paso 1, CMP-07: ``availability.state`` distinto de ``listed`` en un
     particular, DEC-242); se ordenan con los demás problemas en el mismo orden.
+
+    ``zona`` es la de ``general.timezone`` (PAR-01; nombre IANA o ``tzinfo``), que pasa la
+    validación (DEC-240, DEC-247): un ``extractedAt`` que no cabe en ella da ``CAMPO
+    OBLIGATORIO FALTANTE (extractedAt)`` en su lugar del orden (DEC-280). Sin ella, no se
+    comprueba.
 
     El precio inválido no levanta: queda en ``Observacion.precio_invalido``.
     """
@@ -326,4 +357,14 @@ def leer_observacion(datos: Mapping[str, Any], *, no_validos: Iterable[str] = ()
             if isinstance(marca, str) and isinstance(modelo, str):
                 registro["title"] = f"{marca.strip()} {modelo.strip()}"
 
-    return validar_esquema(Observacion, registro, orden, faltan=faltan, ignorar=ignorar)
+    zona_info = ZoneInfo(zona) if isinstance(zona, str) else zona
+    if zona_info is not None and not isinstance(zona_info, dt.tzinfo):
+        raise TypeError("zona: se esperaba un nombre IANA o un tzinfo")
+    return validar_esquema(
+        Observacion,
+        registro,
+        orden,
+        faltan=faltan,
+        ignorar=ignorar,
+        contexto={CONTEXTO_ZONA: zona_info},
+    )
