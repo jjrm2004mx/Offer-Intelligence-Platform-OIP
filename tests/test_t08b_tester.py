@@ -1035,3 +1035,90 @@ def test_defecto_2_visited_at_fuera_de_rango_no_detiene_la_carga():
     reporte, _, _ = correr("v.jsonl", contenido)
     assert reporte.cargados == 1
     assert reporte.rechazados == 1
+
+
+# =========================================================================================
+# Segunda pasada: cierre de T08b-1 y T08b-2 y el mismo patrón en otros sitios
+# =========================================================================================
+
+
+@pytest.mark.parametrize("extraida", ["9999-12-31T23:00:00-08:00", "0001-01-01T00:00:00+05:00"])
+def test_t08b_1_fuera_de_rango_deja_su_rechazo_y_cierra_el_reporte(extraida):
+    contenido = jsonl(comercio("/p/fuera", extractedAt=extraida), comercio("/p/siguiente"))
+    reporte, repo, ids = correr("o.jsonl", contenido)
+    assert motivos(reporte) == [(1, faltante("extractedAt"))]
+    assert repo.leer_carga(reporte.id_carga).reporte is not None
+    assert [(r.renglon, r.motivo_rechazo) for r in _registros_rechazo(repo, ids)] == [
+        (1, faltante("extractedAt"))
+    ]
+
+
+def test_t08b_1_por_csv():
+    contenido = csv_bytes(
+        "schemaVersion,retailerCode,productUrl,title,brand,model,category,price.current,"
+        "price.currency,seller,condition,availability.state,purchaseMode,extractedAt,blocked",
+        f"3.1,{TIENDA_PRUEBA},https://www.{DOMINIO_PRUEBA}/p/c1,T,MB,M1,tools,49.99,USD,"
+        "comercio,new,in_stock,envio,9999-12-31T23:00:00-08:00,false",
+        f"3.1,{TIENDA_PRUEBA},https://www.{DOMINIO_PRUEBA}/p/c2,T,MB,M1,tools,49.99,USD,"
+        "comercio,new,in_stock,envio,2026-11-17T10:00:00-08:00,false",
+    )
+    reporte, _, _ = correr("observation.csv", contenido)
+    assert motivos(reporte) == [(2, faltante("extractedAt"))]
+    assert reporte.cargados == 1
+
+
+def test_t08b_1_no_cambia_el_orden_de_motivos_de_design_6():
+    """Fuera de rango cuenta igual que sin desfase: mismo campo, mismo lugar en el orden.
+    Con ``category`` faltante a la vez, los dos casos dan el mismo motivo."""
+    sin_desfase = comercio("/p/o1", extractedAt="2026-11-17T10:00:00", category=None)
+    fuera = comercio("/p/o2", extractedAt="9999-12-31T23:00:00-08:00", category=None)
+    precio_y_fuera = comercio(
+        "/p/o3",
+        extractedAt="9999-12-31T23:00:00-08:00",
+        price={"current": "0.00", "currency": "USD"},
+    )
+    reporte, _, _ = correr("o.jsonl", jsonl(sin_desfase, fuera, precio_y_fuera))
+    assert motivos(reporte)[0][1] == motivos(reporte)[1][1]
+    # Un campo inválido va antes que PRECIO INVÁLIDO (design.md §6).
+    assert motivos(reporte)[2] == (3, faltante("extractedAt"))
+
+
+@pytest.mark.parametrize("visita", ["0001-01-01T00:00:00+05:00", "0001-01-01T03:00:00Z"])
+def test_t08b_2_visited_at_fuera_de_rango_en_utc_o_en_la_zona(visita):
+    """``0001-01-01T03:00Z`` cabe en UTC pero no en Tijuana (UTC−8): también se rechaza."""
+    contenido = jsonl(_visita(visita), demanda())
+    reporte, repo, _ = correr("v.jsonl", contenido)
+    assert motivos(reporte) == [(1, faltante("visitedAt"))]
+    assert reporte.cargados == 1
+    assert repo.leer_carga(reporte.id_carga).reporte is not None
+
+
+def test_instante_sin_dia_en_la_zona_no_inicia_la_carga():
+    repo, version = nuevo_repo()
+    ids = Ids()
+    instante = dt.datetime(1, 1, 1, 0, 0, tzinfo=dt.UTC)
+    with pytest.raises(ValueError):
+        cargar("d.jsonl", jsonl(demanda()), repo, version, instante, nuevo_id=ids)
+    assert all(repo.leer_carga(i) is None for i in ids.dados)
+
+
+@pytest.mark.parametrize(
+    ("instante", "codigo"),
+    [("9999-12-31T23:00:00-08:00", 2), ("0001-01-01T00:00:00Z", 1)],
+)
+def test_cli_instante_fuera_de_rango(tmp_path, instante, codigo):
+    """Fuera de UTC: argumento inválido (2). El año 1 sale con 1 sin traza (con Tijuana y la
+    configuración de 2026, por no haber configuración activa a ese instante)."""
+    repo, _ = nuevo_repo()
+    archivo = tmp_path / "local_demand.csv"
+    archivo.write_bytes(csv_bytes("category,level,date", "beauty,high,2026-11-18"))
+    errores = io.StringIO()
+    resultado = cli.main(
+        ["cargar", str(archivo), "--instante", instante],
+        repositorio=lambda: repo,
+        reloj=lambda: INSTANTE,
+        salida=io.StringIO(),
+        errores=errores,
+    )
+    assert resultado == codigo
+    assert "Traceback" not in errores.getvalue()
