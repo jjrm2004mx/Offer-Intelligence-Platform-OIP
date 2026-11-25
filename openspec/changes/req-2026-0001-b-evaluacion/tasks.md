@@ -159,6 +159,7 @@ Tareas de la parte B del REQ-2026-0001 v2.9 (`req-2026-0001-b-evaluacion`). **1 
   - URL canónica, y prefijo de ruta de PAR-09 comparado sobre la ruta normalizada en `entradas/validacion.py`, con una prueba de `..` y `%2e%2e` (DEC-256; decisiones 1b y 1b-bis).
   - El cargador pone `captured_at` = instante de la carga (reloj o `--instante`), con una prueba de reproducción (DEC-271; decisión 31).
   - Una prueba de que todo rechazo de una carga lleva su carga y su renglón (decisión 33).
+  - El cargador pasa siempre `dia_de_carga` (instante de la carga en la zona de PAR-01) y un valor que el repositorio no puede guardar es rechazo de ese renglón sin detener la carga (DEC-274; puntos 8 y 9 del comentario 7069378959 del #34).
 - **Fuera de alcance:** disparar evaluaciones (T21); el origen de un rechazo del Worker (parte A).
 - **Construye (design.md):** CMP-08, CMP-22, CTR-02, CTR-03, CTR-05, CTR-07, RNF-5, RNF-4
 - **Comportamientos esperados:** B34 (b) y B34 (c), con los motivos de `design.md` §6 (`CAMPO OBLIGATORIO FALTANTE (condition)` en B34 b); más las pruebas unitarias de §12 (archivo vacío, renglón que no es JSON, CSV sin tipo en el nombre, listas con `|`, duplicados contados en `duplicates`).
@@ -166,8 +167,8 @@ Tareas de la parte B del REQ-2026-0001 v2.9 (`req-2026-0001-b-evaluacion`). **1 
 - **Depende de:** T08a. **Estimación:** 7 h.
 - **DoD:** común.
 
-- [ ] 8b.1 Implementar la lectura de JSON Lines y CSV con el despacho por `recordType`, la clave de idempotencia y la URL canónica, y verificar las pruebas unitarias de formato, de la clave y de la URL
-- [ ] 8b.2 Implementar el reporte de carga, `captured_at` y los comandos de la CLI, y verificar B34 (b) y B34 (c) con `RepositorioMemoria`
+- [x] 8b.1 Implementar la lectura de JSON Lines y CSV con el despacho por `recordType`, la clave de idempotencia y la URL canónica, y verificar las pruebas unitarias de formato, de la clave y de la URL
+- [x] 8b.2 Implementar el reporte de carga, `captured_at` y los comandos de la CLI, y verificar B34 (b) y B34 (c) con `RepositorioMemoria`
 
 ## 9. T09 — Precio habitual y episodio de liquidación (B30)
 

@@ -14,7 +14,8 @@ design.md §6:
 3. precio > 0 con 2 decimales como máximo → ``PRECIO INVÁLIDO``;
 4. dominio autorizado del comercio (``http`` o ``https``, arquitectura §10) o, en la
    publicación de un particular, enlace ``https`` de una plataforma permitida, con su
-   prefijo de ruta si la plataforma lo configura (PAR-09; DEC-212) → ``DOMINIO NO
+   prefijo de ruta si la plataforma lo configura (PAR-09; DEC-212), comparado sobre la
+   ruta ya normalizada (``..`` y ``%2e%2e`` resueltos; DEC-256) → ``DOMINIO NO
    AUTORIZADO``;
 5. ciudad (``pickupLocation``) en la lista de PAR-09 → ``CIUDAD NO CONFIGURADA``.
 
@@ -22,6 +23,9 @@ La validación de la URL es **sintáctica**: nunca se abre una URL (design.md §
 vale si es igual a un dominio autorizado o un subdominio suyo; cualquier forma dudosa
 (credenciales en la URL, puerto explícito, espacios o caracteres de control, barra
 invertida) se rechaza, porque el enlace se compara, no se interpreta.
+
+``url_canonica`` da la URL canónica de un ``productUrl`` ya autorizado (DEC-256; design.md
+§5): la que guarda la publicación (TAB-04) y entra en la clave de idempotencia (DEC-255).
 
 Un rechazo no devuelve la observación: quien llama no puede guardarla en el historial
 (design.md §2, RNF-7). Los motivos solo llevan el código y el nombre del campo, nunca un
@@ -31,9 +35,10 @@ valor ni el contenido del registro (R-20, DEC-181). Sin reloj, sin I/O, sin red.
 from __future__ import annotations
 
 import dataclasses
+import re
 from collections.abc import Iterable, Mapping
 from typing import Any
-from urllib.parse import SplitResult, urlsplit
+from urllib.parse import SplitResult, urlsplit, urlunsplit
 
 from oip.catalogos import EstadoDisponibilidad, MotivoRechazo, Resultado, motivo_campo_faltante
 from oip.configuracion import Configuracion
@@ -44,7 +49,9 @@ __all__ = [
     "CAMPO_ESTADO",
     "Validacion",
     "motivo_de_rechazo",
+    "ruta_normalizada",
     "url_autorizada",
+    "url_canonica",
     "validar",
 ]
 
@@ -53,6 +60,8 @@ CAMPO_ESTADO = "availability.state"
 
 _ESQUEMAS_COMERCIO = frozenset({"http", "https"})  # arquitectura §10
 _ESQUEMAS_PARTICULAR = frozenset({"https"})  # DEC-212
+#: ``%2e`` se lee como punto al resolver ``.`` y ``..`` (DEC-256).
+_PUNTO_CODIFICADO = re.compile("%2e", re.IGNORECASE)
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -128,7 +137,9 @@ def url_autorizada(
     prefijo_ruta: str | None = None,
 ) -> bool:
     """``True`` si ``url`` usa uno de ``esquemas``, su host es uno de ``dominios`` o un
-    subdominio suyo y, con ``prefijo_ruta``, su ruta es ese prefijo o está debajo de él.
+    subdominio suyo y, con ``prefijo_ruta``, su ruta **normalizada** (``ruta_normalizada``)
+    es ese prefijo o está debajo de él: una ruta que sale del prefijo con ``..`` o
+    ``%2e%2e`` no vale (DEC-256).
 
     Solo compara el texto (design.md §16): no resuelve el host ni abre la URL.
     """
@@ -141,8 +152,45 @@ def url_autorizada(
     if prefijo_ruta is None:
         return True
     base = prefijo_ruta.rstrip("/")
-    ruta = partes.path
+    ruta = ruta_normalizada(partes.path)
     return ruta == base or ruta.startswith(base + "/")
+
+
+def ruta_normalizada(ruta: str) -> str:
+    """La ruta con ``.`` y ``..`` resueltos (RFC 3986 §5.2.4, ``remove_dot_segments``) y sin
+    barra final (DEC-256). Un segmento que, leyendo ``%2e`` como punto, es ``.`` o ``..``
+    cuenta como tal; los demás segmentos quedan como vienen. ``..`` no sube más allá de la
+    raíz. La raíz sola (``/``) y la ruta vacía dan ``""``."""
+    if not isinstance(ruta, str):
+        raise TypeError("ruta: se esperaba texto")
+    salida: list[str] = []
+    for segmento in ruta.split("/")[1:] if ruta.startswith("/") else ruta.split("/"):
+        punto = _PUNTO_CODIFICADO.sub(".", segmento)
+        if punto == ".":
+            continue
+        if punto == "..":
+            if salida:
+                salida.pop()
+            continue
+        salida.append(segmento)
+    return ("/" + "/".join(salida)).rstrip("/")
+
+
+def url_canonica(url: str) -> str:
+    """URL canónica de un ``productUrl`` (DEC-256; design.md §5): esquema ``https``, host en
+    minúsculas y sin ``www.`` inicial, sin fragmento, ruta con ``.`` y ``..`` resueltos
+    (``%2e`` se lee como punto) y sin barra final; la query se queda tal cual.
+
+    Solo transforma el texto (design.md §16). Una URL con una forma que no se compara con
+    seguridad (la que ``url_autorizada`` rechaza) levanta ``ValueError`` sin la URL: se
+    canoniza solo un enlace ya autorizado."""
+    partes = _partes(url)
+    if partes is None:
+        raise ValueError("productUrl: la URL no se puede canonizar")
+    host = (partes.hostname or "").lower()
+    if host.startswith("www."):
+        host = host[len("www.") :]
+    return urlunsplit(("https", host, ruta_normalizada(partes.path), partes.query, ""))
 
 
 # --- Internos -----------------------------------------------------------------------------

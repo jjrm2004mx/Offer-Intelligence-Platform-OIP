@@ -53,6 +53,7 @@ __all__ = [
     "Dec",
     "Entero",
     "Esquema",
+    "FechaHora",
     "FechaHoraCaptura",
     "Monto",
     "RegistroInvalido",
@@ -213,8 +214,26 @@ def _localizar(valor: object, info: ValidationInfo) -> object:
     return fecha_hora.replace(tzinfo=zona)
 
 
-FechaHoraCaptura = Annotated[AwareDatetime, BeforeValidator(_localizar)]
-"""Fecha y hora de una captura de Jesús: sin desfase, en la zona de PAR-01 (DEC-240)."""
+def _representable_en_utc(valor: dt.datetime) -> dt.datetime:
+    """Una fecha y hora que no se puede pasar a UTC (``9999-12-31T23:00-08:00``,
+    ``0001-01-01T00:00+05:00``) no es un valor válido del campo: se rechaza al leer, con el
+    motivo de su campo, en lugar de levantar ``OverflowError`` más adelante (clave de
+    idempotencia, repositorio) y detener la carga (REQ §3.2.6 punto 1; lectura de T08b)."""
+    try:
+        valor.astimezone(dt.UTC)
+    except OverflowError:
+        raise ValueError("la fecha y hora no cabe en UTC") from None
+    return valor
+
+
+FechaHora = Annotated[AwareDatetime, AfterValidator(_representable_en_utc)]
+"""Fecha y hora con desfase que se puede pasar a UTC (horas del contrato 3.1)."""
+
+FechaHoraCaptura = Annotated[
+    AwareDatetime, BeforeValidator(_localizar), AfterValidator(_representable_en_utc)
+]
+"""Fecha y hora de una captura de Jesús: sin desfase, en la zona de PAR-01 (DEC-240); se
+puede pasar a UTC."""
 
 
 def ausente(valor: object) -> bool:

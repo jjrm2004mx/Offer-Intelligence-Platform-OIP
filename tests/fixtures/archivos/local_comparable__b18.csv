@@ -1,0 +1,4 @@
+gtin,brand,model,condition,askingPrice,currency,exchangeRate,city,date,sold
+,DEWALT,DCF840,used,120.00,USD,,san_diego,2026-11-14,false
+,DEWALT,DCF840,used,130.00,USD,,san_diego,2026-11-15,false
+,DEWALT,DCF840,used,140.00,USD,,san_diego,2026-11-15,false
