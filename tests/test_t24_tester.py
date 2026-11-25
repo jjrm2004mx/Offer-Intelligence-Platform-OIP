@@ -564,6 +564,13 @@ def _barrido_del_motor():
         oferta = t11._oferta_b1(peso=peso, extra={"category": categoria, "condition": estado})
         contexto = t11._contexto(oferta=oferta, fichas=fichas[ficha](), configuracion=config)
         yield motor.evaluar(contexto)
+    # T20 (S-31): un usado sin valor de referencia deja la venta local por revisar, no con
+    # SIN PRECIO LOCAL; la combinación de dos causas locales sale de un nuevo sin precio de
+    # mercado hoy (sin historial ni fichas) y con demanda local baja.
+    for categoria in categorias:
+        oferta = t11._oferta_b1(extra={"category": categoria})
+        contexto = t11._contexto(oferta=oferta, historial=[], fichas=[], configuracion=baja)
+        yield motor.evaluar(contexto)
 
 
 def test_revision_4_el_motor_emite_causas_en_orden_y_marcas_del_catalogo():

@@ -9,7 +9,7 @@ redondeados (design.md §8).
 
 - **Costo de compra** (RN-001 §4, REQ §3.2 paso 6) = precio + impuesto + envío hacia mí. El
   impuesto usa la tasa de ``taxLocation`` (PAR-07) o la de respaldo (DEC-220); la compra a un
-  particular no lleva impuesto (S-14). La recogida con particulares la agrega T20.
+  particular no lleva impuesto (S-14) y suma la recogida (RN-008; PAR-09 y PAR-12; T20).
 - **Estado del canal** (REQ §3.2.1): con una causa de cerrado queda **cerrado**, aunque tenga
   también una de por revisar (S-31); con solo causas de por revisar, **por revisar**; si no,
   **disponible**.
@@ -46,8 +46,11 @@ Lecturas que fija esta implementación (para G4; ninguna cambia un escenario):
   ("publicaciones comparables activas") cuenta solo los no vendidos.
 - **Peso a cobrar** (RN-006 §4.2): el ``weightKg`` de la observación; el peso por tamaño de la
   caja necesita el divisor de la paquetería, que la configuración no trae.
-- **Venta local de un usado**: solo con estimado de Jesús hasta que T20 agregue el valor de
-  referencia (RN-014).
+- **Venta local de un usado** (T20; RN-014, RN-016, S-31): el estimado es el de Jesús o
+  ``used_reference_value_pct`` del valor de referencia de usados. Sin valor de referencia el
+  canal queda **por revisar** con ``SIN REFERENCIA DE USADOS`` (sin estimado no hay precio ni
+  ``SIN PRECIO LOCAL``); una causa de cerrado prevalece. Amazon queda cerrado con
+  ``PRODUCTO NO NUEVO`` (S-12).
 
 El paquete está dividido por tema sin cambiar la interfaz (design.md §1: un módulo de más
 de ~400 líneas pasa a un subpaquete con el mismo nombre): ``_base`` (tipos, apoyo y estado

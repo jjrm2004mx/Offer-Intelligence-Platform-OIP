@@ -7,6 +7,7 @@ from decimal import Decimal
 from oip.catalogos import (
     Canal,
     CausaCanalCerrado,
+    CausaCanalPorRevisar,
     DemandaLocal,
     Marca,
 )
@@ -69,6 +70,8 @@ def precio_venta_local(
         raise TypeError("se esperaba un ContextoEvaluacion")
     if precio_mercado_hoy is not None:
         exigir_decimal(precio_mercado_hoy, "el precio de mercado hoy")
+    if valor_referencia_usados is not None:
+        exigir_decimal(valor_referencia_usados, "el valor de referencia de usados")
     parametros = contexto.configuracion.contenido.local_sale
     observacion = contexto.oferta.observacion
     condicion = _condicion_de(observacion)
@@ -79,8 +82,14 @@ def precio_venta_local(
     ]
     if aplican:
         estimado: Decimal | None = max(aplican)[2]  # el más reciente
-    elif precio_mercado_hoy is not None and refs.es_nuevo(observacion):
-        estimado = precio_mercado_hoy * _pct(parametros.market_today_pct)
+    elif refs.es_nuevo(observacion):
+        estimado = (
+            None
+            if precio_mercado_hoy is None
+            else precio_mercado_hoy * _pct(parametros.market_today_pct)
+        )
+    elif valor_referencia_usados is not None:
+        estimado = valor_referencia_usados * _pct(parametros.used_reference_value_pct)
     else:
         estimado = None
     if estimado is None:
@@ -158,18 +167,25 @@ def evaluar_local(
     configuracion = contexto.configuracion.contenido
     observacion = contexto.oferta.observacion
     parametros = configuracion.local_sale
-    precio = precio_venta_local(contexto, referencias.precio_mercado_hoy)
+    precio = precio_venta_local(
+        contexto, referencias.precio_mercado_hoy, referencias.valor_referencia_usados
+    )
     demanda = demanda_local(contexto)
     ventas = ventas_al_mes_local(demanda, parametros.demand)
+    # S-31: un no nuevo sin valor de referencia deja la venta local por revisar.
+    sin_referencia = not refs.es_nuevo(observacion) and referencias.valor_referencia_usados is None
 
     cerrado: list[CausaCanalCerrado] = []
+    por_revisar: list[CausaCanalPorRevisar] = []
     if demanda is DemandaLocal.LOW:
         cerrado.append(CausaCanalCerrado.DEMANDA_LOCAL_BAJA)
-    if precio is None:
+    if precio is None and not sin_referencia:
         cerrado.append(CausaCanalCerrado.SIN_PRECIO_LOCAL)
     if ventas is not None and ventas < 1:
         cerrado.append(CausaCanalCerrado.SIN_ROTACION)  # S-08
-    estado = estado_del_canal(tuple(cerrado), ())
+    if sin_referencia:
+        por_revisar.append(CausaCanalPorRevisar.SIN_REFERENCIA_DE_USADOS)
+    estado = estado_del_canal(tuple(cerrado), tuple(por_revisar))
     marcas: list[str] = [c.value for c in cerrado]
     if precio is not None and precio.techo is None:
         marcas.append(Marca.SIN_COMPARABLES_LOCALES.value)  # RN-016 §11
@@ -178,7 +194,7 @@ def evaluar_local(
         canal=Canal.LOCAL,
         estado=estado,
         causas_cerrado=tuple(cerrado),
-        causas_por_revisar=(),
+        causas_por_revisar=tuple(por_revisar),
         precio_venta=None if precio is None else precio.precio,
         # RN-001 §4: costo de entrega (RN-008) + otros; PAR-12 no trae otros costos locales.
         costo_venta=None if precio is None else costo_entrega(parametros.transport),

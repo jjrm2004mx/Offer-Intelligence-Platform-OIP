@@ -39,12 +39,26 @@ def costo_recogida(observacion: Observacion, configuracion: Configuracion) -> De
     y los costos fijos de PAR-12 (``local_sale.transport``), redondeado una vez
     (``TipoMonto.TRASLADO_RECOGIDA``; B18: $9.50). ``None`` si la oferta no es de un
     particular o su ciudad no está en PAR-09."""
-    raise NotImplementedError("T20: fase 2")
+    if not isinstance(observacion, Observacion) or not isinstance(configuracion, Configuracion):
+        raise TypeError("se esperaban la observación y la Configuracion")
+    if not observacion.es_particular or observacion.pickup_location is None:
+        return None
+    ciudad = configuracion.private_sellers.cities.get(observacion.pickup_location.strip())
+    if ciudad is None:
+        return None
+    tarifas = configuracion.local_sale.transport
+    valor = (
+        ciudad.pickup_km * tarifas.cost_per_km
+        + ciudad.pickup_hours * tarifas.hour_value
+        + tarifas.fixed_costs
+    )
+    return redondear(TipoMonto.TRASLADO_RECOGIDA, valor)
 
 
 def costo_compra(observacion: Observacion, configuracion: Configuracion) -> CostoCompra | None:
     """Costo de compra de la oferta (RN-001 §4; REQ §3.2 paso 6). ``None`` sin precio. El envío
-    hacia mí es ``shipping.toMeCost`` o el de ``shipping_to_me_default`` (PAR-06)."""
+    hacia mí es ``shipping.toMeCost`` o el de ``shipping_to_me_default`` (PAR-06); con un
+    particular se suma la recogida (``costo_recogida``; T20)."""
     if not isinstance(configuracion, Configuracion):
         raise TypeError("se esperaba la Configuracion")
     precio = observacion.price.current
@@ -56,7 +70,14 @@ def costo_compra(observacion: Observacion, configuracion: Configuracion) -> Cost
     if observacion.shipping is not None and observacion.shipping.to_me_cost is not None:
         hacia_mi = observacion.shipping.to_me_cost
     envio = redondear(TipoMonto.ENVIO, hacia_mi)
-    total = redondear(TipoMonto.COSTO_COMPRA, precio + impuesto + envio)
+    # RN-001 §4 y RN-008: la recogida con un particular entra en el costo de compra (S-14).
+    recogida = costo_recogida(observacion, configuracion) or Decimal(0)
+    total = redondear(TipoMonto.COSTO_COMPRA, precio + impuesto + envio + recogida)
     return CostoCompra(
-        precio=precio, tasa_impuesto_pct=tasa, impuesto=impuesto, envio_hacia_mi=envio, total=total
+        precio=precio,
+        tasa_impuesto_pct=tasa,
+        impuesto=impuesto,
+        envio_hacia_mi=envio,
+        total=total,
+        recogida=recogida,
     )
