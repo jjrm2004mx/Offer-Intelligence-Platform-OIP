@@ -10,8 +10,8 @@ memoria se comporta como la base:
   escala, o más dígitos enteros que la precisión, se rechaza con ``ValueError`` antes de
   escribir: PostgreSQL lo redondearía en silencio y el repositorio no redondea (DEC-207).
   ``numeric`` sin escala conserva el valor exacto. Nunca pasa por ``float``.
-- ``integer`` y ``bigint`` fuera de su rango, y ``char(n)`` de más de ``n``, también se
-  rechazan con ``ValueError`` antes de escribir (PostgreSQL daría un error de la base).
+- ``smallint``, ``integer`` y ``bigint`` fuera de su rango, y ``char(n)`` de más de ``n``,
+  también se rechazan con ``ValueError`` antes de escribir (PostgreSQL daría un error).
 - La memoria aplica además los ``CHECK`` del esquema desde su texto SQL (``_checks``), con
   el mismo nombre de restricción en ``ErrorDeIntegridad``.
 - ``timestamptz`` vuelve en UTC; una fecha y hora sin desfase se rechaza.
@@ -45,8 +45,10 @@ from oip.evaluacion._canonico import a_json, desde_json
 from oip.persistencia import tablas
 from oip.persistencia.repositorios._columnas import (
     Fila,
+    exigir_tipo,
     instante_utc,
     normalizar,
+    tienda_de_busqueda,
     utc,
 )
 from oip.persistencia.repositorios._evaluaciones import (
@@ -82,6 +84,7 @@ __all__ = [
     "captura_de_fila",
     "carga_de_filas",
     "configuracion_de_fila",
+    "exigir_tipo",
     "evaluacion_de_filas",
     "fila_captura",
     "fila_carga",
@@ -99,6 +102,7 @@ __all__ = [
     "observacion_de_filas",
     "producto_de_fila",
     "publicacion_de_fila",
+    "tienda_de_busqueda",
     "tipo_de_captura",
 ]
 

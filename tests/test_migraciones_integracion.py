@@ -37,7 +37,7 @@ _VARIABLE = "OIP_TEST_DATABASE_URL"
 _INSTANTE = dt.datetime(2026, 11, 16, 18, 0, tzinfo=dt.UTC)
 _HUELLA = "0" * 64
 #: Revisión vigente (``head``).
-_HEAD = "0003_registro_de_rechazo"
+_HEAD = "0004_price_usd_sin_escala"
 
 
 def _url():
@@ -611,3 +611,117 @@ def test_0003_baja_y_sube_y_la_vista_lleva_la_columna_nueva(motor):
     _alembic(motor, command.upgrade, "head")
     assert _revision(motor) == _HEAD
     assert columnas()[-1] == "line_number"
+
+
+# --- 0004_price_usd_sin_escala (DEC-258; T08a) --------------------------------------------
+
+_0003 = "0003_registro_de_rechazo"
+
+
+def _carga_y_producto(conexion) -> tuple[uuid.UUID, uuid.UUID]:
+    """La carga (con su ``config_version``) y el ``product`` que necesita un comparable."""
+    carga = _carga(conexion, _config_version(conexion))
+    producto = uuid.uuid4()
+    conexion.execute(
+        text("INSERT INTO product (id, category, created_at) VALUES (:p, 'tools', :t)"),
+        {"p": producto, "t": _INSTANTE},
+    )
+    return carga, producto
+
+
+def _comparable(conexion, price_usd: str) -> uuid.UUID:
+    """Un ``local_comparable`` sintético con ``price_usd`` dado como texto (sin ``float``)."""
+    carga, producto = _carga_y_producto(conexion)
+    return _fila_comparable(conexion, carga, producto, price_usd)
+
+
+def _fila_comparable(conexion, carga: uuid.UUID, producto: uuid.UUID, price_usd: str) -> uuid.UUID:
+    """Solo la fila de ``local_comparable``, con una carga y un producto que ya existen.
+
+    ``config_version`` tiene ``sha256`` único y ``_config_version`` usa siempre ``_HUELLA``:
+    para una segunda fila en la misma base se reutilizan la carga y el producto.
+    """
+    id_ = uuid.uuid4()
+    conexion.execute(
+        text(
+            "INSERT INTO local_comparable (id, load_run_id, idempotency_key, captured_at,"
+            " product_id, gtin, condition, asking_price, currency, exchange_rate, price_usd,"
+            " city, date, sold) VALUES (:id, :c, :h, :t, :p, '0123456789012', 'used', 1500.00,"
+            " 'MXN', 17.3, CAST(:usd AS numeric), 'tijuana', '2026-11-15', false)"
+        ),
+        {"id": id_, "c": carga, "h": "1" * 64, "t": _INSTANTE, "p": producto, "usd": price_usd},
+    )
+    return id_
+
+
+def _escala_price_usd(motor) -> tuple[int | None, int | None]:
+    with motor.connect() as conexion:
+        fila = conexion.execute(
+            text(
+                "SELECT numeric_precision, numeric_scale FROM information_schema.columns"
+                " WHERE table_schema = current_schema() AND table_name = 'local_comparable'"
+                " AND column_name = 'price_usd'"
+            )
+        ).one()
+    return fila.numeric_precision, fila.numeric_scale
+
+
+def _price_usd(motor, id_: uuid.UUID) -> Decimal:
+    with motor.connect() as conexion:
+        return conexion.execute(
+            text("SELECT price_usd FROM local_comparable WHERE id = :id"), {"id": id_}
+        ).scalar_one()
+
+
+def test_0004_sube_y_baja(motor):
+    _con_timescale(motor)
+    _alembic(motor, command.upgrade, _0003)
+    assert _escala_price_usd(motor) == (14, 4)
+    _alembic(motor, command.upgrade, "head")
+    assert _revision(motor) == _HEAD
+    assert _escala_price_usd(motor) == (None, None)
+    _alembic(motor, command.downgrade, _0003)
+    assert _revision(motor) == _0003
+    assert _escala_price_usd(motor) == (14, 4)
+    _alembic(motor, command.upgrade, "head")
+    assert _escala_price_usd(motor) == (None, None)
+
+
+def test_0004_conserva_los_valores_guardados_y_despues_guarda_el_valor_exacto(motor):
+    _con_timescale(motor)
+    _alembic(motor, command.upgrade, _0003)
+    with motor.begin() as conexion:
+        carga, producto = _carga_y_producto(conexion)
+        antes = _fila_comparable(conexion, carga, producto, "86.7052")
+    _alembic(motor, command.upgrade, "head")
+    assert _price_usd(motor, antes) == Decimal("86.7052")
+    exacto = Decimal("1500.00") / Decimal("17.3")
+    with motor.begin() as conexion:
+        conexion.execute(text("DELETE FROM local_comparable"))
+        despues = _fila_comparable(conexion, carga, producto, str(exacto))
+    leido = _price_usd(motor, despues)
+    assert leido == exacto
+    assert str(leido) == str(exacto)
+
+
+def test_0004_no_se_revierte_si_un_price_usd_perderia_decimales(motor):
+    _con_timescale(motor)
+    _alembic(motor, command.upgrade, "head")
+    exacto = Decimal("1500.00") / Decimal("17.3")
+    with motor.begin() as conexion:
+        id_ = _comparable(conexion, str(exacto))
+    with pytest.raises(Exception, match="no se revierte"):
+        _alembic(motor, command.downgrade, _0003)
+    assert _revision(motor) == _HEAD
+    assert _escala_price_usd(motor) == (None, None)
+    assert _price_usd(motor, id_) == exacto
+
+
+def test_0004_se_revierte_si_ningun_valor_cambia(motor):
+    _con_timescale(motor)
+    _alembic(motor, command.upgrade, "head")
+    with motor.begin() as conexion:
+        id_ = _comparable(conexion, "86.7052")
+    _alembic(motor, command.downgrade, _0003)
+    assert _revision(motor) == _0003
+    assert _price_usd(motor, id_) == Decimal("86.7052")

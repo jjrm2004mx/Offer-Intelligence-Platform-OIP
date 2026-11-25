@@ -187,6 +187,7 @@ class RepositorioPostgres:
         return self._correr(tx)
 
     def version_configuracion(self, id_: int) -> VersionConfiguracion | None:
+        _filas.exigir_tipo(id_, int, "id_")
         t = tablas.config_version
         fila = self._correr(lambda c: _una(c, t, t.c.id == id_))
         return None if fila is None else _filas.configuracion_de_fila(fila)
@@ -217,6 +218,7 @@ class RepositorioPostgres:
         self._correr(lambda c: [_insertar(c, t, f) for t, f in filas])
 
     def leer_producto(self, id_: UUID) -> Producto | None:
+        _filas.exigir_tipo(id_, UUID, "id_")
         t = tablas.product
         fila = self._correr(lambda c: _una(c, t, t.c.id == id_))
         return None if fila is None else _filas.producto_de_fila(fila)
@@ -231,6 +233,7 @@ class RepositorioPostgres:
     def buscar_publicacion(
         self, comercio: str, url_canonica: str, tienda: str | None
     ) -> Publicacion | None:
+        tienda = _filas.tienda_de_busqueda(tienda)
         t = tablas.listing
         condicion_tienda = t.c.store_code.is_(None) if tienda is None else t.c.store_code == tienda
         fila = self._correr(
@@ -266,6 +269,7 @@ class RepositorioPostgres:
         return self._correr(tx)
 
     def observacion_por_clave(self, clave_idempotencia: str) -> UUID | None:
+        _filas.exigir_tipo(clave_idempotencia, str, "clave_idempotencia")
         t = tablas.ingest_receipt
         fila = self._correr(lambda c: _una(c, t, t.c.idempotency_key == clave_idempotencia))
         return None if fila is None else fila["observation_id"]
@@ -305,6 +309,7 @@ class RepositorioPostgres:
         return tuple(_registrada(f) for f in self._correr(tx))
 
     def leer_observacion(self, id_: UUID) -> ObservacionRegistrada | None:
+        _filas.exigir_tipo(id_, UUID, "id_")
         leidas = self._leer_observaciones(_P.c.observation_id == id_)
         return leidas[0] if leidas else None
 
@@ -372,6 +377,7 @@ class RepositorioPostgres:
         self._correr(lambda c: [_insertar(c, t, f) for t, f in filas])
 
     def terminar_carga(self, id_carga: UUID, reporte: ReporteCarga) -> None:
+        _filas.exigir_tipo(id_carga, UUID, "id_carga")
         t = tablas.load_run
 
         def tx(c: Connection) -> None:
@@ -388,6 +394,7 @@ class RepositorioPostgres:
         self._correr(tx)
 
     def leer_carga(self, id_carga: UUID) -> CargaGuardada | None:
+        _filas.exigir_tipo(id_carga, UUID, "id_carga")
         t, r = tablas.load_run, tablas.load_rejection
 
         def tx(c: Connection) -> tuple[Fila | None, list[Fila]]:
@@ -418,6 +425,7 @@ class RepositorioPostgres:
         return [_filas.evaluacion_de_filas(filas[i], canales.get(i, [])) for i in ids]
 
     def leer_evaluacion(self, id_: UUID) -> RegistroEvaluacion | RegistroRechazo | None:
+        _filas.exigir_tipo(id_, UUID, "id_")
         e = tablas.evaluation
 
         def tx(c: Connection) -> list[RegistroEvaluacion | RegistroRechazo]:

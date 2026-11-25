@@ -76,10 +76,13 @@ def _create_tables(sql: str) -> dict[str, frozenset[str]]:
     return tablas_sql
 
 
-def test_revisiones_0001_0002_y_0003_en_cadena():
+def test_revisiones_0001_a_0004_en_cadena():
     config, _ = _config()
     guion = ScriptDirectory.from_config(config)
-    assert guion.get_heads() == ["0003_registro_de_rechazo"]
+    assert guion.get_heads() == ["0004_price_usd_sin_escala"]
+    assert (
+        guion.get_revision("0004_price_usd_sin_escala").down_revision == "0003_registro_de_rechazo"
+    )
     assert guion.get_revision("0003_registro_de_rechazo").down_revision == "0002_hypertables"
     assert guion.get_revision("0002_hypertables").down_revision == "0001_esquema"
     assert guion.get_revision("0001_esquema").down_revision is None
@@ -166,15 +169,19 @@ def _renglones_del_modelo(md, nombre: str) -> frozenset[str]:
     return _cuerpo(str(CreateTable(md.tables[nombre]).compile(dialect=DIALECTO)))[1]
 
 
-def test_el_modelo_vigente_es_el_de_0001_mas_lo_de_0003():
+def _sin_cambios_0004(renglones: frozenset[str], nombre: str) -> frozenset[str]:
+    """Sin las columnas cuyo tipo cambia ``0004`` (DEC-258): las compara su propia prueba."""
+    cambiadas = set(tablas.CAMBIOS_0004.get(nombre, ()))
+    return frozenset(r for r in renglones if r.split()[0] not in cambiadas)
+
+
+def test_el_modelo_vigente_es_el_de_0001_mas_lo_de_0003_y_0004():
     assert set(tablas.metadata.tables) == set(tablas.metadata_0001.tables)
     for nombre in tablas.metadata.tables:
-        agregados = _renglones_del_modelo(tablas.metadata, nombre) - _renglones_del_modelo(
-            tablas.metadata_0001, nombre
-        )
-        quitados = _renglones_del_modelo(tablas.metadata_0001, nombre) - _renglones_del_modelo(
-            tablas.metadata, nombre
-        )
+        vigente = _sin_cambios_0004(_renglones_del_modelo(tablas.metadata, nombre), nombre)
+        de_0001 = _sin_cambios_0004(_renglones_del_modelo(tablas.metadata_0001, nombre), nombre)
+        agregados = vigente - de_0001
+        quitados = de_0001 - vigente
         assert quitados == frozenset(), nombre
         nombres = {r.split()[0] for r in agregados if not r.startswith("CONSTRAINT ")}
         restricciones = {r.split()[1] for r in agregados if r.startswith("CONSTRAINT ")}
@@ -235,3 +242,54 @@ def test_sin_url_ni_conexion_se_detiene_sin_mostrar_nada(monkeypatch):
     config, _ = _config()
     with pytest.raises(RuntimeError, match="falta la variable de entorno OIP_DATABASE_URL"):
         command.upgrade(config, "head")
+
+
+# --- 0004_price_usd_sin_escala (DEC-258; T08a) ---------------------------------------------
+
+_INICIO_0004 = "-- Running upgrade 0003_registro_de_rechazo -> 0004_price_usd_sin_escala"
+
+
+def _de_control(sentencia: str) -> bool:
+    """Transacción y versión de Alembic: no son cambios del esquema."""
+    return sentencia in {"BEGIN", "COMMIT"} or sentencia.startswith("UPDATE alembic_version")
+
+
+def test_0004_cambia_solo_el_tipo_de_price_usd_a_numeric_sin_escala(sql_head):
+    parte = sql_head.split(_INICIO_0004, 1)[1]
+    cambios = [s for s in _sentencias(parte) if not _de_control(s)]
+    assert cambios == ["ALTER TABLE local_comparable ALTER COLUMN price_usd TYPE NUMERIC"]
+    # Las columnas que cambia son las de CAMBIOS_0004, y en el modelo quedan sin escala.
+    assert tablas.CAMBIOS_0004 == {"local_comparable": ("price_usd",)}
+    columna = tablas.metadata.tables["local_comparable"].c.price_usd
+    assert (columna.type.precision, columna.type.scale) == (None, None)
+
+
+def test_0001_sigue_creando_price_usd_con_numeric_14_4(sql_0001):
+    cuerpo = _create_tables(sql_0001)["local_comparable"]
+    assert "price_usd NUMERIC(14, 4) NOT NULL" in cuerpo
+
+
+def test_0004_se_revierte_a_14_4_y_se_detiene_si_un_valor_cambiaria():
+    sql = _sql(command.downgrade, "0004_price_usd_sin_escala:0003_registro_de_rechazo")
+    sentencias = [s for s in _sentencias(sql) if not _de_control(s)]
+    assert len(sentencias) == 2
+    guarda, alter = sentencias
+    # Antes de cambiar el tipo, se niega si algún valor perdería decimales o no cabe.
+    assert guarda.startswith("DO $$ BEGIN IF EXISTS (SELECT 1 FROM local_comparable")
+    assert "price_usd <> round(price_usd, 4)" in guarda
+    assert "abs(price_usd) >= 10000000000" in guarda
+    assert "RAISE EXCEPTION" in guarda
+    assert alter == "ALTER TABLE local_comparable ALTER COLUMN price_usd TYPE NUMERIC(14, 4)"
+
+
+def test_0004_no_se_edita_0001_ni_0003():
+    """DEC-179 y DEC-272: 0004 es nueva; 0001 y 0003 siguen en su lugar de la cadena."""
+    config, _ = _config()
+    guion = ScriptDirectory.from_config(config)
+    revisiones = [r.revision for r in guion.walk_revisions("base", "heads")]
+    assert revisiones == [
+        "0004_price_usd_sin_escala",
+        "0003_registro_de_rechazo",
+        "0002_hypertables",
+        "0001_esquema",
+    ]

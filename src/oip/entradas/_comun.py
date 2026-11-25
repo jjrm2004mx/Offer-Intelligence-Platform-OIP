@@ -9,6 +9,10 @@
   ``CAMPO OBLIGATORIO FALTANTE (<campo>)`` (design.md §6; DEC-234 punto 2).
 - Los campos desconocidos se descartan sin guardarlos (design.md §6, RNF-7, RNF-11).
 - Los montos se leen como ``Decimal`` sin pasar por ``float`` (DEC-060, design.md §8).
+  ``Monto`` además rechaza más de 2 decimales al leer (DEC-257): el rechazo del repositorio
+  (``numeric(12,2)``, T06) queda como última barrera.
+- ``CONTEXTO_DIA_DE_CARGA``: el día de la carga, que llega como dato (nunca el reloj), para
+  rechazar una fecha de captura posterior (DEC-257).
 - Enteros y booleanos **estrictos** (``Entero``, ``Booleano``; DEC-238): ``true`` no se lee
   como 1, ni ``"false"`` o ``0`` como ``False``. Convertir el texto de un CSV es del cargador
   (T08).
@@ -43,18 +47,21 @@ from oip.catalogos import MotivoRechazo, motivo_campo_faltante
 from oip.dinero import leer_monto
 
 __all__ = [
+    "CONTEXTO_DIA_DE_CARGA",
     "CONTEXTO_ZONA",
     "Booleano",
     "Dec",
     "Entero",
     "Esquema",
     "FechaHoraCaptura",
+    "Monto",
     "RegistroInvalido",
     "ValorJson",
     "a_decimal",
     "ausente",
     "decimal_o_none",
     "faltantes_de_producto",
+    "mas_de_2_decimales",
     "obtener",
     "validar_esquema",
 ]
@@ -130,6 +137,29 @@ Dec = Annotated[Decimal, BeforeValidator(a_decimal)]
 """``Decimal`` leído sin ``float``."""
 
 
+def mas_de_2_decimales(valor: Decimal) -> bool:
+    """``True`` si ``valor`` no es un número entero de centavos (``29.001``); ``29.000`` y
+    ``29.5`` no lo son (se compara el valor, no los ceros finales). DEC-257.
+
+    No redondea (solo ``dinero.py`` redondea): compara el valor por 100 con su parte
+    entera."""
+    if not isinstance(valor, Decimal) or not valor.is_finite():
+        raise TypeError("se esperaba un Decimal finito")
+    centavos = valor * 100
+    return centavos != centavos.to_integral_value()
+
+
+def _a_lo_mas_2_decimales(valor: Decimal) -> Decimal:
+    if mas_de_2_decimales(valor):
+        raise ValueError("el monto tiene más de 2 decimales")
+    return valor
+
+
+Monto = Annotated[Decimal, BeforeValidator(a_decimal), AfterValidator(_a_lo_mas_2_decimales)]
+"""Monto en USD leído sin ``float`` y con 2 decimales como máximo: si tiene más, el campo
+no es válido y da ``CAMPO OBLIGATORIO FALTANTE (<campo>)`` (DEC-257, DEC-244)."""
+
+
 def tuplas_a_listas(valor: Any) -> Any:
     """El mismo valor con cada tupla (también anidada) convertida en lista: un valor ``Any``
     queda igual a como vuelve del JSON canónico (CTR-06, RNF-3; decisión 34 del #34)."""
@@ -151,6 +181,10 @@ Booleano = StrictBool
 
 #: Clave del contexto de validación con la zona de las capturas (``tzinfo`` o ``None``).
 CONTEXTO_ZONA = "zona"
+
+#: Clave del contexto de validación con el día de la carga (``datetime.date`` o ``None``):
+#: ninguna fecha de una captura puede ser posterior a él (DEC-257). Llega como dato.
+CONTEXTO_DIA_DE_CARGA = "dia_de_carga"
 
 
 def _localizar(valor: object, info: ValidationInfo) -> object:

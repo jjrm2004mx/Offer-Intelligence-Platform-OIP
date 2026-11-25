@@ -17,6 +17,14 @@ obligatorios de REQ §6. Campos en camelCase en el archivo, códigos en inglés 
 - Una fecha y hora sin desfase (``visitedAt``) se toma en la zona que se pasa en ``zona``:
   la de ``general.timezone`` (PAR-01, ``America/Tijuana``; DEC-240). Sin ``zona``, se
   rechaza como campo faltante.
+- Rangos de CTR-04 (DEC-257): ``units`` ≥ 1, ``actualCosts`` ≥ 0 con 2 decimales como
+  máximo, ``soldOn`` ≥ ``purchasedOn`` y ninguna fecha (``date``, ``visitedAt``,
+  ``purchasedOn``, ``soldOn``) posterior a ``dia_de_carga`` (el día de la carga en la zona de
+  ``general.timezone``, que llega como dato): si no, ``CAMPO OBLIGATORIO FALTANTE
+  (<campo>)``. Los cinco precios (``askingPrice``, ``local_estimate.price``, ``msrp.value``,
+  ``purchasePrice`` y ``salePrice``) > 0 con 2 decimales como máximo: si no, la captura queda
+  marcada (``precio_invalido``) y ``motivo_de_rechazo`` da ``PRECIO INVÁLIDO``, después de
+  los campos faltantes (orden de design.md §6), como ``price.current`` en la observación.
 
 No se valida contra la configuración (ciudades de PAR-09: CMP-07 y CMP-08) ni se guarda
 nada (CMP-20).
@@ -33,20 +41,23 @@ from typing import Annotated, Any, ClassVar
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
-from pydantic import BeforeValidator, Field
+from pydantic import AfterValidator, BeforeValidator, Field, ValidationInfo
 
-from oip.catalogos import Canal, Categoria, Condicion, DemandaLocal, TipoRegistro
+from oip.catalogos import Canal, Categoria, Condicion, DemandaLocal, MotivoRechazo, TipoRegistro
 from oip.entradas._comun import (
+    CONTEXTO_DIA_DE_CARGA,
     CONTEXTO_ZONA,
     Booleano,
     Dec,
     Entero,
     Esquema,
     FechaHoraCaptura,
+    Monto,
     RegistroInvalido,
     ausente,
     decimal_o_none,
     faltantes_de_producto,
+    mas_de_2_decimales,
     validar_esquema,
 )
 
@@ -66,6 +77,7 @@ __all__ = [
     "SolicitudCliente",
     "VisitaTienda",
     "leer_captura",
+    "motivo_de_rechazo",
 ]
 
 _PRODUCTO = ("gtin", "brand", "model")
@@ -75,6 +87,46 @@ _CONDICIONALES = frozenset({*_PRODUCTO, "exchangeRate", "evaluationId"})
 #: ``acceptedConditions`` de una solicitud que no los trae: solo nuevo (RN-011 punto 2,
 #: REQ §3.4 punto 1, CTR-04; DEC-241).
 CONDICIONES_POR_DEFECTO: tuple[Condicion, ...] = (Condicion.NEW,)
+
+
+def _dia_de_carga(info: ValidationInfo) -> dt.date | None:
+    contexto = info.context if isinstance(info.context, Mapping) else {}
+    dia = contexto.get(CONTEXTO_DIA_DE_CARGA)
+    return dia if isinstance(dia, dt.date) and not isinstance(dia, dt.datetime) else None
+
+
+def _fecha_no_posterior(valor: dt.date, info: ValidationInfo) -> dt.date:
+    """DEC-257: una fecha de captura no puede ser posterior al día de la carga."""
+    dia = _dia_de_carga(info)
+    if dia is not None and valor > dia:
+        raise ValueError("la fecha es posterior al día de la carga")
+    return valor
+
+
+def _fecha_hora_no_posterior(valor: dt.datetime, info: ValidationInfo) -> dt.datetime:
+    """DEC-257: el día de una fecha y hora es el de la zona de ``general.timezone``
+    (la del contexto); sin zona, el de su propio desfase."""
+    dia = _dia_de_carga(info)
+    if dia is None:
+        return valor
+    contexto = info.context if isinstance(info.context, Mapping) else {}
+    zona = contexto.get(CONTEXTO_ZONA)
+    local = valor.astimezone(zona) if isinstance(zona, dt.tzinfo) else valor
+    if local.date() > dia:
+        raise ValueError("la fecha es posterior al día de la carga")
+    return valor
+
+
+FechaCaptura = Annotated[dt.date, AfterValidator(_fecha_no_posterior)]
+"""Fecha de una captura: no posterior al día de la carga, si se da (DEC-257)."""
+
+FechaHoraDeCaptura = Annotated[FechaHoraCaptura, AfterValidator(_fecha_hora_no_posterior)]
+"""Fecha y hora de una captura (DEC-240): su día no es posterior al de la carga (DEC-257)."""
+
+
+def _precio_invalido(precio: Decimal | None) -> bool:
+    """DEC-257: un precio de captura ≤ 0, con más de 2 decimales o que no es un número."""
+    return precio is None or precio <= 0 or mas_de_2_decimales(precio)
 
 
 class Moneda(StrEnum):
@@ -103,16 +155,33 @@ class Modalidad(StrEnum):
 class _Captura(Esquema):
     #: Orden de los obligatorios en el archivo (CTR-04).
     ORDEN: ClassVar[tuple[str, ...]] = ()
+    #: Atributos con los precios que dan ``PRECIO INVÁLIDO`` (DEC-257), en orden de CTR-04.
+    PRECIOS: ClassVar[tuple[str, ...]] = ()
 
     @classmethod
     def _faltan(cls, datos: Mapping[str, Any]) -> list[str]:
         """Obligatorios que dependen de otros campos (producto, tipo de cambio)."""
         return []
 
+    @property
+    def precio_invalido(self) -> bool:
+        """Algún precio de la captura es ≤ 0 o tiene más de 2 decimales: ``PRECIO INVÁLIDO``
+        (DEC-257). Las capturas sin precio nunca lo son."""
+        return any(_precio_invalido(getattr(self, nombre)) for nombre in self.PRECIOS)
+
     @classmethod
-    def leer(cls, datos: Mapping[str, Any], zona: dt.tzinfo | None = None) -> _Captura:
+    def leer(
+        cls,
+        datos: Mapping[str, Any],
+        zona: dt.tzinfo | None = None,
+        dia_de_carga: dt.date | None = None,
+    ) -> _Captura:
         if not isinstance(datos, Mapping):
             raise TypeError("la captura debe ser un mapa de campos")
+        if dia_de_carga is not None and (
+            not isinstance(dia_de_carga, dt.date) or isinstance(dia_de_carga, dt.datetime)
+        ):
+            raise TypeError("dia_de_carga: se esperaba una fecha (datetime.date)")
         orden = cls._orden()
         obligatorios = tuple(c for c in orden if c not in _CONDICIONALES)
         return validar_esquema(
@@ -121,7 +190,7 @@ class _Captura(Esquema):
             orden,
             obligatorios,
             faltan=cls._faltan(datos),
-            contexto={CONTEXTO_ZONA: zona},
+            contexto={CONTEXTO_ZONA: zona, CONTEXTO_DIA_DE_CARGA: dia_de_carga},
         )
 
     @classmethod
@@ -158,13 +227,14 @@ class ComparableLocal(_ConProducto):
         "date",
         "sold",
     )
+    PRECIOS: ClassVar[tuple[str, ...]] = ("asking_price",)
 
     condition: Condicion
     asking_price: Annotated[Decimal | None, BeforeValidator(decimal_o_none)]
     currency: Moneda
     exchange_rate: Annotated[Dec, Field(gt=0)] | None = None
     city: str
-    date: dt.date
+    date: FechaCaptura
     sold: Booleano
 
     @classmethod
@@ -178,14 +248,15 @@ class ComparableLocal(_ConProducto):
 
     @property
     def precio_invalido(self) -> bool:
-        """``askingPrice`` no es un número o es ≤ 0: ``PRECIO INVÁLIDO`` (design.md CTR-04)."""
-        return self.asking_price is None or self.asking_price <= 0
+        """``askingPrice`` no es un número, es ≤ 0 o tiene más de 2 decimales: ``PRECIO
+        INVÁLIDO`` (design.md CTR-04; DEC-257)."""
+        return _precio_invalido(self.asking_price)
 
     @property
     def price_usd(self) -> Decimal | None:
         """Precio en USD sin redondear; ``None`` si el precio es inválido."""
         precio = self.asking_price
-        if precio is None or precio <= 0:
+        if precio is None or _precio_invalido(precio):
             return None
         if self.currency is Moneda.MXN and self.exchange_rate is not None:
             return precio / self.exchange_rate
@@ -197,20 +268,22 @@ class EstimadoLocal(_ConProducto):
     producto; con ``condition``, solo para ese (DEC-234 punto 9)."""
 
     ORDEN: ClassVar[tuple[str, ...]] = ("price", "date")
+    PRECIOS: ClassVar[tuple[str, ...]] = ("price",)
 
     condition: Condicion | None = None
     price: Dec
-    date: dt.date
+    date: FechaCaptura
 
 
 class CapturaMsrp(_ConProducto):
     """``msrp``: solo se muestra (DEC-218)."""
 
     ORDEN: ClassVar[tuple[str, ...]] = ("value", "source", "date")
+    PRECIOS: ClassVar[tuple[str, ...]] = ("value",)
 
     value: Dec
     source: str
-    date: dt.date
+    date: FechaCaptura
 
 
 class DemandaLocalCapturada(_Captura):
@@ -220,7 +293,7 @@ class DemandaLocalCapturada(_Captura):
 
     category: Categoria
     level: DemandaLocal
-    date: dt.date
+    date: FechaCaptura
 
 
 class VisitaTienda(_Captura):
@@ -245,7 +318,7 @@ class VisitaTienda(_Captura):
     model: str | None = None
     evaluation_id: UUID | None = None
     result: ResultadoVisita
-    visited_at: FechaHoraCaptura
+    visited_at: FechaHoraDeCaptura
 
     @classmethod
     def _faltan(cls, datos: Mapping[str, Any]) -> list[str]:
@@ -267,15 +340,24 @@ class ResultadoReal(_Captura):
         "purchasedOn",
         "soldOn",
     )
+    PRECIOS: ClassVar[tuple[str, ...]] = ("purchase_price", "sale_price")
 
     evaluation_id: UUID
     channel: Canal
-    units: Entero
+    units: Annotated[Entero, Field(ge=1)]
     purchase_price: Dec
     sale_price: Dec
-    actual_costs: Dec
-    purchased_on: dt.date
-    sold_on: dt.date
+    actual_costs: Annotated[Monto, Field(ge=0)]
+    purchased_on: FechaCaptura
+    sold_on: FechaCaptura
+
+    @classmethod
+    def _faltan(cls, datos: Mapping[str, Any]) -> list[str]:
+        """DEC-257: ``soldOn`` ≥ ``purchasedOn``; si no, ``soldOn`` no es válido."""
+        compra, venta = _fecha_o_none(datos.get("purchasedOn")), _fecha_o_none(datos.get("soldOn"))
+        if compra is not None and venta is not None and venta < compra:
+            return ["soldOn"]
+        return []
 
 
 def _condiciones_o_por_defecto(valor: object) -> object:
@@ -309,7 +391,7 @@ class SolicitudCliente(_Captura):
     ] = CONDICIONES_POR_DEFECTO
     modality: Modalidad
     postal_code: str | None = None
-    date: dt.date
+    date: FechaCaptura
 
 
 Captura = (
@@ -337,7 +419,11 @@ ESQUEMAS_CAPTURA: MappingProxyType[TipoRegistro, type[_Captura]] = MappingProxyT
 
 
 def leer_captura(
-    tipo: str, datos: Mapping[str, Any], *, zona: str | dt.tzinfo | None = None
+    tipo: str,
+    datos: Mapping[str, Any],
+    *,
+    zona: str | dt.tzinfo | None = None,
+    dia_de_carga: dt.date | None = None,
 ) -> Captura:
     """Lee una captura de ``tipo`` (``recordType`` ya quitado del registro).
 
@@ -347,9 +433,44 @@ def leer_captura(
     ``zona`` es la de ``general.timezone`` de la configuración (PAR-01; nombre IANA o
     ``tzinfo``): una fecha y hora sin desfase se toma en ella (DEC-240). El cargador (T08)
     la pasa siempre; sin ella, una fecha y hora sin desfase se rechaza.
+
+    ``dia_de_carga`` es el día de la carga en esa zona (DEC-257): una fecha de la captura
+    (``date``, ``visitedAt``, ``purchasedOn``, ``soldOn``) posterior a él da ``CAMPO
+    OBLIGATORIO FALTANTE (<campo>)``. Llega como dato (el cargador lo saca del instante de
+    la carga), nunca del reloj; sin él, no se comprueba.
+
+    Un precio ≤ 0 o con más de 2 decimales no levanta aquí: queda en
+    ``precio_invalido`` y ``motivo_de_rechazo`` da ``PRECIO INVÁLIDO``, después de los
+    campos faltantes (design.md §6), como en la observación.
     """
     esquema = ESQUEMAS_CAPTURA.get(tipo) if isinstance(tipo, str) else None
     if esquema is None:
         raise RegistroInvalido.tipo_desconocido()
     zona_info = ZoneInfo(zona) if isinstance(zona, str) else zona
-    return esquema.leer(datos, zona_info)  # type: ignore[return-value]
+    return esquema.leer(datos, zona_info, dia_de_carga)  # type: ignore[return-value]
+
+
+def _fecha_o_none(valor: object) -> dt.date | None:
+    """La fecha de un campo tal como la lee el esquema, o ``None`` si no lo es (ausente o no
+    válida: eso lo reporta el esquema en su lugar)."""
+    if isinstance(valor, dt.datetime):
+        return None
+    if isinstance(valor, dt.date):
+        return valor
+    if isinstance(valor, str):
+        try:
+            return dt.date.fromisoformat(valor.strip())
+        except ValueError:
+            return None
+    return None
+
+
+def motivo_de_rechazo(captura: Captura) -> str | None:
+    """``PRECIO INVÁLIDO`` si la captura ya leída tiene un precio ≤ 0 o con más de 2
+    decimales (DEC-257: ``askingPrice``, ``local_estimate.price``, ``msrp.value``,
+    ``actual_result.purchasePrice`` y ``salePrice``); si no, ``None``. Sin el valor ni el
+    campo en el motivo (R-20). La ciudad (``CIUDAD NO CONFIGURADA``) la comprueba el cargador
+    con la configuración, después de esto."""
+    if not isinstance(captura, _Captura):
+        raise TypeError("se esperaba una captura ya leída")
+    return MotivoRechazo.PRECIO_INVALIDO.value if captura.precio_invalido else None

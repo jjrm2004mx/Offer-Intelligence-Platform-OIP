@@ -185,6 +185,7 @@ class RepositorioMemoria:
         return _filas.configuracion_de_fila(fila), True
 
     def version_configuracion(self, id_: int) -> VersionConfiguracion | None:
+        _filas.exigir_tipo(id_, int, "id_")
         fila = self._t(tablas.config_version).por_pk(id_)
         return None if fila is None else _filas.configuracion_de_fila(fila)
 
@@ -209,6 +210,7 @@ class RepositorioMemoria:
         self._escribir(filas)
 
     def leer_producto(self, id_: UUID) -> Producto | None:
+        _filas.exigir_tipo(id_, UUID, "id_")
         fila = self._t(tablas.product).por_pk(id_)
         return None if fila is None else _filas.producto_de_fila(fila)
 
@@ -219,6 +221,7 @@ class RepositorioMemoria:
     def buscar_publicacion(
         self, comercio: str, url_canonica: str, tienda: str | None
     ) -> Publicacion | None:
+        tienda = _filas.tienda_de_busqueda(tienda)
         indice = self._t(tablas.listing).indices["uq_listing_retailer_url_store"]
         fila = indice.get((comercio, url_canonica, tienda or ""))
         return None if fila is None else _filas.publicacion_de_fila(fila)
@@ -233,6 +236,7 @@ class RepositorioMemoria:
         return True
 
     def observacion_por_clave(self, clave_idempotencia: str) -> UUID | None:
+        _filas.exigir_tipo(clave_idempotencia, str, "clave_idempotencia")
         fila = self._t(tablas.ingest_receipt).por_pk(clave_idempotencia)
         return None if fila is None else fila["observation_id"]
 
@@ -246,6 +250,7 @@ class RepositorioMemoria:
         return _filas.observacion_de_filas(precio, disponibilidad, publicacion, ficha)
 
     def leer_observacion(self, id_: UUID) -> ObservacionRegistrada | None:
+        _filas.exigir_tipo(id_, UUID, "id_")
         filas = [f for f in self._t(tablas.price_observation).filas if f["observation_id"] == id_]
         if not filas:
             return None
@@ -313,6 +318,7 @@ class RepositorioMemoria:
         self._escribir(filas)
 
     def terminar_carga(self, id_carga: UUID, reporte: ReporteCarga) -> None:
+        _filas.exigir_tipo(id_carga, UUID, "id_carga")
         fila = self._t(tablas.load_run).por_pk(id_carga)
         if fila is None:
             raise ValueError("terminar_carga: la carga no existe")
@@ -323,6 +329,7 @@ class RepositorioMemoria:
         fila.update(actualizada)
 
     def leer_carga(self, id_carga: UUID) -> CargaGuardada | None:
+        _filas.exigir_tipo(id_carga, UUID, "id_carga")
         fila = self._t(tablas.load_run).por_pk(id_carga)
         if fila is None:
             return None
@@ -344,6 +351,7 @@ class RepositorioMemoria:
         return _filas.evaluacion_de_filas(fila, canales)
 
     def leer_evaluacion(self, id_: UUID) -> RegistroEvaluacion | RegistroRechazo | None:
+        _filas.exigir_tipo(id_, UUID, "id_")
         fila = self._t(tablas.evaluation).por_pk(id_)
         return None if fila is None else self._evaluacion(fila)
 

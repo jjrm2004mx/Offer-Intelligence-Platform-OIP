@@ -117,7 +117,8 @@ MONTOS = {
         "total_profit",
     ),
 }
-CONVERSIONES = {"local_comparable": ("price_usd",), "evaluation_channel": ("sale_price",)}
+#: Medianas (numeric(14,4)). ``price_usd`` pasó a ``numeric`` sin escala con ``0004`` (DEC-258).
+CONVERSIONES = {"evaluation_channel": ("sale_price",)}
 SIN_REDONDEAR = {
     "evaluation": ("advertised_discount", "real_discount"),
     "evaluation_channel": (
@@ -126,7 +127,7 @@ SIN_REDONDEAR = {
         "monthly_yield_pct",
         "days_to_recover",
     ),
-    "local_comparable": ("exchange_rate",),
+    "local_comparable": ("exchange_rate", "price_usd"),
     "price_observation": ("weight_kg",),
 }
 
