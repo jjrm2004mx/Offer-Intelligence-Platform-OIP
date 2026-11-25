@@ -618,14 +618,29 @@ def test_0003_baja_y_sube_y_la_vista_lleva_la_columna_nueva(motor):
 _0003 = "0003_registro_de_rechazo"
 
 
-def _comparable(conexion, price_usd: str) -> uuid.UUID:
-    """Un ``local_comparable`` sintético con ``price_usd`` dado como texto (sin ``float``)."""
+def _carga_y_producto(conexion) -> tuple[uuid.UUID, uuid.UUID]:
+    """La carga (con su ``config_version``) y el ``product`` que necesita un comparable."""
     carga = _carga(conexion, _config_version(conexion))
     producto = uuid.uuid4()
     conexion.execute(
         text("INSERT INTO product (id, category, created_at) VALUES (:p, 'tools', :t)"),
         {"p": producto, "t": _INSTANTE},
     )
+    return carga, producto
+
+
+def _comparable(conexion, price_usd: str) -> uuid.UUID:
+    """Un ``local_comparable`` sintético con ``price_usd`` dado como texto (sin ``float``)."""
+    carga, producto = _carga_y_producto(conexion)
+    return _fila_comparable(conexion, carga, producto, price_usd)
+
+
+def _fila_comparable(conexion, carga: uuid.UUID, producto: uuid.UUID, price_usd: str) -> uuid.UUID:
+    """Solo la fila de ``local_comparable``, con una carga y un producto que ya existen.
+
+    ``config_version`` tiene ``sha256`` único y ``_config_version`` usa siempre ``_HUELLA``:
+    para una segunda fila en la misma base se reutilizan la carga y el producto.
+    """
     id_ = uuid.uuid4()
     conexion.execute(
         text(
@@ -676,13 +691,14 @@ def test_0004_conserva_los_valores_guardados_y_despues_guarda_el_valor_exacto(mo
     _con_timescale(motor)
     _alembic(motor, command.upgrade, _0003)
     with motor.begin() as conexion:
-        antes = _comparable(conexion, "86.7052")
+        carga, producto = _carga_y_producto(conexion)
+        antes = _fila_comparable(conexion, carga, producto, "86.7052")
     _alembic(motor, command.upgrade, "head")
     assert _price_usd(motor, antes) == Decimal("86.7052")
     exacto = Decimal("1500.00") / Decimal("17.3")
     with motor.begin() as conexion:
         conexion.execute(text("DELETE FROM local_comparable"))
-        despues = _comparable(conexion, str(exacto))
+        despues = _fila_comparable(conexion, carga, producto, str(exacto))
     leido = _price_usd(motor, despues)
     assert leido == exacto
     assert str(leido) == str(exacto)
