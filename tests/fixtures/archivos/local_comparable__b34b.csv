@@ -1,0 +1,5 @@
+gtin,brand,model,condition,askingPrice,currency,exchangeRate,city,date,sold
+,MARCA-SINTETICA,MS-200,used,80.00,USD,,san_diego,2026-11-15,false
+,MARCA-SINTETICA,MS-200,used,85.50,USD,,tijuana,2026-11-16,true
+,MARCA-SINTETICA,MS-200,used,90.00,USD,,san_diego,2026-11-17,false
+,MARCA-SINTETICA,MS-200,,95.00,USD,,san_diego,2026-11-17,false
