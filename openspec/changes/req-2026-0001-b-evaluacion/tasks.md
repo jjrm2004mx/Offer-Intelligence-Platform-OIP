@@ -262,7 +262,7 @@ Tareas de la parte B del REQ-2026-0001 v2.9 (`req-2026-0001-b-evaluacion`). **1 
 - **Depende de:** T11, T24, T25. **Estimación:** 6 h.
 - **DoD:** común.
 
-- [ ] 13.1 Implementar restricciones, competencia más barata, confianza baja y sin rotación y verificar B4, B9 (base), B21 y B25
+- [x] 13.1 Implementar restricciones, competencia más barata, confianza baja y sin rotación y verificar B4, B9 (base), B21 y B25
 
 ## 14. T14 — Ranking, demanda, unidades y más de 6 kg (B10 a y b, B12, B13, B26 a y b)
 
