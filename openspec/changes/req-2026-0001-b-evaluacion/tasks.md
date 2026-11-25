@@ -7,7 +7,7 @@ Tareas de la parte B del REQ-2026-0001 v2.9 (`req-2026-0001-b-evaluacion`). **1 
 | Hito | Resultado comprobable | Tareas |
 |---|---|---|
 | H1 Cimientos listos | El paquete instala, el dinero redondea solo la lista cerrada, la configuración de §5 carga con versión, el contrato y las capturas validan su forma, el motor devuelve un registro, las migraciones suben y bajan y el repositorio guarda y lee en memoria y en PostgreSQL | T01, T02, T03, T04, T05, T06 |
-| H2 Entradas | Una observación inválida da `RECHAZADA_VALIDACION` con su motivo; un archivo JSON Lines o CSV carga, rechaza por registro y deja su reporte | T07, T08a, T08b |
+| H2 Entradas | Una observación inválida da `RECHAZADA_VALIDACION` con su motivo; un archivo JSON Lines o CSV carga, rechaza por registro y deja su reporte | T07, T08a, T08b, T08c |
 | H3 Referencias de precio | Precio habitual con episodio de liquidación, descuento real, franja y calidad del precio, como B30, B6 y B7 | T09, T10 |
 | H4 La parte evalúa una oferta de punta a punta | B1 completo: confianza, referencias, costo de compra, los dos canales, elección, nivel del aviso y resultado | T11 |
 | H5 Canales, referencias y configuración completos | Todos los escenarios de `canales-y-margen`, B14, B32, B27 y B31 | T24, T25, T12, T13, T14, T15, T16, T17 |
@@ -15,7 +15,7 @@ Tareas de la parte B del REQ-2026-0001 v2.9 (`req-2026-0001-b-evaluacion`). **1 
 | H7 Carga que evalúa, guarda, reevalúa y reproduce | B34 (a) de punta a punta, registro en PostgreSQL recalculable, ≤ 2 s, y reevaluación con "ya no recomendado" | T21, T22 |
 | H8 Desplegado en Rocky | Migraciones probadas en Rocky (PoC de DEC-179) y carga de un archivo con Podman, con evidencia en el PR | T23 |
 
-**Ruta crítica:** T01 → T02 → T04 → T09 → T10 → T11 → T20 → T21 → T22 → T23 (72 h). En paralelo: T03 (después de T01), T05 → T06 y T07 → T08a → T08b (después de T04), T24 y T25 (después de T11) y T12 a T19 (después de T11; T12 a T16 y T18 esperan además a T24, y T13, T16 y T18 a T25). Total: 26 tareas, 168 h. T08 se partió en T08a y T08b, y se agregaron T24 y T25, por las observaciones del issue #34 (DEC-273).
+**Ruta crítica:** T01 → T02 → T04 → T09 → T10 → T11 → T20 → T21 → T22 → T23 (72 h). En paralelo: T03 (después de T01), T05 → T06 y T07 → T08a → T08b → T08c (después de T04), T24 y T25 (después de T11) y T12 a T19 (después de T11; T12 a T16 y T18 esperan además a T24, y T13, T16 y T18 a T25). Total: 27 tareas, 173 h. T08 se partió en T08a y T08b, y se agregaron T24 y T25, por las observaciones del issue #34 (DEC-273). T08c se agregó al cerrar H2, por las observaciones del #34 sobre T08a y T08b (DEC-281).
 
 **Definition of Done común** (todas las tareas): comportamientos esperados con prueba en verde (los escenarios con `@pytest.mark.scenario("<ID de la matriz>")`); `ruff check .` y `ruff format --check .` limpios; `bash scripts/check-egress.sh src` en verde; sin secretos ni datos personales en código, logs, pruebas o commits; sin `float` en montos; gates de GitHub Actions en verde; commits con `Refs: #2` y `Change: req-2026-0001-b-evaluacion`; PR revisado y fusionado por Jesús (G4).
 
@@ -169,6 +169,27 @@ Tareas de la parte B del REQ-2026-0001 v2.9 (`req-2026-0001-b-evaluacion`). **1 
 
 - [x] 8b.1 Implementar la lectura de JSON Lines y CSV con el despacho por `recordType`, la clave de idempotencia y la URL canónica, y verificar las pruebas unitarias de formato, de la clave y de la URL
 - [x] 8b.2 Implementar el reporte de carga, `captured_at` y los comandos de la CLI, y verificar B34 (b) y B34 (c) con `RepositorioMemoria`
+
+## 8c. T08c — Cierre de las entradas: observaciones de H2 (DEC-276 a DEC-280)
+
+- **Objetivo:** cerrar los huecos de lectura que dejaron T08a y T08b, antes de que T21 conecte la evaluación.
+- **Capacidad:** `carga-y-validacion`. **Escenarios:** ninguno propio; no cambia B20 ni B34.
+- **Alcance:**
+  - `entradas/capturas.py`: los cinco precios de las capturas que no son un número dan `PRECIO INVÁLIDO` (DEC-276).
+  - `entradas/validacion.py`: `%2f`, `%5c` o `%25` en la ruta del enlace de un particular dan `DOMINIO NO AUTORIZADO` (DEC-277).
+  - `cli.py`: `oip config cargar <archivo> [--instante ISO]`, con desfase obligatorio, fija `loaded_at` (DEC-278).
+  - `entradas/_archivos.py` o `entradas/cargador.py`: una columna `recordType` en un CSV distinta del tipo del nombre, o vacía, da `TIPO DE REGISTRO DESCONOCIDO` en ese renglón (DEC-279).
+  - Entrada de la observación: un `extractedAt` que no cabe en la zona de `general.timezone` da `CAMPO OBLIGATORIO FALTANTE (extractedAt)` al cargar, la carga sigue y deja su `RECHAZADA_VALIDACION` (DEC-280).
+  - Docstring de `_patron_are` con la lectura de la decisión 19 (rechaza `(?:…)` y las formas escapadas como subcadena), sin cambiar su comportamiento.
+- **Fuera de alcance:** la evaluación de una carga (T21); la regla de URL canónica por comercio (parte A).
+- **Construye (design.md):** CMP-06, CMP-07, CMP-08, CMP-22, CTR-03, CTR-04, CTR-07
+- **Comportamientos esperados:** una prueba por decisión: cada uno de los cinco precios con un valor que no es un número; `%2f`, `%2F`, `%5c` y `%25` en la ruta de un particular (y una ruta normal que sigue pasando); `config cargar --instante` con y sin desfase, y una carga con `--instante` anterior al registro que vuelve a encontrar la configuración; columna `recordType` igual, distinta y vacía; `extractedAt` = `0001-01-01T03:00:00Z` con `America/Tijuana`, por JSON Lines y por CSV, con la carga completa y su reporte.
+- **Guía de implementación:** la zona llega por parámetro, como en T08b (DEC-240, DEC-247); los motivos solo llevan el código y el campo (R-20); las pruebas de T08a y T08b no se debilitan.
+- **Depende de:** T08b. **Estimación:** 5 h.
+- **DoD:** común.
+
+- [ ] 8c.1 Implementar DEC-276, DEC-277, DEC-279 y DEC-280 en la entrada y verificar sus pruebas unitarias
+- [ ] 8c.2 Implementar `--instante` en `oip config cargar` (DEC-278) y el docstring de `_patron_are`, y verificar sus pruebas
 
 ## 9. T09 — Precio habitual y episodio de liquidación (B30)
 
@@ -352,7 +373,7 @@ Tareas de la parte B del REQ-2026-0001 v2.9 (`req-2026-0001-b-evaluacion`). **1 
 - **Construye (design.md):** CMP-21, CMP-08, CMP-22, RNF-1, RNF-2, RNF-3, RNF-4
 - **Comportamientos esperados:** B34 (a) (con `CAMPO OBLIGATORIO FALTANTE (exchangeRate)` y la observación evaluada con el resultado de B18); recalcular cada evaluación guardada da el mismo registro (RNF-3); cambiar un parámetro y cargar la configuración cambia el resultado de una evaluación nueva y la anterior conserva su versión (RNF-2); evaluar con el historial sintético de `design.md` §11 tarda < 2 s (RNF-1), en memoria y en integración.
 - **Guía de implementación:** las evaluaciones van después de cargar todo el archivo, en orden; la ficha de Amazon no se evalúa como oferta; `observations_used` lista cada observación del contexto con su fecha. Prueba del borde de los 90 días del contexto: una cadena de episodios que empezó antes no se ve y el recálculo da el mismo registro (DEC-264). El contexto toma las capturas con `captured_at` ≤ instante (DEC-271).
-- **Depende de:** T08b, T20. **Estimación:** 8 h.
+- **Depende de:** T08b, T08c, T20. **Estimación:** 8 h.
 - **DoD:** común; evidencia de las pruebas de integración en local.
 
 - [ ] 21.1 Implementar el ensamblador y guardar el registro y verificar B34 (a) con `RepositorioMemoria`
