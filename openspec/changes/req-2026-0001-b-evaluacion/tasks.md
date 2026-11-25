@@ -188,8 +188,8 @@ Tareas de la parte B del REQ-2026-0001 v2.9 (`req-2026-0001-b-evaluacion`). **1 
 - **Depende de:** T08b. **Estimación:** 5 h.
 - **DoD:** común.
 
-- [ ] 8c.1 Implementar DEC-276, DEC-277, DEC-279 y DEC-280 en la entrada y verificar sus pruebas unitarias
-- [ ] 8c.2 Implementar `--instante` en `oip config cargar` (DEC-278) y el docstring de `_patron_are`, y verificar sus pruebas
+- [x] 8c.1 Implementar DEC-276, DEC-277, DEC-279 y DEC-280 en la entrada y verificar sus pruebas unitarias
+- [x] 8c.2 Implementar `--instante` en `oip config cargar` (DEC-278) y el docstring de `_patron_are`, y verificar sus pruebas
 
 ## 9. T09 — Precio habitual y episodio de liquidación (B30)
 

@@ -31,6 +31,7 @@ from oip.entradas.capturas import (
     SolicitudCliente,
     VisitaTienda,
     leer_captura,
+    motivo_de_rechazo,
 )
 
 ALIAS = "Cliente-Zeta-7781"
@@ -250,14 +251,11 @@ def test_store_visit_sin_producto_ni_oportunidad():
         ("local_comparable", "sold", 0),
         ("local_comparable", "sold", 1),
         ("local_estimate", "condition", "nuevo"),
-        ("local_estimate", "price", 95.0),  # float: nunca se acepta
-        ("msrp", "value", "ciento"),
         ("actual_result", "channel", "ebay"),
         ("actual_result", "units", "dos"),
         ("actual_result", "units", "2"),  # DEC-238
         ("actual_result", "units", True),
         ("actual_result", "units", Decimal("2")),
-        ("actual_result", "salePrice", 75.0),
         ("client_request", "modality", "delivery"),
         ("client_request", "quantity", 0),
         ("client_request", "quantity", True),  # DEC-238: true no es 1
@@ -272,6 +270,21 @@ def test_store_visit_sin_producto_ni_oportunidad():
 def test_valor_no_valido_o_fuera_de_la_tabla_cuenta_como_faltante(tipo, campo, valor):
     datos = {**VALIDAS[tipo], campo: valor}
     assert _motivo(tipo, datos) == f"CAMPO OBLIGATORIO FALTANTE ({campo})"
+
+
+@pytest.mark.parametrize(
+    ("tipo", "campo", "valor"),
+    [
+        ("local_estimate", "price", 95.0),  # float: nunca se acepta
+        ("msrp", "value", "ciento"),
+        ("actual_result", "salePrice", 75.0),
+    ],
+)
+def test_precio_que_no_es_un_numero_da_precio_invalido(tipo, campo, valor):
+    # DEC-276: los cinco precios de las capturas dan PRECIO INVÁLIDO, no campo faltante.
+    captura = leer_captura(tipo, {**VALIDAS[tipo], campo: valor})
+    assert captura.precio_invalido is True
+    assert motivo_de_rechazo(captura) == "PRECIO INVÁLIDO"
 
 
 # --- local_comparable: moneda, tipo de cambio y precio --------------------------------

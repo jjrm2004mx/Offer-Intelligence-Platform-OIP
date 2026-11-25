@@ -26,6 +26,10 @@ Reglas que fija aquí la parte B:
   observación rechazada (``recordType: observation``) deja además su registro
   ``RECHAZADA_VALIDACION`` sin nada del renglón (DEC-250), en la misma transacción. Un
   renglón sin tipo o con un tipo desconocido solo queda en el reporte (design.md §2).
+- **Columna ``recordType`` de un CSV** (DEC-279): opcional. Si su valor, sin espacios al
+  inicio y al final, es el tipo del nombre del archivo, se descarta; si es otro o está
+  vacío, ese renglón da ``TIPO DE REGISTRO DESCONOCIDO`` sin tipo (como un renglón JSON
+  Lines con un tipo desconocido). El tipo sigue saliendo del nombre (CTR-03).
 - **Última barrera del repositorio** (DEC-274): un valor que pasó la lectura pero no cabe en
   su columna (``ValueError`` del repositorio, por ejemplo ``price.current`` = ``1e400`` en
   ``numeric(12,2)``) es un rechazo de ese renglón: ``PRECIO INVÁLIDO`` en
@@ -475,7 +479,12 @@ class _Proceso:
             # Un renglón que no es un objeto JSON no tiene recordType (DEC-274, lectura).
             self._rechazar(renglon.numero, None, _TIPO_DESCONOCIDO)
             return
-        tipo = tipo_csv if formato == "csv" else _tipo_json(datos.pop(CAMPO_TIPO, None))
+        if formato == "csv":
+            tipo = tipo_csv
+            if CAMPO_TIPO in datos and _tipo_json(datos.pop(CAMPO_TIPO)) is not tipo_csv:
+                tipo = None  # DEC-279: la columna contradice el nombre o está vacía.
+        else:
+            tipo = _tipo_json(datos.pop(CAMPO_TIPO, None))
         if tipo is None:
             self._rechazar(renglon.numero, None, _TIPO_DESCONOCIDO)
         elif tipo is TipoRegistro.OBSERVATION:

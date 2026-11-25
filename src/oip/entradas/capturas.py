@@ -22,9 +22,11 @@ obligatorios de REQ §6. Campos en camelCase en el archivo, códigos en inglés 
   ``purchasedOn``, ``soldOn``) posterior a ``dia_de_carga`` (el día de la carga en la zona de
   ``general.timezone``, que llega como dato): si no, ``CAMPO OBLIGATORIO FALTANTE
   (<campo>)``. Los cinco precios (``askingPrice``, ``local_estimate.price``, ``msrp.value``,
-  ``purchasePrice`` y ``salePrice``) > 0 con 2 decimales como máximo: si no, la captura queda
-  marcada (``precio_invalido``) y ``motivo_de_rechazo`` da ``PRECIO INVÁLIDO``, después de
-  los campos faltantes (orden de design.md §6), como ``price.current`` en la observación.
+  ``purchasePrice`` y ``salePrice``) son un número > 0 con 2 decimales como máximo: si no
+  (también si no son un número, DEC-276), la captura queda marcada (``precio_invalido``) y
+  ``motivo_de_rechazo`` da ``PRECIO INVÁLIDO``, después de los campos faltantes (orden de
+  design.md §6), como ``price.current`` en la observación. Ausente o vacío sigue siendo
+  ``CAMPO OBLIGATORIO FALTANTE (<campo>)``.
 
 No se valida contra la configuración (ciudades de PAR-09: CMP-07 y CMP-08) ni se guarda
 nada (CMP-20).
@@ -130,8 +132,16 @@ FechaHoraDeCaptura = Annotated[FechaHoraCaptura, AfterValidator(_fecha_hora_no_p
 
 
 def _precio_invalido(precio: Decimal | None) -> bool:
-    """DEC-257: un precio de captura ≤ 0, con más de 2 decimales o que no es un número."""
+    """DEC-257 y DEC-276: un precio de captura ≤ 0, con más de 2 decimales o que no es un
+    número (``None``: lo dejó así ``PrecioCaptura``)."""
     return precio is None or precio <= 0 or mas_de_2_decimales(precio)
+
+
+PrecioCaptura = Annotated[Decimal | None, BeforeValidator(decimal_o_none)]
+"""Uno de los cinco precios de las capturas: un valor que no es un número (texto, ``float``,
+booleano, ``NaN``) queda en ``None`` y marca la captura para ``PRECIO INVÁLIDO`` en lugar de
+contar como campo faltante (DEC-276). Ausente o vacío lo reporta ``validar_esquema`` como
+faltante, porque los cinco son obligatorios (CTR-04)."""
 
 
 class Moneda(StrEnum):
@@ -170,8 +180,8 @@ class _Captura(Esquema):
 
     @property
     def precio_invalido(self) -> bool:
-        """Algún precio de la captura es ≤ 0 o tiene más de 2 decimales: ``PRECIO INVÁLIDO``
-        (DEC-257). Las capturas sin precio nunca lo son."""
+        """Algún precio de la captura no es un número, es ≤ 0 o tiene más de 2 decimales:
+        ``PRECIO INVÁLIDO`` (DEC-257, DEC-276). Las capturas sin precio nunca lo son."""
         return any(_precio_invalido(getattr(self, nombre)) for nombre in self.PRECIOS)
 
     @classmethod
@@ -235,7 +245,7 @@ class ComparableLocal(_ConProducto):
     PRECIOS: ClassVar[tuple[str, ...]] = ("asking_price",)
 
     condition: Condicion
-    asking_price: Annotated[Decimal | None, BeforeValidator(decimal_o_none)]
+    asking_price: PrecioCaptura
     currency: Moneda
     exchange_rate: Annotated[Dec, Field(gt=0)] | None = None
     city: str
@@ -276,7 +286,7 @@ class EstimadoLocal(_ConProducto):
     PRECIOS: ClassVar[tuple[str, ...]] = ("price",)
 
     condition: Condicion | None = None
-    price: Dec
+    price: PrecioCaptura
     date: FechaCaptura
 
 
@@ -286,7 +296,7 @@ class CapturaMsrp(_ConProducto):
     ORDEN: ClassVar[tuple[str, ...]] = ("value", "source", "date")
     PRECIOS: ClassVar[tuple[str, ...]] = ("value",)
 
-    value: Dec
+    value: PrecioCaptura
     source: str
     date: FechaCaptura
 
@@ -350,8 +360,8 @@ class ResultadoReal(_Captura):
     evaluation_id: UUID
     channel: Canal
     units: Annotated[Entero, Field(ge=1)]
-    purchase_price: Dec
-    sale_price: Dec
+    purchase_price: PrecioCaptura
+    sale_price: PrecioCaptura
     actual_costs: Annotated[Monto, Field(ge=0)]
     purchased_on: FechaCaptura
     sold_on: FechaCaptura
@@ -444,9 +454,9 @@ def leer_captura(
     OBLIGATORIO FALTANTE (<campo>)``. Llega como dato (el cargador lo saca del instante de
     la carga), nunca del reloj; sin él, no se comprueba.
 
-    Un precio ≤ 0 o con más de 2 decimales no levanta aquí: queda en
-    ``precio_invalido`` y ``motivo_de_rechazo`` da ``PRECIO INVÁLIDO``, después de los
-    campos faltantes (design.md §6), como en la observación.
+    Un precio que no es un número, ≤ 0 o con más de 2 decimales no levanta aquí: queda en
+    ``precio_invalido`` (DEC-257, DEC-276) y ``motivo_de_rechazo`` da ``PRECIO INVÁLIDO``,
+    después de los campos faltantes (design.md §6), como en la observación.
     """
     esquema = ESQUEMAS_CAPTURA.get(tipo) if isinstance(tipo, str) else None
     if esquema is None:
@@ -471,11 +481,11 @@ def _fecha_o_none(valor: object) -> dt.date | None:
 
 
 def motivo_de_rechazo(captura: Captura) -> str | None:
-    """``PRECIO INVÁLIDO`` si la captura ya leída tiene un precio ≤ 0 o con más de 2
-    decimales (DEC-257: ``askingPrice``, ``local_estimate.price``, ``msrp.value``,
-    ``actual_result.purchasePrice`` y ``salePrice``); si no, ``None``. Sin el valor ni el
-    campo en el motivo (R-20). La ciudad (``CIUDAD NO CONFIGURADA``) la comprueba el cargador
-    con la configuración, después de esto."""
+    """``PRECIO INVÁLIDO`` si la captura ya leída tiene un precio que no es un número, ≤ 0 o
+    con más de 2 decimales (DEC-257, DEC-276: ``askingPrice``, ``local_estimate.price``,
+    ``msrp.value``, ``actual_result.purchasePrice`` y ``salePrice``); si no, ``None``. Sin el
+    valor ni el campo en el motivo (R-20). La ciudad (``CIUDAD NO CONFIGURADA``) la comprueba
+    el cargador con la configuración, después de esto."""
     if not isinstance(captura, _Captura):
         raise TypeError("se esperaba una captura ya leída")
     return MotivoRechazo.PRECIO_INVALIDO.value if captura.precio_invalido else None

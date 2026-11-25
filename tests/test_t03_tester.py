@@ -675,9 +675,12 @@ def test_asking_price_no_positivo_se_marca_para_precio_invalido(precio):
 def test_un_monto_float_no_se_acepta(tipo, campo):
     datos = _captura(tipo)
     datos[campo] = 29.5
-    if campo == "askingPrice":
-        # askingPrice no válido se marca para PRECIO INVÁLIDO (no pasa por float).
-        assert leer_captura(tipo, datos).precio_invalido is True
+    if campo != "actualCosts":
+        # Los cinco precios no válidos se marcan para PRECIO INVÁLIDO (no pasan por float;
+        # DEC-276).
+        captura = leer_captura(tipo, datos)
+        assert captura.precio_invalido is True
+        assert all(not isinstance(v, float) for v in captura.model_dump().values())
     else:
         assert _rechazo(leer_captura, tipo, datos).motivo == _motivo(campo)
 

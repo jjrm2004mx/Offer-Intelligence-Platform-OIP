@@ -356,9 +356,11 @@ def test_csv_con_nombre_sin_tipo_rechaza_cada_renglon(repo, nombre):
 def test_el_tipo_del_csv_sale_del_nombre(repo, nombre):
     contenido = b"recordType,category,level,date\ncoupon,beauty,medium,2026-11-18\n"
     reporte = _cargar(repo, nombre, contenido)
-    # La columna recordType se descarta: manda el nombre (CTR-03).
+    # El tipo sale del nombre (CTR-03); una columna recordType que lo contradice rechaza
+    # ese renglón (DEC-279).
     assert reporte.tipo_registro is TipoRegistro.LOCAL_DEMAND
-    assert (reporte.cargados, reporte.rechazados) == (1, 0)
+    assert (reporte.cargados, reporte.rechazados) == (0, 1)
+    assert _rechazos(reporte) == [(2, TIPO_DESCONOCIDO)]
 
 
 def test_celdas_vacias_son_campos_ausentes(repo):
