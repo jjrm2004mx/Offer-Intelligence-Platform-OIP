@@ -94,6 +94,7 @@ from oip.entradas.capturas import motivo_de_rechazo as motivo_de_captura
 from oip.entradas.contrato import Observacion, gtin_valido
 from oip.entradas.validacion import url_autorizada, url_canonica, validar
 from oip.evaluacion.contexto import ObservacionRegistrada
+from oip.persistencia.ensamblador import evaluar_carga
 from oip.persistencia.repositorios import (
     CapturaNueva,
     Carga,
@@ -314,6 +315,10 @@ def cargar(
             rechazados_por_motivo=por_motivo,
         ),
     )
+    # design.md §2: las evaluaciones, después de cargar todo el archivo, en su orden.
+    evaluaciones = evaluar_carga(
+        repositorio, proceso.nuevas, instante, version, id_carga=carga.id, nuevo_id=nuevo_id
+    )
     return ReporteDeCarga(
         id_carga=carga.id,
         archivo=nombre,
@@ -325,6 +330,7 @@ def cargar(
         rechazados_por_motivo=por_motivo,
         rechazos=tuple(proceso.rechazos),
         ciudades_por_registrar=tuple(sorted(proceso.ciudades)),
+        evaluaciones=tuple(r.id for r in evaluaciones),
     )
 
 
@@ -480,6 +486,8 @@ class _Proceso:
         self.duplicados = 0
         self.rechazos: list[RechazoDelReporte] = []
         self.ciudades: set[str] = set()
+        #: Observaciones guardadas en esta carga, en el orden del archivo (las evalúa T21).
+        self.nuevas: list[UUID] = []
 
     # --- Un renglón ---------------------------------------------------------------------
 
@@ -560,6 +568,8 @@ class _Proceso:
             self._rechazar(numero, tipo, *motivo)
             return
         self._contar(guardada)
+        if guardada:
+            self.nuevas.append(nueva.registrada.id)
 
     def _observacion_nueva(self, observacion: Observacion) -> ObservacionNueva:
         url = url_canonica(observacion.product_url)

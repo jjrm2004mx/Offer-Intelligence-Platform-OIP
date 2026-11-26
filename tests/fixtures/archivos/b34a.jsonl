@@ -1,0 +1,4 @@
+{"recordType": "observation", "schemaVersion": "3.1", "retailerCode": "particular", "productUrl": "https://offerup.com/item/detail/b18-sintetico", "brand": "DEWALT", "model": "DCF840", "content": "atornillador, batería y cargador", "category": "tools", "price": {"current": "70.00", "currency": "USD"}, "seller": "particular", "condition": "used", "availability": {"state": "listed"}, "purchaseMode": "particular", "pickupLocation": "san_diego", "extractedAt": "2026-11-16T10:00:00-08:00", "blocked": false}
+{"recordType": "local_comparable", "brand": "DEWALT", "model": "DCF840", "condition": "used", "askingPrice": "2200.00", "currency": "MXN", "city": "san_diego", "date": "2026-11-15", "sold": false}
+{"recordType": "local_demand", "category": "beauty", "level": "medium", "date": "2026-11-16"}
+{"recordType": "coupon", "code": "SINTETICO-10"}

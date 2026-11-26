@@ -41,7 +41,7 @@ from uuid import UUID
 
 from oip.configuracion import ErrorConfiguracion, cargar_configuracion
 from oip.entradas.cargador import ErrorDeArchivo, cargar_archivo, dia_de_carga
-from oip.persistencia.ensamblador import ErrorEnsamblador
+from oip.persistencia.ensamblador import ErrorEnsamblador, recalcular
 from oip.persistencia.repositorios import ErrorRepositorio, Repositorio
 
 __all__ = ["main"]
@@ -177,7 +177,9 @@ def _cargar(
 
 
 def _recalcular(id_evaluacion: UUID, repo: Repositorio, salida: TextIO) -> int:
-    raise NotImplementedError
+    resultado = recalcular(repo, id_evaluacion)
+    print(json.dumps(resultado.a_json(), ensure_ascii=False, indent=2), file=salida)
+    return 0 if resultado.coincide else 1
 
 
 if __name__ == "__main__":  # pragma: no cover
