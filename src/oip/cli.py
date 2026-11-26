@@ -6,18 +6,26 @@
   aunque ese instante sea anterior al registro original. Una versión ya registrada (mismo
   ``sha256``) conserva su ``loaded_at``.
 - ``oip cargar <archivo> [--instante ISO]``: carga un archivo JSON Lines o CSV (CMP-08) con
-  la configuración activa a ese instante e imprime el reporte de carga (CTR-05) en JSON.
+  la configuración activa a ese instante, evalúa al final cada observación nueva de un origen
+  de compra (CMP-21, T21) e imprime el reporte de carga (CTR-05) en JSON.
+- ``oip evaluacion recalcular <id>``: recalcula la evaluación guardada con ese id (UUID)
+  desde su ``input_snapshot`` y la compara con el registro guardado (RNF-3, CTR-06). Imprime
+  en JSON ``{"evaluationId", "matches", "differences"}``; sale con 0 si coincide y con 1 si
+  no (con las diferencias en la salida). Una evaluación que no existe o un
+  ``RECHAZADA_VALIDACION`` (sin ``input_snapshot``, DEC-250) sale con 1 y un mensaje en la
+  salida de errores.
 
 Sin lógica propia: arma las dependencias y llama a la configuración (CMP-04), al cargador
 (CMP-08) y al repositorio (CMP-20). Es el **borde** que lee el reloj: sin ``--instante``, el
 instante de la carga (o el ``loaded_at`` de la configuración) es el del reloj, en UTC
 (DEC-271, DEC-278); el cargador y el repositorio lo reciben como dato. ``--instante`` exige
-el desfase en los dos comandos (no se usa la zona de la máquina). La evaluación de las
-observaciones nuevas y ``oip evaluacion recalcular`` llegan con T21.
+el desfase en los dos comandos (no se usa la zona de la máquina). ``oip evaluacion
+recalcular`` no lee el reloj: el instante es el de la evaluación guardada.
 
 Los mensajes de error no llevan la URL de la base, la contraseña ni el contenido de un
-renglón (RNF-8, DEC-181). Salida: 0 si terminó, 1 si no se pudo hacer, 2 si los argumentos no
-son válidos.
+renglón (RNF-8, DEC-181). Salida: 0 si terminó (en ``recalcular``, si coincide), 1 si no se
+pudo hacer (en ``recalcular``, también si no coincide), 2 si los argumentos no son válidos
+(también un id que no es un UUID).
 """
 
 from __future__ import annotations
@@ -29,9 +37,11 @@ import sys
 from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import TextIO
+from uuid import UUID
 
 from oip.configuracion import ErrorConfiguracion, cargar_configuracion
 from oip.entradas.cargador import ErrorDeArchivo, cargar_archivo, dia_de_carga
+from oip.persistencia.ensamblador import ErrorEnsamblador, recalcular
 from oip.persistencia.repositorios import ErrorRepositorio, Repositorio
 
 __all__ = ["main"]
@@ -65,6 +75,13 @@ def _instante(texto: str) -> dt.datetime:
     return valor
 
 
+def _id_evaluacion(texto: str) -> UUID:
+    try:
+        return UUID(texto)
+    except ValueError:
+        raise argparse.ArgumentTypeError("id: el identificador (UUID) de la evaluación") from None
+
+
 def _analizador() -> argparse.ArgumentParser:
     analizador = argparse.ArgumentParser(prog="oip", description="OIP, Core (parte B).")
     comandos = analizador.add_subparsers(dest="comando", required=True)
@@ -78,6 +95,13 @@ def _analizador() -> argparse.ArgumentParser:
     cargar = comandos.add_parser("cargar", help="cargar un archivo .jsonl o .csv")
     cargar.add_argument("archivo", type=Path)
     cargar.add_argument("--instante", type=_instante, default=None)
+
+    evaluacion = comandos.add_parser("evaluacion", help="evaluaciones guardadas")
+    acciones_evaluacion = evaluacion.add_subparsers(dest="accion", required=True)
+    recalcular = acciones_evaluacion.add_parser(
+        "recalcular", help="recalcular una evaluación guardada y compararla (RNF-3)"
+    )
+    recalcular.add_argument("id", type=_id_evaluacion)
     return analizador
 
 
@@ -97,6 +121,8 @@ def main(
     except SystemExit as fin:
         return 0 if fin.code == 0 else 2
     try:
+        if argumentos.comando == "evaluacion":
+            return _recalcular(argumentos.id, repositorio(), salida)
         instante = argumentos.instante if argumentos.instante is not None else reloj()
         if argumentos.comando == "config":
             return _config_cargar(argumentos.archivo, repositorio(), instante, salida)
@@ -109,6 +135,8 @@ def main(
     except OSError as error:
         print(f"oip: no se pudo leer el archivo ({type(error).__name__})", file=errores)
     except ErrorRepositorio as error:
+        print(f"oip: {error}", file=errores)
+    except ErrorEnsamblador as error:
         print(f"oip: {error}", file=errores)
     return 1
 
@@ -146,6 +174,12 @@ def _cargar(
     reporte = cargar_archivo(archivo, repo, version, instante)
     print(json.dumps(reporte.a_json(), ensure_ascii=False, indent=2), file=salida)
     return 0
+
+
+def _recalcular(id_evaluacion: UUID, repo: Repositorio, salida: TextIO) -> int:
+    resultado = recalcular(repo, id_evaluacion)
+    print(json.dumps(resultado.a_json(), ensure_ascii=False, indent=2), file=salida)
+    return 0 if resultado.coincide else 1
 
 
 if __name__ == "__main__":  # pragma: no cover

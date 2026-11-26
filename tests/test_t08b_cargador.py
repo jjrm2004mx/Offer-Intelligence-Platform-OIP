@@ -1013,6 +1013,8 @@ def test_una_transaccion_por_registro():
         "guardar_rechazo_carga",
         "guardar_captura",
         "terminar_carga",
+        # T21 (design.md §2): la evaluación de la observación nueva, después del reporte.
+        "guardar_evaluacion",
     ]
 
 

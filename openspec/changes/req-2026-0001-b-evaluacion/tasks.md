@@ -376,8 +376,8 @@ Tareas de la parte B del REQ-2026-0001 v2.9 (`req-2026-0001-b-evaluacion`). **1 
 - **Depende de:** T08b, T08c, T20. **Estimación:** 8 h.
 - **DoD:** común; evidencia de las pruebas de integración en local.
 
-- [ ] 21.1 Implementar el ensamblador y guardar el registro y verificar B34 (a) con `RepositorioMemoria`
-- [ ] 21.2 Implementar `oip evaluacion recalcular` y las pruebas de RNF-1, RNF-2 y RNF-3 y verificarlas en CI y en integración
+- [x] 21.1 Implementar el ensamblador y guardar el registro y verificar B34 (a) con `RepositorioMemoria`
+- [x] 21.2 Implementar `oip evaluacion recalcular` y las pruebas de RNF-1, RNF-2 y RNF-3 y verificarlas en CI y en integración
 
 ## 22. T22 — Reevaluación de oportunidades abiertas (B2 b, B9 b)
 

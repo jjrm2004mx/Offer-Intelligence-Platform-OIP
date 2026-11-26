@@ -40,8 +40,14 @@ Reglas que fija aquí la parte B:
   única excepción es ``citiesToRegister``: los **códigos** de ciudad que dieron ``CIUDAD
   NO CONFIGURADA``, que el reporte pide dar de alta (REQ §6).
 
-No evalúa: disparar la evaluación de cada observación nueva es de T21 (CMP-21). Sin reloj,
-sin red.
+- **Evaluación al final** (design.md §2; T21): después de cargar todo el archivo y de
+  escribir el reporte, se evalúa, en el orden del archivo, cada observación nueva de un
+  origen de compra con el ensamblador (CMP-21, ``evaluar_carga``), para que una captura del
+  mismo archivo ya cuente. Una ficha de Amazon no se evalúa como oferta (DEC-203); un
+  duplicado o un rechazo, tampoco. Los ids de las evaluaciones guardadas quedan en
+  ``ReporteDeCarga.evaluaciones`` (no son parte de CTR-05).
+
+Sin reloj, sin red.
 """
 
 from __future__ import annotations
@@ -88,6 +94,7 @@ from oip.entradas.capturas import motivo_de_rechazo as motivo_de_captura
 from oip.entradas.contrato import Observacion, gtin_valido
 from oip.entradas.validacion import url_autorizada, url_canonica, validar
 from oip.evaluacion.contexto import ObservacionRegistrada
+from oip.persistencia.ensamblador import evaluar_carga
 from oip.persistencia.repositorios import (
     CapturaNueva,
     Carga,
@@ -154,6 +161,9 @@ class ReporteDeCarga:
     rechazados_por_motivo: Mapping[str, int]
     rechazos: tuple[RechazoDelReporte, ...]
     ciudades_por_registrar: tuple[str, ...]
+    #: Ids de las evaluaciones guardadas al final de la carga, en el orden del archivo (T21).
+    #: No van en ``a_json``: CTR-05 no las tiene.
+    evaluaciones: tuple[UUID, ...] = ()
 
     def a_json(self) -> dict[str, Any]:
         """El reporte con los nombres de CTR-05, listo para ``json.dumps``."""
@@ -261,7 +271,8 @@ def cargar(
 
     ``nuevo_id`` da los identificadores nuevos (carga, productos, publicaciones,
     observaciones, capturas y registros de rechazo); con uno determinista, la misma carga
-    da el mismo resultado. Levanta ``ErrorDeArchivo`` (antes de empezar la carga) si el
+    da el mismo resultado; también da los ids de las evaluaciones del final de la carga.
+    Levanta ``ErrorDeArchivo`` (antes de empezar la carga) si el
     archivo no se puede leer como carga; nunca por un renglón inválido.
     """
     if not isinstance(contenido, bytes):
@@ -304,6 +315,10 @@ def cargar(
             rechazados_por_motivo=por_motivo,
         ),
     )
+    # design.md §2: las evaluaciones, después de cargar todo el archivo, en su orden.
+    evaluaciones = evaluar_carga(
+        repositorio, proceso.nuevas, instante, version, id_carga=carga.id, nuevo_id=nuevo_id
+    )
     return ReporteDeCarga(
         id_carga=carga.id,
         archivo=nombre,
@@ -315,6 +330,7 @@ def cargar(
         rechazados_por_motivo=por_motivo,
         rechazos=tuple(proceso.rechazos),
         ciudades_por_registrar=tuple(sorted(proceso.ciudades)),
+        evaluaciones=tuple(r.id for r in evaluaciones),
     )
 
 
@@ -470,6 +486,8 @@ class _Proceso:
         self.duplicados = 0
         self.rechazos: list[RechazoDelReporte] = []
         self.ciudades: set[str] = set()
+        #: Observaciones guardadas en esta carga, en el orden del archivo (las evalúa T21).
+        self.nuevas: list[UUID] = []
 
     # --- Un renglón ---------------------------------------------------------------------
 
@@ -550,6 +568,8 @@ class _Proceso:
             self._rechazar(numero, tipo, *motivo)
             return
         self._contar(guardada)
+        if guardada:
+            self.nuevas.append(nueva.registrada.id)
 
     def _observacion_nueva(self, observacion: Observacion) -> ObservacionNueva:
         url = url_canonica(observacion.product_url)

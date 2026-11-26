@@ -20,15 +20,18 @@ el costo de compra (paso 6), el estado y los números de cada canal (pasos 7 y 8
 las unidades, los días y el rendimiento, y la elección del canal con el nivel del aviso
 (paso 9). T20, los usados (valor de referencia de RN-014 en el paso 3 y su descuento real en
 el 4), la compra a particular (``PARTICULAR`` y ``RIESGO DE PROCEDENCIA`` en el paso 2, la
-recogida en el 6). Los motivos y la precedencia (``resultado``, CMP-16) y el armado del
-registro ya están completos.
+recogida en el 6). T21, las observaciones usadas con su fecha en el registro (paso 11,
+REQ §7). Los motivos y la precedencia (``resultado``, CMP-16) y el armado del registro ya
+están completos.
 """
 
 from __future__ import annotations
 
 import dataclasses
+import datetime as dt
 from collections.abc import Callable
 from decimal import Decimal
+from uuid import UUID
 
 from oip.catalogos import (
     CalidadPrecio,
@@ -365,6 +368,19 @@ def evaluar(contexto: ContextoEvaluacion) -> RegistroEvaluacion:
     return _armar_registro(contexto, avance)
 
 
+def _observaciones_usadas(contexto: ContextoEvaluacion) -> tuple[ObservacionUsada, ...]:
+    """Observaciones usadas con su fecha (REQ §7, ``observations_used``; T21): cada
+    observación guardada del contexto (la oferta, el historial y las fichas de Amazon), una
+    vez, con su ``extractedAt``, en orden de fecha e id. Una oferta sin id (no guardada) no
+    cuenta."""
+    usadas: dict[UUID, dt.datetime] = {}
+    for registrada in (contexto.oferta, *contexto.historial, *contexto.fichas_amazon):
+        if registrada.id is not None:
+            usadas.setdefault(registrada.id, registrada.observacion.extracted_at)
+    orden = sorted(usadas.items(), key=lambda par: (par[1], par[0]))
+    return tuple(ObservacionUsada(id=i, fecha=f) for i, f in orden)
+
+
 def _armar_registro(contexto: ContextoEvaluacion, avance: Avance) -> RegistroEvaluacion:
     """Paso 11 (REQ §7): arma el registro. Guardarlo es de la persistencia (CMP-21)."""
     oferta = contexto.oferta
@@ -429,7 +445,7 @@ def _armar_registro(contexto: ContextoEvaluacion, avance: Avance) -> RegistroEva
         nivel_aviso=avance.nivel_aviso if asignado else None,
         canal_aviso=avance.canal_aviso if asignado else None,
         canales=avance.canales,
-        observaciones_usadas=avance.observaciones_usadas,
+        observaciones_usadas=_observaciones_usadas(contexto),
         entrada=contexto,
         id_evaluacion_anterior=contexto.id_evaluacion_anterior,
         referencias_cambiadas=contexto.referencias_cambiadas,
