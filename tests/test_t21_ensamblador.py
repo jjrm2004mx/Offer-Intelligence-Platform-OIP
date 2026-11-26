@@ -676,3 +676,45 @@ def test_la_captura_de_otro_tipo_no_entra_al_contexto(repo):
     registro = repo.leer_evaluacion(reporte.evaluaciones[0])
     assert registro.entrada.estimados == () and registro.entrada.msrp == ()
     assert repo.capturas(TipoRegistro.LOCAL_DEMAND, instante=B34A_EN)
+
+
+def test_solo_entran_las_capturas_y_observaciones_del_producto_de_la_oferta(repo, tmp_path):
+    """T12-tester-1 (#34): el motor confía en que el contexto trae solo los comparables del
+    producto. El producto de una captura se identifica en la carga como el de una
+    observación (design.md §10 punto 7): GTIN válido, si no marca + modelo."""
+    ids = Ids()
+    version = _version(repo)
+    otro = (ARCHIVOS / "local_comparable__b18.csv").read_text("utf-8").replace("DCF840", "DCF850")
+    (tmp_path / "local_comparable__otro.csv").write_text(otro, encoding="utf-8")
+    cargar_archivo(
+        tmp_path / "local_comparable__otro.csv", repo, version, COMPARABLES_EN, nuevo_id=ids
+    )
+    renglones = [
+        {"recordType": "local_estimate", "brand": "DEWALT", "model": "DCF850"}
+        | {"price": "500.00", "date": "2026-11-15"},
+        {"recordType": "msrp", "brand": "DEWALT", "model": "DCF850"}
+        | {"value": "600.00", "source": "sintético", "date": "2026-11-15"},
+    ]
+    cargar("otro.jsonl", _jsonl(*renglones), repo, version, COMPARABLES_EN, nuevo_id=ids)
+    observacion = json.loads((ARCHIVOS / "b34a.jsonl").read_text("utf-8").splitlines()[0])
+    observacion |= {"model": "DCF850", "productUrl": "https://offerup.com/item/detail/b18-otro"}
+    observacion["extractedAt"] = "2026-11-16T09:00:00-08:00"
+    otra = cargar("o.jsonl", _jsonl(observacion), repo, version, COMPARABLES_EN, nuevo_id=ids)
+    id_otra = repo.leer_evaluacion(otra.evaluaciones[0]).id_observacion_oferta
+
+    reporte = cargar_archivo(
+        ARCHIVOS / "local_comparable__b18.csv", repo, version, COMPARABLES_EN, nuevo_id=ids
+    )
+    assert reporte.cargados == 3
+    b34a = cargar_archivo(ARCHIVOS / "b34a.jsonl", repo, version, B34A_EN, nuevo_id=ids)
+    registro = repo.leer_evaluacion(b34a.evaluaciones[0])
+    entrada = registro.entrada
+    # Solo los 3 comparables de DCF840: ninguno de DCF850 (mismo precio, ciudad y estado).
+    assert len(entrada.comparables) == 3
+    assert {c.model for c in entrada.comparables} == {"DCF840"}
+    assert entrada.estimados == () and entrada.msrp == ()
+    # La observación del otro modelo no entra al contexto ni a observations_used.
+    assert id_otra not in {r.id for r in entrada.historial}
+    assert id_otra not in {u.id for u in registro.observaciones_usadas}
+    _afirmar_b18(registro)
+    assert recalcular(repo, registro.id).coincide
