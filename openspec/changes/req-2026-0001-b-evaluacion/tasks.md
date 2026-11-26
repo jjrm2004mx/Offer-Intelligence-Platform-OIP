@@ -276,8 +276,8 @@ Tareas de la parte B del REQ-2026-0001 v2.9 (`req-2026-0001-b-evaluacion`). **1 
 - **Depende de:** T11, T24. **Estimación:** 7 h.
 - **DoD:** común.
 
-- [ ] 14.1 Implementar el ranking y la demanda desconocida y verificar B10 (a) y B10 (b)
-- [ ] 14.2 Implementar unidades sin ventas, demanda a la baja y más de 6 kg y verificar B12, B13, B26 (a) y B26 (b)
+- [x] 14.1 Implementar el ranking y la demanda desconocida y verificar B10 (a) y B10 (b)
+- [x] 14.2 Implementar unidades sin ventas, demanda a la baja y más de 6 kg y verificar B12, B13, B26 (a) y B26 (b)
 
 ## 15. T15 — Sin precio de venta en Amazon y redondeo una vez por fórmula (B28 a y b, B33)
 
