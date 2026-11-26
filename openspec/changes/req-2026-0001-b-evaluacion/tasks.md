@@ -248,7 +248,7 @@ Tareas de la parte B del REQ-2026-0001 v2.9 (`req-2026-0001-b-evaluacion`). **1 
 - **Depende de:** T11, T24. **Estimación:** 6 h.
 - **DoD:** común.
 
-- [ ] 12.1 Implementar el techo local, el castigo sin mínimo, el envío sin peso y la comisión desconocida y verificar B2 (base), B15, B16 y B17
+- [x] 12.1 Implementar el techo local, el castigo sin mínimo, el envío sin peso y la comisión desconocida y verificar B2 (base), B15, B16 y B17
 
 ## 13. T13 — Restricción, competencia más barata, confianza baja y sin rotación (B4, B9 base, B21, B25)
 
